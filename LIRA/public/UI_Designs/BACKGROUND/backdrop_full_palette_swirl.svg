@@ -1,0 +1,29 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="c4-base" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FBF6EC"/><stop offset="100%" stop-color="#F5EFDD"/>
+    </linearGradient>
+    <radialGradient id="c4-sky" cx="15%" cy="20%" r="34%"><stop offset="0%" stop-color="#9FD8E6" stop-opacity="0.7"/><stop offset="100%" stop-color="#9FD8E6" stop-opacity="0"/></radialGradient>
+    <radialGradient id="c4-butter" cx="45%" cy="10%" r="28%"><stop offset="0%" stop-color="#EDD98C" stop-opacity="0.7"/><stop offset="100%" stop-color="#EDD98C" stop-opacity="0"/></radialGradient>
+    <radialGradient id="c4-peach" cx="80%" cy="25%" r="32%"><stop offset="0%" stop-color="#EDA97A" stop-opacity="0.6"/><stop offset="100%" stop-color="#EDA97A" stop-opacity="0"/></radialGradient>
+    <radialGradient id="c4-coral" cx="85%" cy="80%" r="34%"><stop offset="0%" stop-color="#E2938C" stop-opacity="0.6"/><stop offset="100%" stop-color="#E2938C" stop-opacity="0"/></radialGradient>
+    <radialGradient id="c4-sage" cx="15%" cy="82%" r="34%"><stop offset="0%" stop-color="#8FAE7D" stop-opacity="0.55"/><stop offset="100%" stop-color="#8FAE7D" stop-opacity="0"/></radialGradient>
+    <filter id="c4-blur"><feGaussianBlur stdDeviation="32"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#c4-base)"/>
+  <g filter="url(#c4-blur)">
+    <ellipse cx="240" cy="180" rx="260" ry="190" fill="url(#c4-sky)"/>
+    <ellipse cx="720" cy="90" rx="220" ry="160" fill="url(#c4-butter)"/>
+    <ellipse cx="1280" cy="220" rx="240" ry="180" fill="url(#c4-peach)"/>
+    <ellipse cx="1360" cy="740" rx="260" ry="200" fill="url(#c4-coral)"/>
+    <ellipse cx="220" cy="760" rx="250" ry="190" fill="url(#c4-sage)"/>
+  </g>
+  <!-- five small dots echoing each palette colour, spaced along a gentle arc -->
+  <g>
+    <circle cx="440" cy="450" r="9" fill="#9FD8E6"/>
+    <circle cx="640" cy="400" r="9" fill="#EDD98C"/>
+    <circle cx="840" cy="380" r="9" fill="#EDA97A"/>
+    <circle cx="1040" cy="400" r="9" fill="#E2938C"/>
+    <circle cx="1240" cy="450" r="9" fill="#8FAE7D"/>
+  </g>
+</svg>

@@ -1,0 +1,67 @@
+<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="fox-wash" cx="45%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#F7D2B0" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#F7D2B0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="fox-body" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#EDAD7E"/>
+      <stop offset="100%" stop-color="#E29357"/>
+    </linearGradient>
+    <linearGradient id="fox-face" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F9E4CE"/>
+      <stop offset="100%" stop-color="#F3D3AF"/>
+    </linearGradient>
+    <filter id="fox-blur"><feGaussianBlur stdDeviation="10"/></filter>
+  </defs>
+
+  <!-- watercolor wash -->
+  <ellipse cx="120" cy="110" rx="100" ry="95" fill="url(#fox-wash)" filter="url(#fox-blur)"/>
+
+  <!-- tail -->
+  <path d="M182,168 C220,168 226,120 200,100 C214,132 200,158 176,160 Z" fill="url(#fox-body)"/>
+  <path d="M200,110 C210,124 208,142 194,150 C200,138 198,122 190,112 Z" fill="#FBF6EC"/>
+
+  <!-- feet -->
+  <ellipse cx="98" cy="198" rx="12" ry="7" fill="#D97F45"/>
+  <ellipse cx="142" cy="198" rx="12" ry="7" fill="#D97F45"/>
+
+  <!-- body -->
+  <ellipse cx="118" cy="150" rx="66" ry="58" fill="url(#fox-body)"/>
+  <ellipse cx="118" cy="164" rx="34" ry="30" fill="#FBF6EC"/>
+
+  <!-- ears -->
+  <path d="M70,60 L48,14 L96,36 Z" fill="url(#fox-body)"/>
+  <path d="M170,60 L192,14 L144,36 Z" fill="url(#fox-body)"/>
+  <path d="M70,54 L58,26 L88,38 Z" fill="#FBF6EC"/>
+  <path d="M170,54 L182,26 L152,38 Z" fill="#FBF6EC"/>
+
+  <!-- head -->
+  <ellipse cx="120" cy="92" rx="58" ry="54" fill="url(#fox-face)"/>
+
+  <!-- muzzle -->
+  <path d="M96,102 C96,124 106,138 120,140 C134,138 144,124 144,102 C132,112 108,112 96,102 Z" fill="#FBF6EC"/>
+
+  <!-- eyes -->
+  <ellipse cx="98" cy="90" rx="9" ry="11" fill="#3F3B35"/>
+  <ellipse cx="142" cy="90" rx="9" ry="11" fill="#3F3B35"/>
+  <circle cx="101" cy="86" r="2.6" fill="#FFFFFF"/>
+  <circle cx="145" cy="86" r="2.6" fill="#FFFFFF"/>
+
+  <!-- brows -->
+  <path d="M84,72 Q98,64 112,74" stroke="#C97A3D" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M128,74 Q142,64 156,72" stroke="#C97A3D" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- nose + mouth -->
+  <ellipse cx="120" cy="112" rx="7" ry="5" fill="#3F3B35"/>
+  <path d="M120,117 Q120,126 110,130" stroke="#3F3B35" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M120,117 Q120,126 130,130" stroke="#3F3B35" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+  <!-- cheeks -->
+  <circle cx="80" cy="106" r="8" fill="#F3C4C0" opacity="0.6"/>
+  <circle cx="160" cy="106" r="8" fill="#F3C4C0" opacity="0.6"/>
+
+  <!-- whisker dots -->
+  <circle cx="86" cy="112" r="1.6" fill="#C97A3D"/><circle cx="80" cy="118" r="1.6" fill="#C97A3D"/>
+  <circle cx="154" cy="112" r="1.6" fill="#C97A3D"/><circle cx="160" cy="118" r="1.6" fill="#C97A3D"/>
+</svg>

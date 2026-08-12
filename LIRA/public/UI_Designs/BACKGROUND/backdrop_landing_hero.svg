@@ -1,0 +1,51 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="l-sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FBF6EC"/><stop offset="100%" stop-color="#F2EEDD"/>
+    </linearGradient>
+    <radialGradient id="l-glow1" cx="20%" cy="15%" r="45%"><stop offset="0%" stop-color="#CDEEF5" stop-opacity="0.75"/><stop offset="100%" stop-color="#CDEEF5" stop-opacity="0"/></radialGradient>
+    <radialGradient id="l-glow2" cx="85%" cy="10%" r="40%"><stop offset="0%" stop-color="#F7EFC6" stop-opacity="0.8"/><stop offset="100%" stop-color="#F7EFC6" stop-opacity="0"/></radialGradient>
+    <radialGradient id="l-glow3" cx="50%" cy="0%" r="35%"><stop offset="0%" stop-color="#F7D2B0" stop-opacity="0.55"/><stop offset="100%" stop-color="#F7D2B0" stop-opacity="0"/></radialGradient>
+    <linearGradient id="l-hillA" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#DCE7CE"/><stop offset="100%" stop-color="#C9DAB6"/></linearGradient>
+    <linearGradient id="l-hillB" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#A9C58F"/><stop offset="100%" stop-color="#8FAE78"/></linearGradient>
+    <linearGradient id="l-tree" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#9FC488"/><stop offset="100%" stop-color="#7FAE6C"/></linearGradient>
+    <filter id="l-blur-lg"><feGaussianBlur stdDeviation="30"/></filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#l-sky)"/>
+  <circle cx="260" cy="140" r="320" fill="url(#l-glow1)"/>
+  <circle cx="1340" cy="120" r="300" fill="url(#l-glow2)"/>
+  <circle cx="800" cy="40" r="260" fill="url(#l-glow3)"/>
+
+  <g filter="url(#l-blur-lg)" opacity="0.45">
+    <ellipse cx="450" cy="220" rx="140" ry="100" fill="#F7D2B0"/>
+    <ellipse cx="1150" cy="240" rx="150" ry="110" fill="#CDEEF5"/>
+  </g>
+
+  <!-- sun -->
+  <circle cx="800" cy="130" r="70" fill="#F7EFC6" opacity="0.85"/>
+  <circle cx="800" cy="130" r="46" fill="#FBF6DE"/>
+
+  <!-- hills -->
+  <path d="M0,600 C300,540 520,630 820,570 C1120,510 1360,590 1600,550 L1600,900 L0,900 Z" fill="url(#l-hillA)"/>
+  <path d="M0,740 C300,700 560,760 850,720 C1140,680 1380,750 1600,710 L1600,900 L0,900 Z" fill="url(#l-hillB)"/>
+
+  <!-- rows of soft trees along the horizon -->
+  <g fill="url(#l-tree)" opacity="0.85">
+    <ellipse cx="120" cy="610" rx="44" ry="50"/>
+    <ellipse cx="190" cy="628" rx="34" ry="40"/>
+    <ellipse cx="1420" cy="620" rx="48" ry="54"/>
+    <ellipse cx="1490" cy="640" rx="36" ry="42"/>
+    <ellipse cx="1300" cy="580" rx="30" ry="36"/>
+    <ellipse cx="80" cy="580" rx="28" ry="34"/>
+  </g>
+
+  <!-- gentle path leading toward the viewer -->
+  <path d="M700,900 C740,760 780,700 800,650 C820,700 860,760 900,900 Z" fill="#EADFC0" opacity="0.55"/>
+
+  <!-- fireflies / sparkles -->
+  <g fill="#F7EFC6">
+    <circle cx="300" cy="380" r="4"/><circle cx="1250" cy="360" r="4"/>
+    <circle cx="640" cy="300" r="3"/><circle cx="980" cy="320" r="3"/>
+  </g>
+</svg>

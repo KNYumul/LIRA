@@ -1,0 +1,80 @@
+<svg viewBox="0 0 420 520" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="wash-sky" cx="35%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#CDEEF5"/>
+      <stop offset="100%" stop-color="#9FD8E6"/>
+    </radialGradient>
+    <radialGradient id="wash-butter" cx="65%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#F7EFC6"/>
+      <stop offset="100%" stop-color="#EDDB92"/>
+    </radialGradient>
+    <radialGradient id="wash-peach" cx="50%" cy="20%" r="80%">
+      <stop offset="0%" stop-color="#F7D2B0"/>
+      <stop offset="100%" stop-color="#EDA97A"/>
+    </radialGradient>
+    <linearGradient id="page-sky" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B9E4EE"/>
+      <stop offset="100%" stop-color="#8FCFE0"/>
+    </linearGradient>
+    <linearGradient id="page-butter" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F3E7B0"/>
+      <stop offset="100%" stop-color="#E9D384"/>
+    </linearGradient>
+    <linearGradient id="leaf-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#9FC488"/>
+      <stop offset="100%" stop-color="#7FAE6C"/>
+    </linearGradient>
+    <linearGradient id="spark-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F6C79B"/>
+      <stop offset="100%" stop-color="#EDA871"/>
+    </linearGradient>
+    <filter id="soft-blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+  </defs>
+
+  <!-- watercolor wash blobs -->
+  <g opacity="0.55" filter="url(#soft-blur)">
+    <ellipse cx="150" cy="150" rx="95" ry="80" fill="url(#wash-sky)"/>
+    <ellipse cx="270" cy="160" rx="95" ry="80" fill="url(#wash-butter)"/>
+    <ellipse cx="210" cy="90" rx="70" ry="60" fill="url(#wash-peach)"/>
+  </g>
+
+  <!-- open book: two curved pages meeting at a spine -->
+  <g>
+    <path d="M210,300
+             C 150,300 90,275 65,215
+             C 42,160 48,105 78,70
+             C 100,45 140,42 168,62
+             C 195,82 208,120 210,165
+             Z"
+          fill="url(#page-sky)" opacity="0.92"/>
+    <path d="M210,300
+             C 270,300 330,275 355,215
+             C 378,160 372,105 342,70
+             C 320,45 280,42 252,62
+             C 225,82 212,120 210,165
+             Z"
+          fill="url(#page-butter)" opacity="0.92"/>
+    <!-- page fold lines -->
+    <path d="M210,165 C208,205 205,250 202,292" fill="none" stroke="#E8F6FA" stroke-width="3" opacity="0.6"/>
+    <path d="M210,165 C160,150 118,140 82,132" fill="none" stroke="#EAF3FF" stroke-width="2.5" opacity="0.5"/>
+    <path d="M210,165 C260,150 302,140 338,132" fill="none" stroke="#FBF6DE" stroke-width="2.5" opacity="0.5"/>
+    <!-- spine -->
+    <path d="M210,165 C206,210 206,255 210,300" fill="none" stroke="#6E8FA0" stroke-width="4" stroke-linecap="round" opacity="0.35"/>
+  </g>
+
+  <!-- sprouting leaf / spark, growing from the spine -->
+  <path d="M210,165 C206,140 206,112 214,90" fill="none" stroke="#7FAE6C" stroke-width="5" stroke-linecap="round"/>
+  <path d="M214,90
+           C 190,86 172,68 168,42
+           C 196,42 220,54 230,78
+           C 234,88 226,96 214,90 Z"
+        fill="url(#leaf-grad)"/>
+  <circle cx="248" cy="58" r="10" fill="url(#spark-grad)"/>
+  <circle cx="266" cy="82" r="6" fill="url(#spark-grad)" opacity="0.85"/>
+
+  <!-- wordmark -->
+  <text x="210" y="410" text-anchor="middle" font-family="Quicksand, 'Baloo 2', sans-serif" font-weight="700" font-size="86" fill="#4E6B45" letter-spacing="4">LIRA</text>
+  <text x="210" y="452" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="500" font-size="19" fill="#7A756A" letter-spacing="3.5">LITERACY INTELLIGENCE &amp; READING ASSESSMENT</text>
+</svg>

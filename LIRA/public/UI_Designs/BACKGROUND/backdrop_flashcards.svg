@@ -1,0 +1,38 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="f-base" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F2EEDD"/><stop offset="100%" stop-color="#DDEFF3"/>
+    </linearGradient>
+    <radialGradient id="f-glow1" cx="15%" cy="20%" r="40%"><stop offset="0%" stop-color="#CDEEF5" stop-opacity="0.8"/><stop offset="100%" stop-color="#CDEEF5" stop-opacity="0"/></radialGradient>
+    <radialGradient id="f-glow2" cx="85%" cy="80%" r="42%"><stop offset="0%" stop-color="#F7D2B0" stop-opacity="0.6"/><stop offset="100%" stop-color="#F7D2B0" stop-opacity="0"/></radialGradient>
+    <radialGradient id="f-glow3" cx="80%" cy="15%" r="30%"><stop offset="0%" stop-color="#F7EFC6" stop-opacity="0.6"/><stop offset="100%" stop-color="#F7EFC6" stop-opacity="0"/></radialGradient>
+    <filter id="f-blur"><feGaussianBlur stdDeviation="24"/></filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#f-base)"/>
+  <g filter="url(#f-blur)">
+    <circle cx="240" cy="180" r="220" fill="url(#f-glow1)"/>
+    <circle cx="1360" cy="740" r="240" fill="url(#f-glow2)"/>
+    <circle cx="1280" cy="140" r="180" fill="url(#f-glow3)"/>
+  </g>
+
+  <!-- floating flashcard silhouettes for depth -->
+  <g opacity="0.5">
+    <rect x="90" y="620" width="120" height="86" rx="20" fill="#FFFFFF" transform="rotate(-8 150 663)"/>
+    <rect x="1360" y="560" width="120" height="86" rx="20" fill="#FFFFFF" transform="rotate(10 1420 603)"/>
+    <rect x="1440" y="120" width="100" height="72" rx="18" fill="#FFFFFF" transform="rotate(-6 1490 156)"/>
+    <rect x="70" y="120" width="100" height="72" rx="18" fill="#FFFFFF" transform="rotate(8 120 156)"/>
+  </g>
+
+  <!-- soft ripple rings echoing the mic-listening motif -->
+  <g fill="none" stroke="#9FD8E6" stroke-width="3" opacity="0.35">
+    <circle cx="800" cy="450" r="120"/>
+    <circle cx="800" cy="450" r="180"/>
+    <circle cx="800" cy="450" r="240"/>
+  </g>
+
+  <!-- tiny sparkles -->
+  <g fill="#EDA97A" opacity="0.6">
+    <circle cx="340" cy="380" r="5"/><circle cx="1220" cy="400" r="5"/><circle cx="900" cy="720" r="4"/>
+  </g>
+</svg>

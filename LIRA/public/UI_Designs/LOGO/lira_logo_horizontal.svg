@@ -1,0 +1,55 @@
+<svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="h-page-sky" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B9E4EE"/>
+      <stop offset="100%" stop-color="#8FCFE0"/>
+    </linearGradient>
+    <linearGradient id="h-page-butter" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F3E7B0"/>
+      <stop offset="100%" stop-color="#E9D384"/>
+    </linearGradient>
+    <linearGradient id="h-leaf-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#9FC488"/>
+      <stop offset="100%" stop-color="#7FAE6C"/>
+    </linearGradient>
+    <linearGradient id="h-spark-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F6C79B"/>
+      <stop offset="100%" stop-color="#EDA871"/>
+    </linearGradient>
+    <radialGradient id="h-wash" cx="40%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#F2ECD2" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#F2ECD2" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="100" cy="100" r="92" fill="url(#h-wash)"/>
+
+  <g transform="translate(10,-8) scale(0.62)">
+    <path d="M210,300
+             C 150,300 90,275 65,215
+             C 42,160 48,105 78,70
+             C 100,45 140,42 168,62
+             C 195,82 208,120 210,165
+             Z"
+          fill="url(#h-page-sky)" opacity="0.92"/>
+    <path d="M210,300
+             C 270,300 330,275 355,215
+             C 378,160 372,105 342,70
+             C 320,45 280,42 252,62
+             C 225,82 212,120 210,165
+             Z"
+          fill="url(#h-page-butter)" opacity="0.92"/>
+    <path d="M210,165 C208,205 205,250 202,292" fill="none" stroke="#E8F6FA" stroke-width="3" opacity="0.6"/>
+    <path d="M210,165 C206,210 206,255 210,300" fill="none" stroke="#6E8FA0" stroke-width="4" stroke-linecap="round" opacity="0.35"/>
+    <path d="M210,165 C206,140 206,112 214,90" fill="none" stroke="#7FAE6C" stroke-width="5" stroke-linecap="round"/>
+    <path d="M214,90
+             C 190,86 172,68 168,42
+             C 196,42 220,54 230,78
+             C 234,88 226,96 214,90 Z"
+          fill="url(#h-leaf-grad)"/>
+    <circle cx="248" cy="58" r="10" fill="url(#h-spark-grad)"/>
+    <circle cx="266" cy="82" r="6" fill="url(#h-spark-grad)" opacity="0.85"/>
+  </g>
+
+  <text x="210" y="122" font-family="Quicksand, 'Baloo 2', sans-serif" font-weight="700" font-size="74" fill="#4E6B45" letter-spacing="3">LIRA</text>
+</svg>

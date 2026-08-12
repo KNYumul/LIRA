@@ -1,0 +1,43 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="s-base" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F2EEDD"/><stop offset="100%" stop-color="#FBF6EC"/>
+    </linearGradient>
+    <radialGradient id="s-book-glow" cx="50%" cy="55%" r="45%">
+      <stop offset="0%" stop-color="#FBF6DE" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#FBF6DE" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="s-glow1" cx="10%" cy="85%" r="35%"><stop offset="0%" stop-color="#F7D2B0" stop-opacity="0.55"/><stop offset="100%" stop-color="#F7D2B0" stop-opacity="0"/></radialGradient>
+    <radialGradient id="s-glow2" cx="92%" cy="15%" r="32%"><stop offset="0%" stop-color="#CDEEF5" stop-opacity="0.55"/><stop offset="100%" stop-color="#CDEEF5" stop-opacity="0"/></radialGradient>
+    <linearGradient id="s-page" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#F3EEDD"/></linearGradient>
+    <filter id="s-blur"><feGaussianBlur stdDeviation="28"/></filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#s-base)"/>
+  <g filter="url(#s-blur)">
+    <circle cx="160" cy="780" r="220" fill="url(#s-glow1)"/>
+    <circle cx="1460" cy="120" r="220" fill="url(#s-glow2)"/>
+  </g>
+
+  <!-- soft light spilling from an open book, centered low, echoing "Story Mode" card art -->
+  <circle cx="800" cy="620" r="380" fill="url(#s-book-glow)"/>
+  <path d="M800,560 C700,520 600,540 560,580 L560,700 C600,660 700,650 800,690 Z" fill="url(#s-page)" opacity="0.9"/>
+  <path d="M800,560 C900,520 1000,540 1040,580 L1040,700 C1000,660 900,650 800,690 Z" fill="url(#s-page)" opacity="0.9"/>
+  <path d="M800,560 L800,690" stroke="#E4D9B8" stroke-width="3"/>
+
+  <!-- gentle page-line texture -->
+  <g stroke="#E9DFC4" stroke-width="2" opacity="0.6">
+    <path d="M580,600 C640,590 690,600 790,620" fill="none"/>
+    <path d="M580,630 C640,620 690,630 790,650" fill="none"/>
+    <path d="M810,620 C900,600 950,590 1020,600" fill="none"/>
+    <path d="M810,650 C900,630 950,620 1020,630" fill="none"/>
+  </g>
+
+  <!-- floating story motes -->
+  <g fill="#F7EFC6" opacity="0.8">
+    <circle cx="800" cy="380" r="6"/><circle cx="740" cy="330" r="4"/><circle cx="870" cy="320" r="4"/>
+  </g>
+  <g fill="#E2938C" opacity="0.55">
+    <circle cx="300" cy="220" r="5"/><circle cx="1280" cy="700" r="5"/>
+  </g>
+</svg>

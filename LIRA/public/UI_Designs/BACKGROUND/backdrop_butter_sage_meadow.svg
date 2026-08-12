@@ -1,0 +1,27 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="c2-base" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FBF6EC"/><stop offset="100%" stop-color="#EFEFD4"/>
+    </linearGradient>
+    <radialGradient id="c2-glow1" cx="18%" cy="25%" r="40%"><stop offset="0%" stop-color="#F7EFC6" stop-opacity="0.85"/><stop offset="100%" stop-color="#F7EFC6" stop-opacity="0"/></radialGradient>
+    <radialGradient id="c2-glow2" cx="85%" cy="70%" r="46%"><stop offset="0%" stop-color="#D9E4CD" stop-opacity="0.9"/><stop offset="100%" stop-color="#D9E4CD" stop-opacity="0"/></radialGradient>
+    <radialGradient id="c2-glow3" cx="70%" cy="10%" r="26%"><stop offset="0%" stop-color="#EDD98C" stop-opacity="0.55"/><stop offset="100%" stop-color="#EDD98C" stop-opacity="0"/></radialGradient>
+    <filter id="c2-blur"><feGaussianBlur stdDeviation="30"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#c2-base)"/>
+  <g filter="url(#c2-blur)">
+    <ellipse cx="320" cy="220" rx="270" ry="200" fill="url(#c2-glow1)"/>
+    <ellipse cx="1300" cy="680" rx="300" ry="220" fill="url(#c2-glow2)"/>
+    <ellipse cx="1180" cy="120" rx="200" ry="140" fill="url(#c2-glow3)"/>
+  </g>
+  <!-- meadow ground -->
+  <path d="M0,660 C300,610 560,690 850,640 C1140,590 1380,660 1600,620 L1600,900 L0,900 Z" fill="#C9DAB6" opacity="0.55"/>
+  <path d="M0,760 C300,730 560,790 850,750 C1140,710 1380,770 1600,740 L1600,900 L0,900 Z" fill="#AFC79A" opacity="0.55"/>
+  <!-- scattered wildflowers -->
+  <g>
+    <g transform="translate(220,720)"><circle r="7" fill="#EDD98C"/><circle cx="12" cy="4" r="6" fill="#F7EFC6"/><circle cx="-10" cy="6" r="6" fill="#F7EFC6"/></g>
+    <g transform="translate(1360,780)"><circle r="7" fill="#EDD98C"/><circle cx="12" cy="4" r="6" fill="#F7EFC6"/><circle cx="-10" cy="6" r="6" fill="#F7EFC6"/></g>
+    <g transform="translate(720,820)"><circle r="6" fill="#E2938C"/><circle cx="10" cy="3" r="5" fill="#F3C4C0"/><circle cx="-8" cy="5" r="5" fill="#F3C4C0"/></g>
+    <g transform="translate(1040,700)"><circle r="6" fill="#9FD8E6"/><circle cx="10" cy="3" r="5" fill="#CDEEF5"/><circle cx="-8" cy="5" r="5" fill="#CDEEF5"/></g>
+  </g>
+</svg>

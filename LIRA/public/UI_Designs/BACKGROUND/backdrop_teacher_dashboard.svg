@@ -1,0 +1,37 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="t-base" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FBF6EC"/><stop offset="100%" stop-color="#F5EFDD"/>
+    </linearGradient>
+    <radialGradient id="t-glow1" cx="8%" cy="6%" r="30%"><stop offset="0%" stop-color="#CDEEF5" stop-opacity="0.5"/><stop offset="100%" stop-color="#CDEEF5" stop-opacity="0"/></radialGradient>
+    <radialGradient id="t-glow2" cx="94%" cy="92%" r="34%"><stop offset="0%" stop-color="#D9E4CD" stop-opacity="0.55"/><stop offset="100%" stop-color="#D9E4CD" stop-opacity="0"/></radialGradient>
+    <radialGradient id="t-glow3" cx="92%" cy="8%" r="22%"><stop offset="0%" stop-color="#F7EFC6" stop-opacity="0.45"/><stop offset="100%" stop-color="#F7EFC6" stop-opacity="0"/></radialGradient>
+    <filter id="t-blur"><feGaussianBlur stdDeviation="34"/></filter>
+    <pattern id="t-grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M60,0 L0,0 0,60" fill="none" stroke="#EDE4CC" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#t-base)"/>
+  <rect width="1600" height="900" fill="url(#t-grid)" opacity="0.5"/>
+
+  <g filter="url(#t-blur)">
+    <circle cx="120" cy="60" r="240" fill="url(#t-glow1)"/>
+    <circle cx="1500" cy="840" r="260" fill="url(#t-glow2)"/>
+    <circle cx="1480" cy="70" r="200" fill="url(#t-glow3)"/>
+  </g>
+
+  <!-- faint organic corner accents, kept quiet so charts/tables stay legible -->
+  <g opacity="0.5">
+    <path d="M0,0 C60,40 40,120 0,150 Z" fill="#E3EFD6"/>
+    <path d="M1600,900 C1540,860 1560,780 1600,750 Z" fill="#E3EFD6"/>
+  </g>
+
+  <!-- tiny leaf accents, echoing the logo, kept subtle in the corners -->
+  <g opacity="0.35" transform="translate(40,780)">
+    <path d="M0,0 C-10,-16 -6,-34 8,-40 C14,-24 8,-8 0,0 Z" fill="#7FAE6C"/>
+  </g>
+  <g opacity="0.3" transform="translate(1540,120) scale(-1,1)">
+    <path d="M0,0 C-10,-16 -6,-34 8,-40 C14,-24 8,-8 0,0 Z" fill="#7FAE6C"/>
+  </g>
+</svg>
