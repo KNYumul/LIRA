@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './FaqSection.css';
 
 import bunnyIcon from '../assets/icons/bunny.jpg';
@@ -70,7 +70,7 @@ function FaqSection() {
   };
 
   return (
-    <section className="faq-section">
+    <section className="faq-section" id="help-center">
       <div className="faq-container">
         <span className="faq-pill">Help Center</span>
 

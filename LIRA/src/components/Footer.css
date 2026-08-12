@@ -1,0 +1,148 @@
+.lira-footer {
+  background: #fffaf1;
+  border-top: 3px solid #9b58ff;
+  color: #9d9b98;
+  font-family: "Poppins", "Segoe UI", sans-serif;
+  padding: 54px 40px 36px;
+}
+
+.lira-footer__grid,
+.lira-footer__legal {
+  width: 100%;
+  max-width: 1650px;
+  margin: 0 auto;
+}
+
+.lira-footer__grid {
+  display: grid;
+  grid-template-columns: minmax(450px, 2.75fr) repeat(3, minmax(155px, 1fr));
+  gap: 56px;
+  align-items: start;
+}
+
+.lira-footer__intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 30px;
+}
+
+.lira-footer__logo {
+  display: block;
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+}
+
+.lira-footer__intro p {
+  max-width: 440px;
+  margin: 12px 0 0;
+  color: #6f6e6d;
+  font-size: 1rem;
+  line-height: 1.42;
+}
+
+.lira-footer__intro strong {
+  font-weight: 700;
+}
+
+.lira-footer__column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  color: #aaa7a2;
+  font-style: normal;
+}
+
+.lira-footer__column h2 {
+  margin: 0 0 27px;
+  color: #999794;
+  font-family: "Baloo 2", "Poppins", sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.lira-footer__column a,
+.lira-footer__column span {
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1.48;
+  text-decoration: none;
+}
+
+.lira-footer__column a:hover,
+.lira-footer__column a:focus-visible {
+  color: #6d995d;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lira-footer__portal {
+  align-self: flex-end;
+  margin-top: 25px;
+}
+
+.lira-footer__legal {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 580px;
+  margin: 27px 0 0;
+  padding-top: 22px;
+  border-top: 1px solid #7b7975;
+  color: #9d9b98;
+  font-size: 0.73rem;
+  line-height: 1.3;
+}
+
+@media (max-width: 1050px) {
+  .lira-footer__grid {
+    grid-template-columns: minmax(300px, 2fr) repeat(2, minmax(150px, 1fr));
+  }
+
+  .lira-footer__contact {
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 700px) {
+  .lira-footer {
+    padding: 38px 24px 28px;
+  }
+
+  .lira-footer__grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .lira-footer__intro {
+    gap: 20px;
+  }
+
+  .lira-footer__logo {
+    width: 76px;
+    height: 76px;
+  }
+
+  .lira-footer__intro p {
+    margin-top: 4px;
+    font-size: 0.9rem;
+  }
+
+  .lira-footer__contact {
+    grid-column: auto;
+  }
+
+  .lira-footer__column h2 {
+    margin-bottom: 12px;
+  }
+
+  .lira-footer__portal {
+    align-self: flex-start;
+    margin-top: 12px;
+  }
+
+  .lira-footer__legal {
+    margin-top: 30px;
+  }
+}

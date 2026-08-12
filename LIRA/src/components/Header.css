@@ -1,0 +1,142 @@
+.lira-header {
+  display: flex;
+  justify-content: center;
+  padding: 12px 10px;
+  background: #fbe9dc;
+  color: #3a3a3a;
+  font-family: "Poppins", "Segoe UI", sans-serif;
+}
+
+.lira-header *,
+.lira-header *::before,
+.lira-header *::after {
+  box-sizing: border-box;
+}
+
+.lira-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1280px;
+}
+
+.lira-header__brand,
+.lira-header__right,
+.lira-header__actions,
+.lira-header__links {
+  display: flex;
+  align-items: center;
+}
+
+.lira-header__brand {
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.lira-header__logo {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.lira-header__brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.lira-header__brand-text strong {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.lira-header__brand-text small {
+  color: #6b6b6b;
+  font-size: 0.5rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.lira-header__right {
+  gap: 40px;
+}
+
+.lira-header__links {
+  gap: 30px;
+}
+
+.lira-header__links a {
+  color: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.lira-header__links a:hover,
+.lira-header__links a:focus-visible {
+  color: #4a7a5a;
+}
+
+.lira-header__actions {
+  gap: 12px;
+}
+
+.lira-header__icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.lira-header__login {
+  border-radius: 999px;
+  padding: 8px 18px;
+  background: #e8908a;
+  box-shadow: 0 6px 16px rgba(232, 144, 138, 0.35);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.lira-header__login:hover,
+.lira-header__login:focus-visible {
+  background: #de7c76;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 700px) {
+  .lira-header {
+    padding: 14px 20px;
+  }
+
+  .lira-header__inner,
+  .lira-header__right {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .lira-header__right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .lira-header__links {
+    gap: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .lira-header__links a {
+    font-size: 0.78rem;
+  }
+
+  .lira-header__brand-text small,
+  .lira-header__icon {
+    display: none;
+  }
+}

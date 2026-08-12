@@ -1,12 +1,9 @@
-import React from "react";
 import "./WelcomePage.css";
 
 // These are served straight from /public/UI_Designs, so plain string
 // paths are used instead of imports — no bundling needed for these.
-const logo = "/UI_Designs/LOGO/lira_logo_primary.svg";
 const foxMascot = "/UI_Designs/ANIMALS/mascot_fox.svg";
 const owlMascot = "/UI_Designs/ANIMALS/mascot_owl.svg";
-const navFoxIcon = "/UI_Designs/ANIMALS/F_Fox.png";
 const bearIcon = "/UI_Designs/ANIMALS/A_Bear.png";
 const frogIcon = "/UI_Designs/ANIMALS/G_Frog.png";
 const deerIcon = "/UI_Designs/ANIMALS/J_Deer.png";
@@ -17,37 +14,7 @@ const bgSunrise = "/UI_Designs/BACKGROUND/backdrop_coral_peach_sunrise.svg";
 
 export default function WelcomePage() {
   return (
-    <div className="lira-page">
-      {/* ---------- NAV ---------- */}
-      <header className="lira-nav">
-        <div className="lira-nav__inner">
-          <div className="lira-nav__brand">
-            <img src={logo} alt="LIRA logo" className="lira-nav__logo" />
-            <div className="lira-nav__brandtext">
-              <span className="lira-nav__name">LIRA</span>
-              <span className="lira-nav__tagline">
-                LITERACY INTELLIGENCE AND READING ASSESSMENT
-              </span>
-            </div>
-          </div>
-
-         
-
-          <div className="lira-nav__right">
-  <nav className="lira-nav__links">
-    <a href="#about">About</a>
-    <a href="#how-it-works">How It Works</a>
-    <a href="#features">Features</a>
-  </nav>
-
-  <div className="lira-nav__actions">
-    <img src={navFoxIcon} alt="" className="lira-nav__icon" />
-    <button className="btn btn--pill btn--coral">Login</button>
-  </div>
-</div>
-        </div>
-      </header>
-
+    <div className="lira-page" id="top">
       {/* ---------- HERO ---------- */}
       <section
         className="lira-hero"

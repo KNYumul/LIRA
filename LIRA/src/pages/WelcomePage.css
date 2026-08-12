@@ -99,101 +99,6 @@
   transform: translateY(-1px);
 }
 
-/* ============ Nav ============ */
-.lira-nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 10px;
-  background: var(--peach);
-}
-
-.lira-nav__inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 1280px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-.lira-nav__brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-right: 32px;
-  flex-shrink: 0;
-}
-
-.lira-nav__logo {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-.lira-nav__brandtext {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
-
-.lira-nav__name {
-  font-weight: 800;
-  font-size: 1.05rem;
-  letter-spacing: 0.3px;
-}
-
-.lira-nav__tagline {
-  font-size: 0.5rem;
-  letter-spacing: 0.3px;
-  color: var(--ink-soft);
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.lira-nav__right {
-  display: flex;
-  align-items: center;
-  gap: 40px;
-}
-
-.lira-nav__links {
-  display: flex;
-  gap: 30px;
-}
-
-.lira-nav__links a {
-  text-decoration: none;
-  color: var(--ink);
-  font-weight: 500;
-  font-size: 0.88rem;
-}
-
-.lira-nav__links a:hover {
-  color: var(--green-text);
-}
-
-.lira-nav__actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.lira-nav__icon {
-  width: 24px;
-  height: 24px;
-  max-width: 24px;
-  max-height: 24px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-.lira-nav__actions .btn {
-  padding: 8px 18px;
-  font-size: 0.85rem;
-}
-
 /* ============ Hero ============ */
 .lira-hero {
   position: relative;
@@ -480,15 +385,6 @@
     display: none;
   }
 
-  .lira-nav {
-    flex-direction: column;
-    gap: 14px;
-    padding: 16px 24px;
-  }
-
-  .lira-nav__links {
-    gap: 20px;
-  }
 }
 
 @media (max-width: 600px) {
