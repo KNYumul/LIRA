@@ -1,7 +1,8 @@
 import WelcomePage from "./components/WelcomePage";
+import FaqSection from "./components/FaqSection";
 
 function App() {
-  return <WelcomePage />;
+  return <FaqSection />;
 }
 
 export default App;
