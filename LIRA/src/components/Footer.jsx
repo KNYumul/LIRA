@@ -41,7 +41,7 @@ function Footer() {
           <a href="mailto:hello@lira-reading.ph">hello@lira-reading.ph</a>
           <span>Department of Education</span>
           <span>Pasig City, Philippines</span>
-          <Link className="lira-footer__portal" to="/admin/login"> Admin Portal </Link>
+          <Link className="lira-footer__portal" to="/admin/login"><strong>Admin Portal</strong></Link>
         </address>
       </div>
 

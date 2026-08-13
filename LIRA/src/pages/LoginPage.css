@@ -1,0 +1,324 @@
+.login-page {
+  color: #545454;
+  font-family: "Poppins", "Segoe UI", sans-serif;
+}
+
+.login-hero {
+  min-height: 980px;
+  padding: 70px 24px;
+  border-bottom: 1px solid #747474;
+  background: #fbf5e9 url("/UI_Designs/BACKGROUND/background_forest.svg") center bottom / cover no-repeat;
+}
+
+.login-choice {
+  width: min(100%, 930px);
+  margin: 0 auto 78px;
+  padding: 58px 80px;
+  border-radius: 80px;
+  background: linear-gradient(120deg, rgba(210, 244, 204, 0.92), rgba(154, 219, 205, 0.88));
+  text-align: center;
+}
+
+.login-choice h1 {
+  margin: 0;
+  font-family: "Baloo 2", "Poppins", sans-serif;
+  font-size: clamp(2.45rem, 5vw, 4.2rem);
+  line-height: 1;
+}
+
+.login-choice p {
+  max-width: 710px;
+  margin: 32px auto;
+  font-size: clamp(1rem, 1.5vw, 1.32rem);
+  line-height: 1.42;
+}
+
+.login-choice__actions,
+.teacher-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 26px;
+}
+
+.login-choice button,
+.teacher-tabs button {
+  padding: 12px 35px;
+  border: 2px solid #aadbc9;
+  border-radius: 999px;
+  background: #fff;
+  color: #5d6860;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.login-choice button.is-active {
+  border-color: #78977e;
+  background: #78977e;
+  color: #fff;
+}
+
+.portal-card {
+  position: relative;
+  width: min(100%, 1000px);
+  margin: 0 auto;
+  padding: 43px 68px 48px;
+  border: 4px solid #e7948c;
+  border-radius: 55px;
+  background: rgba(255, 255, 255, 0.97);
+}
+
+.portal-card--student {
+  max-width: 1000px;
+  border-color: #a6d9c0;
+}
+
+.portal-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 75px;
+}
+
+.portal-card__heading img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+.portal-card__heading h2 {
+  margin: 0;
+  font-family: "Baloo 2", "Poppins", sans-serif;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.portal-card__heading p {
+  margin: 7px 0 0;
+  font-size: 0.9rem;
+}
+
+.student-bunting {
+  position: absolute;
+  top: 0;
+  right: 45px;
+  display: flex;
+  overflow: hidden;
+  width: 450px;
+  height: 104px;
+  align-items: start;
+  justify-content: space-between;
+  border-top: 4px solid #545454;
+  border-radius: 50%;
+  transform: translateY(25px) rotate(2deg);
+}
+
+.student-bunting i {
+  display: block;
+  width: 0;
+  height: 0;
+  border-top: 75px solid #dff1e9;
+  border-right: 36px solid transparent;
+  border-left: 36px solid transparent;
+}
+
+.student-bunting i:nth-child(even) {
+  border-top-color: #9fd4b9;
+}
+
+.portal-fields {
+  display: grid;
+  gap: 28px 42px;
+  margin-top: 45px;
+}
+
+.portal-fields--two,
+.portal-fields--teacher {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.portal-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #808080;
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+.portal-fields .field-label {
+  display: inline;
+}
+
+.portal-fields .field-label em {
+  color: #e48b84;
+  font-style: normal;
+}
+
+.portal-fields input {
+  width: 100%;
+  height: 54px;
+  padding: 0 14px;
+  border: 2px solid #efc4b7;
+  border-radius: 11px;
+  outline: 0;
+  background: #ffe7cc;
+  color: #4d4d4d;
+  font: inherit;
+}
+
+.portal-card--student .portal-fields input {
+  border-color: #b7c9bc;
+  background: #eef7f1;
+}
+
+.portal-fields input:focus {
+  box-shadow: 0 0 0 3px rgba(122, 151, 126, 0.2);
+}
+
+.portal-submit {
+  display: block;
+  min-width: 280px;
+  height: 58px;
+  margin: 48px auto 0;
+  border: 0;
+  border-radius: 20px;
+  background: #e59088;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.portal-card--student .portal-submit {
+  background: #78977e;
+}
+
+.teacher-tabs {
+  position: absolute;
+  top: 42px;
+  right: 52px;
+  gap: 0;
+  width: 490px;
+  padding: 5px;
+  border-radius: 999px;
+  background: #ffe5c9;
+}
+
+.teacher-tabs button {
+  flex: 1;
+  padding: 11px 20px;
+  border: 0;
+  background: transparent;
+}
+
+.teacher-tabs button.is-active {
+  background: #e59088;
+  color: #fff;
+}
+
+.portal-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 37px 0 24px;
+  color: #777;
+  font-size: 0.8rem;
+}
+
+.portal-divider::before,
+.portal-divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid #c9c9c9;
+}
+
+.google-button {
+  display: block;
+  max-width: 390px;
+  margin: 0 auto;
+  padding: 14px 25px;
+  border: 2px solid #f1c6b6;
+  border-radius: 999px;
+  background: #fff;
+  color: #777;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+.google-button b {
+  color: #4285f4;
+  font-size: 1.5rem;
+  line-height: 0;
+  vertical-align: middle;
+}
+
+@media (max-width: 800px) {
+  .login-hero {
+    padding: 40px 16px;
+  }
+
+  .login-choice {
+    margin-bottom: 38px;
+    padding: 42px 24px;
+    border-radius: 42px;
+  }
+
+  .portal-card {
+    padding: 34px 28px;
+    border-radius: 34px;
+  }
+
+  .teacher-tabs {
+    position: static;
+    width: 100%;
+    margin: 27px 0 0;
+  }
+
+  .student-bunting {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .login-hero {
+    min-height: 850px;
+  }
+
+  .login-choice__actions {
+    gap: 12px;
+  }
+
+  .login-choice button {
+    padding: 10px 17px;
+    font-size: 0.75rem;
+  }
+
+  .portal-card__heading img {
+    width: 58px;
+    height: 58px;
+  }
+
+  .portal-card__heading h2 {
+    font-size: 1.55rem;
+  }
+
+  .portal-fields--two,
+  .portal-fields--teacher {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-fields {
+    gap: 20px;
+    margin-top: 32px;
+  }
+
+  .portal-submit {
+    min-width: 100%;
+    margin-top: 32px;
+  }
+}

@@ -5,6 +5,7 @@ import FaqSection from "./pages/FaqSection";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import AdminLoginPage from "./pages/Admin-LoginPage";
+import LoginPage from "./pages/LoginPage";
 
 function ScrollToHash() {
   const { hash, pathname } = useLocation();
@@ -31,6 +32,7 @@ function App() {
       <Routes>
         <Route path="/" element={<WelcomePage />} />
         <Route path="/help-center" element={<FaqSection />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
       </Routes>
       <Footer />
