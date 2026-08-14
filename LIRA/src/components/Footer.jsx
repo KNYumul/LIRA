@@ -32,8 +32,8 @@ function Footer() {
           <h2>Resources</h2>
           <Link to="/help-center">Help Center</Link>
           <a href="#schools">For DepEd Schools</a>
-          <a href="#privacy">Privacy Policy</a>
-          <a href="#terms">Terms of Use</a>
+          <Link to="/privacy-policy">Privacy Policy</Link>
+          <Link to="/terms-of-use">Terms of Use</Link>
         </nav>
 
         <address className="lira-footer__column lira-footer__contact">

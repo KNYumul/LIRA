@@ -1,5 +1,5 @@
 import React from "react";
-import PolicyLayout from "../components/PolicyLayout.jsx";
+import PolicyLayout from "./PolicyLayout.jsx";
 
 const SECTIONS = [
   {

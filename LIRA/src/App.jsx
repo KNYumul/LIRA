@@ -6,6 +6,8 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import AdminLoginPage from "./pages/Admin-LoginPage";
 import LoginPage from "./pages/LoginPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfUse from "./pages/TermsOfUse";
 
 function ScrollToHash() {
   const { hash, pathname } = useLocation();
@@ -34,6 +36,8 @@ function App() {
         <Route path="/help-center" element={<FaqSection />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-use" element={<TermsOfUse />} />
       </Routes>
       <Footer />
     </>

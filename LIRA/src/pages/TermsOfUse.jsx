@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import PolicyLayout from "../components/PolicyLayout.jsx";
+import PolicyLayout from "./PolicyLayout.jsx";
 
 const SECTIONS = [
   {
@@ -68,7 +68,7 @@ const SECTIONS = [
       <p>
         Reading recordings, accuracy scores, and risk levels are used solely
         to support literacy screening and are visible only to the learner's
-        teacher. See our <Link to="/">Privacy Policy</Link> for full details
+        teacher. See our <Link to="/privacy-policy">Privacy Policy</Link> for full details
         on how learner data is handled.
       </p>
     ),
