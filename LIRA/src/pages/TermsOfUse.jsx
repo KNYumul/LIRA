@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import PolicyLayout from "./PolicyLayout.jsx";
+import PolicyLayout from "../components/PolicyLayout.jsx";
 
 const SECTIONS = [
   {
