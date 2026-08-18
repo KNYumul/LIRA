@@ -1,0 +1,146 @@
+/* ============ Nav ============ */
+.lira-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 10px;
+  background: var(--peach, #fbe9dc);
+}
+
+.lira-nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.lira-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 32px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.lira-nav__logo {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.lira-nav__brandtext {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.lira-nav__name {
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: 0.3px;
+  color: var(--ink, #3a3a3a);
+}
+
+.lira-nav__tagline {
+  font-size: 0.5rem;
+  letter-spacing: 0.3px;
+  color: var(--ink-soft, #6b6b6b);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.lira-nav__right {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.lira-nav__links {
+  display: flex;
+  gap: 30px;
+}
+
+.lira-nav__links a,
+.lira-nav__linkbtn {
+  text-decoration: none;
+  color: var(--ink, #3a3a3a);
+  font-weight: 500;
+  font-size: 0.88rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+}
+
+.lira-nav__links a:hover,
+.lira-nav__linkbtn:hover {
+  color: var(--green-text, #4a7a5a);
+}
+
+.lira-nav__linkbtn--active {
+  color: var(--green-text, #4a7a5a);
+  font-weight: 700;
+}
+
+.lira-nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lira-nav__icon {
+  width: 24px;
+  height: 24px;
+  max-width: 24px;
+  max-height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.lira-nav__actions .btn {
+  padding: 8px 18px;
+  font-size: 0.85rem;
+}
+
+/* Buttons (shared across the app) */
+.btn {
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.btn--pill {
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-size: 0.95rem;
+}
+
+.btn--coral {
+  background: var(--coral, #e8908a);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(232, 144, 138, 0.35);
+}
+
+.btn--coral:hover {
+  background: var(--coral-dark, #de7c76);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 900px) {
+  .lira-nav {
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px 24px;
+  }
+
+  .lira-nav__links {
+    gap: 20px;
+  }
+}

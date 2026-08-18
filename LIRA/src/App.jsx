@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes, useLocation, Outlet } from "react-router-dom";
 import WelcomePage from "./pages/WelcomePage";
 import FaqSection from "./pages/FaqSection";
 import Header from "./components/Header";
@@ -8,7 +8,12 @@ import AdminLoginPage from "./pages/Admin-LoginPage";
 import LoginPage from "./pages/LoginPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
-import StoryMode from "./components/StoryMode"; // <-- 1. Import StoryMode here (removed the raw import "./components/StoryMode")
+import StoryMode from "./components/StoryMode";
+
+// Newly inserted pages — standalone screens, not part of the public site.
+import Category from "./pages/Category";
+import FlashcardDifficulty from "./pages/FlashcardDifficulty";
+import FlashcardSession from "./pages/FlashcardSession";
 
 function ScrollToHash() {
   const { hash, pathname } = useLocation();
@@ -27,21 +32,39 @@ function ScrollToHash() {
   return null;
 }
 
+// Wraps the existing public/marketing pages with the site-wide Header + Footer,
+// exactly as before. Nothing about these routes changed.
+function PublicLayout() {
+  return (
+    <>
+      <Header />
+      <Outlet />
+      <Footer />
+    </>
+  );
+}
+
 function App() {
   return (
     <>
       <ScrollToHash />
-      <Header />
       <Routes>
-        <Route path="/" element={<WelcomePage />} />
-        <Route path="/help-center" element={<FaqSection />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/admin/login" element={<AdminLoginPage />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/terms-of-use" element={<TermsOfUse />} />
-        <Route path="/story-mode" element={<StoryMode />} /> {/* <-- 2. Add the route here */}
+        {/* ---------- Existing public site (unchanged) ---------- */}
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<WelcomePage />} />
+          <Route path="/help-center" element={<FaqSection />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-use" element={<TermsOfUse />} />
+          <Route path="/story-mode" element={<StoryMode />} />
+        </Route>
+
+        {/* ---------- Newly inserted pages (standalone, own header) ---------- */}
+        <Route path="/category" element={<Category />} />
+        <Route path="/flashcards" element={<FlashcardDifficulty />} />
+        <Route path="/flashcards/:difficulty" element={<FlashcardSession />} />
       </Routes>
-      <Footer />
     </>
   );
 }

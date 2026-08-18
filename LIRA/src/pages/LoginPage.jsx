@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./LoginPage.css";
 
 const fox = "/UI_Designs/ANIMALS/mascot_fox.svg";
 const owl = "/UI_Designs/ANIMALS/mascot_owl.svg";
 
 function LoginPage() {
+  const navigate = useNavigate();
   const [portal, setPortal] = useState("student");
   const [teacherMode, setTeacherMode] = useState("login");
 
@@ -13,6 +15,10 @@ function LoginPage() {
 
   function submitForm(event) {
     event.preventDefault();
+
+    if (isStudent) {
+      navigate("/category");
+    }
   }
 
   return (

@@ -1,0 +1,182 @@
+.fc-page {
+  --ink: #3a3a3a;
+  --ink-soft: #6b6b6b;
+
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  font-family: "Poppins", "Segoe UI", -apple-system, BlinkMacSystemFont,
+    sans-serif;
+  color: var(--ink);
+  background-color: #eaf4ee;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  box-sizing: border-box;
+}
+
+.fc-page * {
+  box-sizing: border-box;
+}
+
+.fc-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 32px 48px 0;
+}
+
+.fc-back {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+}
+
+.fc-back:hover {
+  background: #f4f4f4;
+}
+
+.fc-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  flex: 1;
+}
+
+.lang-toggle {
+  display: inline-flex;
+  background: #fff;
+  border-radius: 999px;
+  padding: 4px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.lang-toggle__option {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 8px 22px;
+  border-radius: 999px;
+  color: var(--ink-soft);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.lang-toggle__option--active {
+  background: #f2c48c;
+  color: var(--ink);
+}
+
+.fc-main {
+  display: flex;
+  justify-content: center;
+  padding: 70px 24px 100px;
+}
+
+.fc-cards {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.fc-card {
+  background: #fdf6ee;
+  border-radius: 20px;
+  width: 260px;
+  padding: 28px 22px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-top: 4px solid transparent;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.fc-card--blue {
+  border-top-color: #8fc8e8;
+}
+
+.fc-card--coral {
+  border-top-color: #e8918c;
+}
+
+.fc-card--green {
+  border-top-color: #7fa87f;
+}
+
+.fc-card__icon {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  margin-bottom: 14px;
+}
+
+.fc-card h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+.fc-card p {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 0 0 18px;
+}
+
+.fc-card__start {
+  align-self: flex-end;
+  border: none;
+  border-radius: 999px;
+  background: #e4e4e4;
+  color: var(--ink);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fc-card--blue .fc-card__start {
+  background: #cdeaf6;
+}
+
+.fc-card--coral .fc-card__start {
+  background: #f6d3d0;
+}
+
+.fc-card--green .fc-card__start {
+  background: #d9e8d3;
+}
+
+.fc-card__start:hover {
+  filter: brightness(0.95);
+}
+
+@media (max-width: 700px) {
+  .fc-header {
+    flex-wrap: wrap;
+    padding: 24px;
+  }
+
+  .fc-title {
+    width: 100%;
+    order: 1;
+  }
+}
