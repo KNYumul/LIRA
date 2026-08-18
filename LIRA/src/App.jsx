@@ -9,6 +9,7 @@ import LoginPage from "./pages/LoginPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import StoryMode from "./components/StoryMode"; // <-- 1. Import StoryMode here (removed the raw import "./components/StoryMode")
+import StudentDashboard from "./pages/Testing-StudentDashboard";
 
 function ScrollToHash() {
   const { hash, pathname } = useLocation();
@@ -40,6 +41,7 @@ function App() {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-use" element={<TermsOfUse />} />
         <Route path="/story-mode" element={<StoryMode />} /> {/* <-- 2. Add the route here */}
+        <Route path="/testing-student-dashboard" element={<StudentDashboard />} />
       </Routes>
       <Footer />
     </>
