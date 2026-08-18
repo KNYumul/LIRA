@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import "./WelcomePage.css";
 
 // These are served straight from /public/UI_Designs, so plain string
@@ -13,6 +14,14 @@ const bgMeadow = "/UI_Designs/BACKGROUND/backdrop_butter_sage_meadow.svg";
 const bgSunrise = "/UI_Designs/BACKGROUND/backdrop_coral_peach_sunrise.svg";
 
 export default function WelcomePage() {
+  const navigate = useNavigate();
+
+  const scrollToFlow = () => {
+    document
+      .querySelector("#how-it-works")
+      ?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <div className="lira-page" id="top">
       {/* ---------- HERO ---------- */}
@@ -52,10 +61,16 @@ export default function WelcomePage() {
             </p>
 
             <div className="lira-hero__ctas">
-              <button className="btn btn--pill btn--coral btn--lg">
+              <button
+                className="btn btn--pill btn--coral btn--lg"
+                onClick={() => navigate("/login")}
+              >
                 Get Started
               </button>
-              <button className="btn btn--pill btn--outline btn--lg">
+              <button
+                className="btn btn--pill btn--outline btn--lg"
+                onClick={scrollToFlow}
+              >
                 See How it works ↓
               </button>
             </div>

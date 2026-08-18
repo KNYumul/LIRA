@@ -6,7 +6,6 @@ const fox = "/UI_Designs/ANIMALS/mascot_fox.svg";
 const owl = "/UI_Designs/ANIMALS/mascot_owl.svg";
 
 function LoginPage() {
-  const navigate = useNavigate();
   const [portal, setPortal] = useState("student");
   const [teacherMode, setTeacherMode] = useState("login");
 
@@ -48,7 +47,7 @@ function LoginPage() {
       // console.log("Logged in learner:", data.learner);
 
       alert(`Welcome, ${data.learner.firstName}!`);
-      navigate("/testing-student-dashboard");
+      navigate("/category");
 
     } catch (error) {
       console.error("Login error:", error);
