@@ -4,6 +4,8 @@ const cors = require("cors");
 require("dotenv").config();
 
 const learnerRoutes = require("./routes/learner");
+const teacherRoutes = require("./routes/teacher");
+const adminRoutes = require("./routes/admin");
 
 const app = express();
 
@@ -11,6 +13,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/learners", learnerRoutes);
+app.use("/api/teachers", teacherRoutes);
+app.use("/api/admin", adminRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI, {dbname: "LIRA"} )

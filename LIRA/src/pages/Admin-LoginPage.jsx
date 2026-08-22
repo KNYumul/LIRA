@@ -1,18 +1,42 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Admin-LoginPage.css";
 
 const mascot = "/UI_Designs/ANIMALS/K_Squirrel.png";
 
 function AdminLoginPage() {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   function updateField(event) {
     const { name, value } = event.target;
     setCredentials((current) => ({ ...current, [name]: value }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:5000/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Admin login failed.");
+        return;
+      }
+
+      localStorage.setItem("liraSession", JSON.stringify({ role: "admin", user: data.admin }));
+      navigate("/admin");
+    } catch (error) {
+      console.error("Admin login error:", error);
+      setError("Unable to connect to the server.");
+    }
   }
 
   return (
@@ -46,6 +70,7 @@ function AdminLoginPage() {
           />
 
           <button type="submit">Log in</button>
+          {error && <p role="alert">{error}</p>}
         </form>
       </section>
     </main>

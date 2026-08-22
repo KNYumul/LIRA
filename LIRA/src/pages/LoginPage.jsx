@@ -9,13 +9,15 @@ function LoginPage() {
   const navigate = useNavigate();
   const [portal, setPortal] = useState("student");
   const [teacherMode, setTeacherMode] = useState("login");
+  const [error, setError] = useState("");
 
   const isStudent = portal === "student";
   const isSignUp = teacherMode === "signup";
 
 
   async function submitForm(event) {
-  event.preventDefault();
+    event.preventDefault();
+    setError("");
 
   const formData = new FormData(event.target);
 
@@ -25,7 +27,7 @@ function LoginPage() {
   console.log("Lastname:", lastName);
   console.log("Birthdate:", birthdate);
 
-  if (isStudent) {
+    if (isStudent) {
     try {
       const response = await fetch("http://localhost:5000/api/learners/login", {
         method: "POST",
@@ -41,7 +43,7 @@ function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message);
+         setError(data.message);
         return;
       }
 
@@ -51,9 +53,40 @@ function LoginPage() {
 
     } catch (error) {
       console.error("Login error:", error);
-      alert("Unable to connect to the server.");
-    }
-  }
+       setError("Unable to connect to the server.");
+     }
+    } else {
+      const endpoint = isSignUp ? "/signup" : "/login";
+      const payload = {
+        email: formData.get("email"),
+        password: formData.get("password"),
+      };
+
+      if (isSignUp) {
+        payload.firstName = formData.get("firstName");
+        payload.lastName = formData.get("lastName");
+      }
+
+      try {
+        const response = await fetch(`http://localhost:5000/api/teachers${endpoint}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.message || "Teacher login failed.");
+          return;
+        }
+
+        localStorage.setItem("liraSession", JSON.stringify({ role: "teacher", user: data.teacher }));
+        navigate("/teacher");
+      } catch (error) {
+        console.error("Teacher login error:", error);
+        setError("Unable to connect to the server.");
+      }
+   }
 }
 
   return (
@@ -84,7 +117,7 @@ function LoginPage() {
                 <label><span className="field-label">Type your Last Name <em>*</em></span><input name="lastName" required /></label>
                 <label><span className="field-label">Type your Birthdate <em>*</em></span><input name="birthdate" type="date" required /></label>
               </div>
-              <button className="portal-submit" type="submit">Log in</button>
+            <button className="portal-submit" type="submit">Log in</button>
             </>
           ) : (
             <>
@@ -103,6 +136,7 @@ function LoginPage() {
               <button className="google-button" type="button"><b aria-hidden="true">●</b> Connect thru Gmail / Google Workspace</button>
             </>
           )}
+          {error && <p role="alert">{error}</p>}
         </form>
       </section>
     </main>

@@ -9,6 +9,8 @@ import LoginPage from "./pages/LoginPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import StoryMode from "./pages/StoryMode";
+import TeachersPage from "./pages/TeachersPage";
+import AdminPage from "./pages/AdminPage";
 
 // Newly inserted pages — standalone screens, not part of the public site.
 import Category from "./pages/Category";
@@ -64,6 +66,8 @@ function App() {
         <Route path="/story-mode" element={<StoryMode />} />
         <Route path="/flashcards" element={<FlashcardDifficulty />} />
         <Route path="/flashcards/:difficulty" element={<FlashcardSession />} />
+        <Route path="/teacher" element={<TeachersPage />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Routes>
     </>
   );
