@@ -601,3 +601,52 @@
   color: #fff;
   background: var(--ai-badge);
 }
+
+/* ---- teacher management ---- */
+.page-sub {
+  margin: 0.25rem 0 1.5rem;
+  color: var(--text-muted);
+}
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 34rem;
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.85rem;
+  background: #fff;
+  border: 1px solid var(--card-border);
+  border-radius: 0.65rem;
+}
+.search-wrap input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: var(--text);
+  background: transparent;
+}
+.table-head, .row {
+  display: grid;
+  grid-template-columns: 1.2fr 1.5fr 0.8fr 0.7fr;
+  align-items: center;
+  gap: 1rem;
+}
+.table-head {
+  padding: 0.75rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.row, .empty-state {
+  margin-bottom: 0.5rem;
+  padding: 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 0.75rem;
+  color: var(--text);
+}
+.actions { display: flex; align-items: center; gap: 0.6rem; }
+.status-pill { padding: 0.25rem 0.65rem; border-radius: 999px; font-size: 0.8rem; }
+.status-pill.active { background: #e1f3e6; color: #27743b; }
+.status-pill.inactive { background: #f5e7e5; color: #9b514c; }
+.row-caret { color: var(--text-muted); }
