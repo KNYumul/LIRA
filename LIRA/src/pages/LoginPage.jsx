@@ -13,13 +13,48 @@ function LoginPage() {
   const isStudent = portal === "student";
   const isSignUp = teacherMode === "signup";
 
-  function submitForm(event) {
-    event.preventDefault();
 
-    if (isStudent) {
+  async function submitForm(event) {
+  event.preventDefault();
+
+  const formData = new FormData(event.target);
+
+  const lastName = formData.get("lastName");
+  const birthdate = formData.get("birthdate");
+
+  console.log("Lastname:", lastName);
+  console.log("Birthdate:", birthdate);
+
+  if (isStudent) {
+    try {
+      const response = await fetch("http://localhost:5000/api/learners/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          lastName,
+          birthdate
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message);
+        return;
+      }
+
+      // console.log("Logged in learner:", data.learner);
+      // alert(`Welcome, ${data.learner.firstName}!`);
       navigate("/category");
+
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Unable to connect to the server.");
     }
   }
+}
 
   return (
     <main className="login-page">

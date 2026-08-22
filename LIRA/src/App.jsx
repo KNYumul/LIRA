@@ -8,7 +8,7 @@ import AdminLoginPage from "./pages/Admin-LoginPage";
 import LoginPage from "./pages/LoginPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
-import StoryMode from "./components/StoryMode";
+import StoryMode from "./pages/StoryMode";
 
 // Newly inserted pages — standalone screens, not part of the public site.
 import Category from "./pages/Category";
@@ -57,11 +57,11 @@ function App() {
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-use" element={<TermsOfUse />} />
-          <Route path="/story-mode" element={<StoryMode />} />
         </Route>
 
         {/* ---------- Newly inserted pages (standalone, own header) ---------- */}
         <Route path="/category" element={<Category />} />
+        <Route path="/story-mode" element={<StoryMode />} />
         <Route path="/flashcards" element={<FlashcardDifficulty />} />
         <Route path="/flashcards/:difficulty" element={<FlashcardSession />} />
       </Routes>

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './StoryMode.css';
 
 import coverSiDindoPundido from '../assets/icons/si-dindo-pundido.jpg';
@@ -478,9 +479,7 @@ const STORIES = [
 function BackButton({ onClick }) {
   return (
     <button className="sm-back-btn" onClick={onClick} aria-label="Go back" type="button">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M15 19l-7-7 7-7" stroke="#3F3F3F" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <span aria-hidden="true">&larr;</span>
     </button>
   );
 }
@@ -512,6 +511,7 @@ function KoalaMascot() {
 }
 
 function StoryMode({ onExit }) {
+  const navigate = useNavigate();
   const [view, setView] = useState('selection'); // 'selection' | 'reading' | 'quiz'
   const [language, setLanguage] = useState('ENG'); // 'ENG' | 'FIL'
   const [activeStory, setActiveStory] = useState(null);
@@ -608,7 +608,7 @@ function StoryMode({ onExit }) {
       <section className="story-mode sm-selection-bg">
         <div className="sm-header">
           <div className="sm-header-left">
-            <BackButton onClick={onExit} />
+            <BackButton onClick={onExit || (() => navigate('/category'))} />
             <h1 className="sm-title">Story Mode</h1>
           </div>
 
@@ -722,9 +722,9 @@ function StoryMode({ onExit }) {
           >
             <MicIcon />
           </button>
-          <span className="sm-mic-label">
+          {/* <span className="sm-mic-label">
             {isListening ? 'Listening...' : 'Tap to read aloud'}
-          </span>
+          </span> */}
 
           <div className={`sm-page-card ${isFlipping ? 'flipping' : ''}`}>
             <span className="sm-bookmark" aria-hidden="true" />
