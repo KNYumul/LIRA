@@ -1,9 +1,9 @@
-import { HeartIcon, DotIcon } from '../components/Icons.jsx'
+import { HeartIcon, DotIcon } from '../../components/AdminIcons.jsx'
 
 const SCHOOL_YEAR = '2026–2027'
 const SECTIONS_COUNT = 7 // no sections data source yet — wire this to real data when available
 
-export default function Dashboard({ teachers }) {
+export default function AdminDashboard({ teachers }) {
   const totalTeachers = teachers.length
   const activeAccounts = teachers.filter(t => t.status === 'Active').length
 

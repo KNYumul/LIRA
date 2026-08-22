@@ -4,7 +4,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { createWorker } from "tesseract.js";
-import "./TeacherDashboardPage.css";
+import { useNavigate } from "react-router-dom";
+import './TeacherDashboard.css';
 
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -285,7 +286,7 @@ function NavItem({ label, active, onClick }) {
   );
 }
 
-function Sidebar({ page, setPage }) {
+function Sidebar({ page, setPage, onLogout }) {
   return (
     <div
       className="w-56 shrink-0 flex flex-col justify-between px-4 py-6"
@@ -301,7 +302,7 @@ function Sidebar({ page, setPage }) {
         <NavItem label="Flashcards" active={page === "flashcards"} onClick={() => setPage("flashcards")} />
         <NavItem label="Stories" active={page === "stories"} onClick={() => setPage("stories")} />
       </div>
-      <button className="text-left px-5 py-2 font-medium" style={{ color: "#C0504D" }}>
+      <button className="text-left px-5 py-2 font-medium" style={{ color: "#C0504D" }} onClick={onLogout}>
         ↩ Logout
       </button>
     </div>
@@ -1566,14 +1567,20 @@ function Stories() {
   );
 }
 
-export default function App() {
+export default function TeacherDashboard() {
+  const navigate = useNavigate();
   const [page, setPage] = useState("dashboard");
   const [students, setStudents] = useState(seedStudents);
   const sectionName = "SAMPAGUITA";
 
+  function handleLogout() {
+    localStorage.removeItem("liraSession");
+    navigate("/");
+  }
+
   return (
     <div className="flex min-h-screen" style={{ background: `linear-gradient(160deg, #FBF6EC 0%, #F7E4D6 100%)`, fontFamily: "'Segoe UI', ui-sans-serif, system-ui" }}>
-      <Sidebar page={page} setPage={setPage} />
+      <Sidebar page={page} setPage={setPage} onLogout={handleLogout} />
       <div className="flex-1 p-8 overflow-auto">
         {page === "dashboard" && (
           <Dashboard students={students} sectionName={sectionName} sectionCount={1} onCycleSection={() => {}} />

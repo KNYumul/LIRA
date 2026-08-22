@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Route, Routes, useLocation, Outlet } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, Outlet } from "react-router-dom";
 import WelcomePage from "./pages/WelcomePage";
 import FaqSection from "./pages/FaqSection";
 import Header from "./components/Header";
@@ -9,8 +9,8 @@ import LoginPage from "./pages/LoginPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import StoryMode from "./pages/StoryMode";
-import TeacherDashboardPage from "./pages/TeacherDashboardPage";
-import AdminPage from "./pages/AdminPage";
+import TeacherDashboardPage from "./pages/TeacherPages/TeacherDashboard";
+import AdminPage from "./pages/AdminTeacherDashboard";
 
 // Newly inserted pages — standalone screens, not part of the public site.
 import Category from "./pages/Category";
@@ -46,6 +46,15 @@ function PublicLayout() {
   );
 }
 
+function ProtectedRoute({ role, children }) {
+  try {
+    const session = JSON.parse(localStorage.getItem("liraSession"));
+    return session?.role === role ? children : <Navigate to="/" replace />;
+  } catch {
+    return <Navigate to="/" replace />;
+  }
+}
+
 function App() {
   return (
     <>
@@ -66,8 +75,8 @@ function App() {
         <Route path="/story-mode" element={<StoryMode />} />
         <Route path="/flashcards" element={<FlashcardDifficulty />} />
         <Route path="/flashcards/:difficulty" element={<FlashcardSession />} />
-        <Route path="/teacher" element={<TeacherDashboardPage />} />
-        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/teacher" element={<ProtectedRoute role="teacher"><TeacherDashboardPage /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute role="admin"><AdminPage /></ProtectedRoute>} />
       </Routes>
     </>
   );

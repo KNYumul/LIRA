@@ -10,6 +10,11 @@ const bgDashboard = "/UI_Designs/BACKGROUND/backdrop_coral_peach_sunrise.svg";
 
 export default function Category() {
   const navigate = useNavigate();
+
+  function handleLogout() {
+    localStorage.removeItem("liraSession");
+    navigate("/");
+  }
   const [lang, setLang] = useState("ENG");
 
   return (
@@ -30,7 +35,7 @@ export default function Category() {
           },
         ]}
         actionLabel="Logout"
-        onAction={() => navigate("/")}
+        onAction={handleLogout}
       />
 
       <main className="dash-main">

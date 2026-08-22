@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { ChevronDownIcon } from './Icons.jsx'
+import { ChevronDownIcon } from './AdminIcons.jsx'
 
 const EMPTY_FORM = { name: '', email: '', status: 'active' }
 
-export default function EditTeacherModal({ teacher, onCancel, onSave }) {
+export default function AdminEditTeacherModal({ teacher, onCancel, onSave }) {
   const [form, setForm] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
 

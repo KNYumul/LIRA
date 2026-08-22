@@ -1,6 +1,6 @@
-import { LogoutIcon } from './Icons.jsx'
+import { LogoutIcon } from './AdminIcons.jsx'
 
-export default function Sidebar({ activeNav, onNavChange, onLogout }) {
+export default function AdminSidebar({ activeNav, onNavChange, onLogout }) {
  function Logo() {
   return (
     <div className="flex items-center">

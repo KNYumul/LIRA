@@ -1,6 +1,6 @@
-import { PencilIcon, MinusIcon, ChevronDownIcon } from './Icons.jsx'
+import { PencilIcon, MinusIcon, ChevronDownIcon } from './AdminIcons.jsx'
 
-export default function TeacherRow({ teacher, onEdit, onDelete }) {
+export default function AdminTeacherRow({ teacher, onEdit, onDelete }) {
   const statusClass = teacher.status === 'Active' ? 'active' : 'inactive'
 
   return (
