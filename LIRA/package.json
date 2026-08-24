@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
-    "express": "^5.2.1",
     "lucide-react": "^1.33.0",
     "mongoose": "^9.9.2",
     "pdfjs-dist": "^6.2.108",
