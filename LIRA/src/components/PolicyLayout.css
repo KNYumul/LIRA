@@ -38,7 +38,7 @@
 .lira-title {
   font-family: "Baloo 2", "Quicksand", sans-serif;
   font-weight: 400;
-  font-size: 60px;
+  font-size: 50px;
   text-align: left;
   line-height: 1.1;
   color: #3b3b3b;
@@ -54,35 +54,6 @@
   margin: 0;
 }
 
-.lira-dots {
-  display: flex;
-  align-items: center;
-  gap: 76px;
-  margin: 40px 0 8px 40px;
-}
-
-.lira-dot {
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.lira-dot--sky {
-  background: #9fd8e6;
-}
-.lira-dot--butter {
-  background: #edd98c;
-}
-.lira-dot--peach {
-  background: #eda97a;
-}
-.lira-dot--coral {
-  background: #e2938c;
-}
-.lira-dot--sage {
-  background: #8fae7d;
-}
 
 /* ---------- Layout ---------- */
 
