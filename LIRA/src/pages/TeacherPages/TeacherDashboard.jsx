@@ -6,6 +6,7 @@ import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { createWorker } from "tesseract.js";
 import { useNavigate } from "react-router-dom";
 import './TeacherDashboard.css';
+import { clearSession } from "../../utils/session";
 
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -1661,7 +1662,7 @@ export default function TeacherDashboard() {
   useEffect(() => { loadLearners(); }, []);
 
   function handleLogout() {
-    localStorage.removeItem("liraSession");
+    clearSession();
     navigate("/");
   }
 

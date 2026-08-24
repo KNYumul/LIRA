@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Admin-LoginPage.css";
+import { saveSession } from "../utils/session";
 
 const mascot = "/UI_Designs/ANIMALS/K_Squirrel.png";
 
@@ -31,7 +32,7 @@ function AdminLoginPage() {
         return;
       }
 
-      localStorage.setItem("liraSession", JSON.stringify({ role: "admin", user: data.admin }));
+      saveSession({ role: "admin", user: data.admin });
       navigate("/admin");
     } catch (error) {
       console.error("Admin login error:", error);

@@ -16,6 +16,7 @@ import AdminPage from "./pages/AdminTeacherDashboard";
 import Category from "./pages/Category";
 import FlashcardDifficulty from "./pages/FlashcardDifficulty";
 import FlashcardSession from "./pages/FlashcardSession";
+import { getSession } from "./utils/session";
 
 function ScrollToHash() {
   const { hash, pathname } = useLocation();
@@ -48,7 +49,7 @@ function PublicLayout() {
 
 function ProtectedRoute({ role, children }) {
   try {
-    const session = JSON.parse(localStorage.getItem("liraSession"));
+    const session = getSession();
     return session?.role === role ? children : <Navigate to="/" replace />;
   } catch {
     return <Navigate to="/" replace />;
