@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import './FaqSection.css';
-
 import bunnyIcon from '../assets/icons/bunny.jpg';
 import owlIcon from '../assets/icons/owl.svg';
 import catIcon from '../assets/icons/cat.svg';
 import foxIcon from '../assets/icons/fox.jpg';
+
 
 // Category cards shown under the search bar
 const CATEGORIES = [
@@ -38,6 +38,7 @@ const CATEGORIES = [
   },
 ];
 
+
 // FAQ accordion items
 const FAQS = [
   {
@@ -60,27 +61,33 @@ const FAQS = [
   },
 ];
 
+
 function FaqSection() {
   const [searchValue, setSearchValue] = useState('');
   // Index 1 ("student-accounts") starts open to match the reference design
   const [openIndex, setOpenIndex] = useState(1);
 
+
   const toggleFaq = (index) => {
     setOpenIndex((prev) => (prev === index ? -1 : index));
   };
 
+
   return (
-    <section className="faq-section" id="help-center">
+    <section className="faq-section">
       <div className="faq-container">
         <span className="faq-pill">Help Center</span>
 
+
         <h1 className="faq-heading">How can we help?</h1>
+
 
         <p className="faq-subheading">
           Search for a topic, or browse questions from teachers and
           <br />
           learners using LIRA.
         </p>
+
 
         <div className="faq-search-wrapper">
           <input
@@ -118,17 +125,23 @@ function FaqSection() {
           </svg>
         </div>
 
+
         <div className="faq-categories">
           {CATEGORIES.map((cat) => (
             <button key={cat.id} className="faq-category-card" type="button">
               <span className="faq-category-icon-wrap">
-                <img src={cat.icon} alt={cat.alt} className="faq-category-icon" />
+                <img
+                  src={cat.icon}
+                  alt={cat.alt}
+                  className="faq-category-icon"
+                />
               </span>
               <span className="faq-category-title">{cat.title}</span>
               <span className="faq-category-subtitle">{cat.subtitle}</span>
             </button>
           ))}
         </div>
+
 
         <div className="faq-accordion">
           {FAQS.map((item, index) => {
@@ -172,6 +185,7 @@ function FaqSection() {
           })}
         </div>
 
+
         <div className="faq-cta">
           <h2 className="faq-cta-heading">Still need help?</h2>
           <p className="faq-cta-subheading">
@@ -185,5 +199,6 @@ function FaqSection() {
     </section>
   );
 }
+
 
 export default FaqSection;
