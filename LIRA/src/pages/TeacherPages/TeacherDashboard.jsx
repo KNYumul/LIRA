@@ -6,6 +6,7 @@ import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { createWorker } from "tesseract.js";
 import { useNavigate } from "react-router-dom";
 import './TeacherDashboard.css';
+import { clearSession } from "../../utils/session";
 
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -120,6 +121,15 @@ function seedStudents() {
 }
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+async function apiErrorMessage(response, fallbackMessage) {
+  const responseText = await response.text();
+  try {
+    return JSON.parse(responseText).message || fallbackMessage;
+  } catch {
+    return `${fallbackMessage} The API returned HTML instead of JSON. Make sure the backend is running at ${API_URL}.`;
+  }
+}
 
 function learnerToStudent(learner) {
   const [birthYear = "", birthMonth = "", birthDay = ""] = (learner.birthdate || "").split("-");
@@ -454,19 +464,18 @@ function Field({ label, children, required }) {
 }
 const selectStyle = { border: `1px solid #D8E8D0`, background: "#F5FAF2" };
 
-function LearnerFormModal({ mode, initial, onCancel, onSubmit }) {
+function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
   const [lastName, setLastName] = useState(initial?.lastName || "");
   const [month, setMonth] = useState(initial?.birthMonth || "");
   const [day, setDay] = useState(initial?.birthDay || "");
   const [year, setYear] = useState(initial?.birthYear || "");
-  const [classNumber, setClassNumber] = useState(initial?.classNumber || "");
 
-  const clear = () => { setLastName(""); setMonth(""); setDay(""); setYear(""); setClassNumber(""); };
+  const clear = () => { setLastName(""); setMonth(""); setDay(""); setYear(""); };
   const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0"));
   const years = Array.from({ length: 15 }, (_, i) => String(2011 + i));
 
-  const valid = lastName.trim() && month && day && year && classNumber;
+  const valid = lastName.trim() && month && day && year;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "rgba(60,50,45,0.35)" }}>
@@ -508,14 +517,9 @@ function LearnerFormModal({ mode, initial, onCancel, onSubmit }) {
           </div>
         </Field>
 
-        <Field label="Student Class Number" required>
-          <select value={classNumber} onChange={(e) => setClassNumber(e.target.value)} className="w-full rounded-lg px-2 py-2" style={selectStyle}>
-            <option value="">Select</option>
-            {Array.from({ length: 10 }, (_, i) => String(i + 1).padStart(2, "0")).map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-        </Field>
+        <div className="mb-4 rounded-lg px-3 py-2 text-sm" style={{ background: C.activePill, color: C.text }}>
+          Section: <strong>{sectionName}</strong>
+        </div>
 
         <div className="flex gap-3 mt-5">
           <button onClick={onCancel} className="flex-1 rounded-full py-2 font-medium" style={{ border: `1px solid ${C.cardBorder}`, color: C.text }}>
@@ -523,7 +527,7 @@ function LearnerFormModal({ mode, initial, onCancel, onSubmit }) {
           </button>
           <button
             disabled={!valid}
-            onClick={() => valid && onSubmit({ lastName: lastName.trim(), birthMonth: month, birthDay: day, birthYear: year, classNumber })}
+            onClick={() => valid && onSubmit({ lastName: lastName.trim(), birthMonth: month, birthDay: day, birthYear: year })}
             className="flex-1 rounded-full py-2 font-semibold text-white"
             style={{ background: valid ? "#EDA751" : "#EAD9BE" }}
           >
@@ -622,14 +626,14 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     const payload = {
       lastName: data.lastName,
       birthdate: `${data.birthYear}-${data.birthMonth}-${data.birthDay}`,
-      section: sectionName,
+      section: data.section || sectionName,
     };
     const response = await fetch(`${API_URL}/api/learners${id ? `/${id}` : ""}`, {
       method: id ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!response.ok) throw new Error((await response.json()).message || "Could not save learner.");
+    if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not save learner."));
     return learnerToStudent(await response.json());
   };
 
@@ -656,7 +660,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
   const deleteLearner = async () => {
     try {
       const response = await fetch(`${API_URL}/api/learners/${modal.student.id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error((await response.json()).message || "Could not delete learner.");
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not delete learner."));
       setStudents((prev) => prev.filter((s) => s.id !== modal.student.id));
       setModal(null);
     } catch (requestError) {
@@ -672,25 +676,32 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       const lines = text.split(/\r?\n/).filter(Boolean);
       const startIdx = /last\s*name/i.test(lines[0]) ? 1 : 0;
       const newRows = [];
-      let nextId = Math.max(0, ...students.map((s) => s.id)) + 1;
+      const invalidRows = [];
       for (let i = startIdx; i < lines.length; i++) {
-        const [lastName, birthdate] = lines[i].split(",").map((x) => (x || "").trim());
+        const [lastName, birthdate, section] = lines[i].split(",").map((x) => (x || "").trim());
+        const dateParts = (birthdate || "").split(/[-/]/).map((part) => part.trim());
+        const isIsoDate = /^\d{4}$/.test(dateParts[0]);
+        const [by, bm, bd] = isIsoDate
+          ? dateParts
+          : [dateParts[2], dateParts[0], dateParts[1]];
+
         if (!lastName) continue;
-        const [bm, bd, by] = (birthdate || "").split(/[-/]/);
+        if (!section || !/^\d{4}$/.test(by || "") || !/^\d{1,2}$/.test(bm || "") || !/^\d{1,2}$/.test(bd || "")) {
+          invalidRows.push(i + 1);
+          continue;
+        }
         newRows.push({
-          id: nextId++,
           lastName,
-          wpm: 0,
-          accuracy: 0,
-          historyDate: "--",
-          birthMonth: bm || "01",
-          birthDay: bd || "01",
-          birthYear: by || "2018",
-          classNumber: "01",
-          expanded: false,
+          birthMonth: bm.padStart(2, "0"),
+          birthDay: bd.padStart(2, "0"),
+          birthYear: by,
+          section,
         });
       }
-      Promise.all(newRows.map(({ lastName, birthMonth, birthDay, birthYear }) => saveLearner({ lastName, birthMonth, birthDay, birthYear })))
+      if (invalidRows.length > 0) {
+        alert(`Skipped invalid CSV row(s): ${invalidRows.join(", ")}. Each row needs Lastname, Birthdate, and Section.`);
+      }
+      Promise.all(newRows.map(({ lastName, birthMonth, birthDay, birthYear, section }) => saveLearner({ lastName, birthMonth, birthDay, birthYear, section })))
         .then((learners) => setStudents((prev) => [...prev, ...learners]))
         .catch((requestError) => alert(requestError.message));
     };
@@ -714,7 +725,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       >
         <Upload size={20} color="#4A4A4A" />
         <div className="font-medium mt-2" style={{ color: C.text }}>Drag & Drop your CSV roster here, or click to upload</div>
-        <div className="text-xs mt-1" style={{ color: C.textMuted }}>Columns expected: Last Name, Birthdate,</div>
+        <div className="text-xs mt-1" style={{ color: C.textMuted }}>Columns expected: Last Name, Birthdate, Section</div>
         <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
       </div>
 
@@ -759,10 +770,10 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       )}
 
       {modal?.type === "add" && (
-        <LearnerFormModal mode="add" onCancel={() => setModal(null)} onSubmit={addLearner} />
+        <LearnerFormModal mode="add" sectionName={sectionName} onCancel={() => setModal(null)} onSubmit={addLearner} />
       )}
       {modal?.type === "edit" && (
-        <LearnerFormModal mode="edit" initial={modal.student} onCancel={() => setModal(null)} onSubmit={editLearner} />
+        <LearnerFormModal mode="edit" initial={modal.student} sectionName={sectionName} onCancel={() => setModal(null)} onSubmit={editLearner} />
       )}
       {modal?.type === "delete" && (
         <DeleteConfirmModal
@@ -1635,7 +1646,7 @@ export default function TeacherDashboard() {
     setLearnersError("");
     try {
       const response = await fetch(`${API_URL}/api/learners`);
-      if (!response.ok) throw new Error("Could not load learners from the database.");
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not load learners from the database."));
       const learners = await response.json();
       const databaseStudents = learners.map(learnerToStudent);
       const databaseSections = [...new Set(databaseStudents.map((student) => student.section?.trim()).filter(Boolean))].sort();
@@ -1651,7 +1662,7 @@ export default function TeacherDashboard() {
   useEffect(() => { loadLearners(); }, []);
 
   function handleLogout() {
-    localStorage.removeItem("liraSession");
+    clearSession();
     navigate("/");
   }
 

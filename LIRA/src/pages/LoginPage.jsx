@@ -1,9 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./LoginPage.css";
+import { saveSession } from "../utils/session";
 
 const fox = "/UI_Designs/ANIMALS/mascot_fox.svg";
 const owl = "/UI_Designs/ANIMALS/mascot_owl.svg";
+
+async function readApiResponse(response) {
+  const responseText = await response.text();
+  try {
+    return { data: JSON.parse(responseText) };
+  } catch {
+    return { error: "The server returned HTML instead of an API response. Ensure the backend has the /api/teachers/login route and has been restarted." };
+  }
+}
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -40,7 +50,12 @@ function LoginPage() {
         })
       });
 
-      const data = await response.json();
+      const { data, error: responseError } = await readApiResponse(response);
+
+      if (responseError) {
+        setError(responseError);
+        return;
+      }
 
       if (!response.ok) {
          setError(data.message);
@@ -73,14 +88,19 @@ function LoginPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        const data = await response.json();
+        const { data, error: responseError } = await readApiResponse(response);
+
+        if (responseError) {
+          setError(responseError);
+          return;
+        }
 
         if (!response.ok) {
           setError(data.message || "Teacher login failed.");
           return;
         }
 
-        localStorage.setItem("liraSession", JSON.stringify({ role: "teacher", user: data.teacher }));
+        saveSession({ role: "teacher", user: data.teacher });
         navigate("/teacher");
       } catch (error) {
         console.error("Teacher login error:", error);

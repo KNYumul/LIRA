@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppHeader from "../components/AppHeader";
 import "./Category.css";
+import { clearSession } from "../utils/session";
 
 const penguinIcon = "/UI_Designs/ANIMALS/H_Penguin.png";
 const catIcon = "/UI_Designs/ANIMALS/D_Cat.png";
@@ -12,7 +13,7 @@ export default function Category() {
   const navigate = useNavigate();
 
   function handleLogout() {
-    localStorage.removeItem("liraSession");
+    clearSession();
     navigate("/");
   }
   const [lang, setLang] = useState("ENG");

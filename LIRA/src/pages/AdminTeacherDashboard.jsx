@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { clearSession } from '../utils/session'
 import AdminSidebar from '../components/AdminSidebar.jsx'
 import AdminDashboard from './AdminPages/AdminDashboard.jsx'
 import AdminTeachersPage from './AdminPages/AdminTeachersPage.jsx'
@@ -31,7 +32,7 @@ export default function AdminTeacherDashboard() {
   function handleLogout() {
     const ok = window.confirm('Are you sure you want to log out?')
     if (ok) {
-      localStorage.removeItem('liraSession')
+      clearSession()
       navigate('/')
     }
   }
