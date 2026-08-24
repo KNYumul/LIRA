@@ -32,16 +32,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 60px 24px 120px;
+  padding: 60px 60px 120px;
 }
 
 .lang-toggle {
   display: inline-flex;
   background: #fff;
   border-radius: 999px;
-  padding: 4px;
+  padding: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
-  margin-bottom: 60px;
+  margin-bottom: 40px;
 }
 
 .lang-toggle__option {
@@ -49,9 +49,9 @@
   background: none;
   cursor: pointer;
   font-family: inherit;
-  font-weight: 700;
-  font-size: 0.85rem;
-  padding: 8px 22px;
+  font-weight: 800px;
+  font-size: large;
+  padding: px 90px;
   border-radius: 999px;
   color: var(--ink-soft);
   transition: background 0.15s ease, color 0.15s ease;
@@ -71,10 +71,11 @@
 
 .dash-card {
   background: #fff;
-  border: 1.5px solid #bfe0bf;
+  border: 2.5px solid #bfe0bf;
   border-radius: 24px;
-  width: 240px;
-  padding: 32px 24px;
+  width: 400px;
+  height: 300px;
+  padding: 60px 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -90,22 +91,22 @@
 }
 
 .dash-card__icon {
-  width: 56px;
-  height: 56px;
+  width: 80px;
+  height: 80px;
   object-fit: contain;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .dash-card h2 {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin: 0 0 10px;
+  margin: 0 15 15px;
 }
 
 .dash-card p {
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--ink-soft);
-  margin: 0;
+  margin: 10;
 }
 
 /* ============ Frog mascot ============ */
