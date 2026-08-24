@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+// import { Link, useLocation } from "react-router-dom";
 import "./PolicyLayout.css";
 
 const BACKDROP = "/UI_Designs/BACKGROUND/backdrop_full_palette_swirl.svg";
 
-const PAGE_LINKS = [
-  { to: "/privacy-policy", label: "Privacy Policy" },
-  { to: "/terms-of-use", label: "Terms of Use" },
-];
+// const PAGE_LINKS = [
+//   { to: "/privacy-policy", label: "Privacy Policy" },
+//   { to: "/terms-of-use", label: "Terms of Use" },
+// ];
 
 export default function PolicyLayout({ badge, title, subtitle, sections }) {
   const [activeId, setActiveId] = useState(sections[0]?.id);
-  const location = useLocation();
+  // const location = useLocation();
 
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return undefined;
@@ -43,10 +43,10 @@ export default function PolicyLayout({ badge, title, subtitle, sections }) {
   return (
     <div className="lira-page" style={{ backgroundImage: `url(${BACKDROP})` }}>
       <main className="lira-main">
-        <div className="lira-hero">
+        <div className="">
           <div className="lira-badge-row">
             <span className="lira-badge">{badge}</span>
-            <nav className="lira-page-links" aria-label="Policy pages">
+            {/* <nav className="lira-page-links" aria-label="Policy pages">
               {PAGE_LINKS.map((link) => (
                 <Link
                   key={link.to}
@@ -56,7 +56,7 @@ export default function PolicyLayout({ badge, title, subtitle, sections }) {
                   {link.label}
                 </Link>
               ))}
-            </nav>
+            </nav> */}
           </div>
 
           <h1 className="lira-title">{title}</h1>
