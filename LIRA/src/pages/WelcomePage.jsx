@@ -71,7 +71,7 @@ export default function WelcomePage() {
                 className="btn btn--pill btn--outline btn--lg"
                 onClick={scrollToFlow}
               >
-                See How it works ↓
+                See How it Works ↓
               </button>
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function WelcomePage() {
       <section
         className="lira-flow"
         id="how-it-works"
-        style={{ backgroundImage: `url(${bgSunrise})` }}
+        style={{ backgroundImage: `url(${bgHero})` }}
       >
         <div className="lira-section-inner">
           <span className="badge badge--center">The Flow</span>

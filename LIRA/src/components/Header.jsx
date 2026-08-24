@@ -1,7 +1,7 @@
 import "./Header.css";
 import { Link } from "react-router-dom";
 
-const logo = "/UI_Designs/LOGO/lira_logo_primary.svg";
+const logo = "/UI_Designs/LOGO/lira_logo_horizontal.svg";
 const foxIcon = "/UI_Designs/ANIMALS/F_Fox.png";
 
 function Header() {
@@ -11,7 +11,7 @@ function Header() {
         <Link className="lira-header__brand" to="/" aria-label="LIRA home">
           <img src={logo} alt="LIRA" className="lira-header__logo" />
           <span className="lira-header__brand-text">
-            <strong>LIRA</strong>
+            {/* <strong>LIRA</strong> */}
             <small>Literacy Intelligence and Reading Assessment</small>
           </span>
         </Link>
