@@ -1,7 +1,7 @@
-
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700;800&display=swap');
 
 :root {
-  /* ---- palette (was the `C` object) ---- */
+  /* ---- palette ---- */
   --cream: #FBF6EC;
   --sidebar-top: #F9EAE1;
   --sidebar-bottom: #F2BEC2;
@@ -53,7 +53,8 @@
   min-height: 100vh;
   display: flex;
   background: linear-gradient(160deg, var(--cream) 0%, #F7E4D6 100%);
-  font-family: 'Segoe UI', ui-sans-serif, system-ui;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
 }
 
 .app-main {
@@ -81,6 +82,7 @@
   padding: 0.75rem 1.25rem;
   border-radius: 0.75rem;
   margin-bottom: 0.5rem;
+  font-family: 'Poppins', sans-serif;
   font-weight: 500;
   color: var(--text);
   background: transparent;
@@ -92,12 +94,14 @@
 .nav-item.active {
   background: var(--active-pill);
   color: var(--active-text);
+  font-weight: 600;
 }
 
 .logout-btn {
   text-align: left;
   padding: 0.5rem 1.25rem;
-  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
   color: var(--danger);
   background: transparent;
   border: none;
@@ -112,12 +116,18 @@
   box-shadow: var(--shadow-card);
 }
 
+/* Page Title: Quicksand */
 .page-title {
+  font-family: 'Quicksand', sans-serif;
   font-size: 1.875rem;
   font-weight: 700;
   color: var(--text);
 }
+
+/* Page Subtitle: Poppins Thin */
 .page-subtitle {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
   font-size: 0.875rem;
   margin-top: 0.25rem;
   color: var(--text-muted);
@@ -132,11 +142,14 @@
   border: 1px solid var(--card-border);
 }
 .stat-card-value {
+  font-family: 'Quicksand', sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--text);
 }
 .stat-card-label {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
   font-size: 0.875rem;
   margin-top: 0.25rem;
   color: var(--text-muted);
@@ -152,8 +165,9 @@
 .risk-pill {
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
+  font-family: 'Poppins', sans-serif;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 .risk-pill.low { background: var(--low); color: var(--low-text); }
 .risk-pill.moderate { background: var(--moderate); color: var(--moderate-text); }
@@ -174,6 +188,8 @@
   cursor: pointer;
   background: var(--card-bg);
   color: var(--text);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400;
 }
 .student-row-main.high-risk {
   background: var(--high-row-bg);
@@ -181,6 +197,8 @@
 }
 .student-row-detail {
   padding: 1rem 1.25rem;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
   font-size: 0.875rem;
   background: #F7F3EA;
   color: var(--text);
@@ -201,6 +219,8 @@
   justify-content: center;
   padding: 2rem;
   cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
 }
 
 /* ---- modal shell (used by every modal) ---- */
@@ -221,6 +241,7 @@
   padding: 1.75rem;
   width: 380px;
   background: var(--cream);
+  font-family: 'Poppins', sans-serif;
 }
 .modal-card.wide { width: 420px; }
 .modal-card.wider { width: 480px; }
@@ -239,17 +260,22 @@
   justify-content: space-between;
   margin-bottom: 1rem;
 }
+
+/* Modal Title: Quicksand */
 .modal-title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-family: 'Quicksand', sans-serif;
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text);
 }
 
 .pill-btn {
+  font-family: 'Poppins', sans-serif;
   font-size: 0.75rem;
+  font-weight: 600;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   background: var(--low);
@@ -261,8 +287,9 @@
 .field { margin-bottom: 0.75rem; }
 .field-label {
   display: block;
+  font-family: 'Poppins', sans-serif;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 0.25rem;
   color: var(--text);
 }
@@ -277,6 +304,8 @@
   border: 1px solid #D8E8D0;
   background: #F5FAF2;
   color: var(--text);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
 }
 .field-textarea { resize: none; }
 
@@ -289,6 +318,7 @@
   flex: 1;
   border-radius: 9999px;
   padding: 0.5rem 0;
+  font-family: 'Poppins', sans-serif;
   font-weight: 600;
   cursor: pointer;
   border: none;
@@ -320,6 +350,7 @@
   width: 360px;
   text-align: center;
   background: #fff;
+  font-family: 'Poppins', sans-serif;
 }
 .confirm-icon-wrap {
   display: flex;
@@ -332,11 +363,14 @@
   background: var(--danger-bg);
 }
 .confirm-title {
+  font-family: 'Quicksand', sans-serif;
   font-size: 1.125rem;
   font-weight: 700;
   color: var(--text);
 }
 .confirm-subtitle {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
   font-size: 0.875rem;
   margin-top: 0.25rem;
   color: var(--text-muted);
@@ -370,6 +404,7 @@
 .flashcard-chip {
   padding: 0.5rem 1rem;
   border-radius: 9999px;
+  font-family: 'Poppins', sans-serif;
   font-weight: 500;
   font-size: 0.875rem;
   cursor: grab;
@@ -408,12 +443,14 @@
   max-width: 24rem;
   background: #fff;
   border: 1px solid var(--card-border);
+  font-family: 'Poppins', sans-serif;
 }
 
 .category-toggle-btn {
   flex: 1;
   border-radius: 0.5rem;
   padding: 0.5rem 0;
+  font-family: 'Poppins', sans-serif;
   font-weight: 600;
   font-size: 0.875rem;
   color: #fff;
@@ -455,7 +492,8 @@
 }
 .story-cover-title {
   position: relative;
-  font-weight: 800;
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 700;
   font-size: 1.125rem;
   line-height: 1.25;
 }
@@ -463,6 +501,7 @@
   position: relative;
   padding: 0.25rem 0.5rem;
   border-radius: 9999px;
+  font-family: 'Poppins', sans-serif;
   font-size: 0.75rem;
   font-weight: 600;
   background: #FBE3C0;
@@ -508,6 +547,7 @@
   color: var(--text-muted);
   background: transparent;
   cursor: pointer;
+  font-family: 'Poppins', sans-serif;
 }
 
 .method-card {
@@ -520,6 +560,7 @@
   background: #fff;
   border: 2px solid #8FBF9F;
   cursor: pointer;
+  font-family: 'Poppins', sans-serif;
 }
 .method-card.selected {
   border-color: var(--success);
@@ -534,6 +575,7 @@
   margin-bottom: 0.75rem;
   background: #fff;
   border: 1.5px solid var(--easy-border);
+  font-family: 'Poppins', sans-serif;
 }
 .qa-index-badge {
   position: absolute;
@@ -545,6 +587,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: 'Quicksand', sans-serif;
   font-size: 0.75rem;
   font-weight: 700;
   color: #fff;
@@ -574,6 +617,8 @@
   background: var(--dropzone-bg);
   color: var(--text);
   border: none;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
 }
 .add-dashed-btn {
   width: 100%;
@@ -581,6 +626,7 @@
   padding: 0.5rem 0;
   margin-bottom: 1rem;
   font-size: 0.875rem;
+  font-family: 'Poppins', sans-serif;
   font-weight: 500;
   border: 2px dashed #D8CFC2;
   color: var(--text-muted);
@@ -591,8 +637,9 @@
 .ai-badge {
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
+  font-family: 'Poppins', sans-serif;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #fff;
   background: var(--ai-badge);
 }

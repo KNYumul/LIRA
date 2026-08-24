@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700;800&display=swap');
+
 /* ============ Nav ============ */
 .lira-nav {
   display: flex;
@@ -5,6 +7,8 @@
   justify-content: center;
   padding: 12px 10px;
   background: var(--peach, #fbe9dc);
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
 }
 
 .lira-nav__inner {
@@ -38,18 +42,22 @@
   line-height: 1.15;
 }
 
+/* Brand Name / Title: Quicksand */
 .lira-nav__name {
+  font-family: "Quicksand", sans-serif;
   font-weight: 800;
   font-size: 1.05rem;
   letter-spacing: 0.3px;
   color: var(--ink, #3a3a3a);
 }
 
+/* Tagline / Subtitle: Poppins Thin */
 .lira-nav__tagline {
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
   font-size: 0.5rem;
   letter-spacing: 0.3px;
   color: var(--ink-soft, #6b6b6b);
-  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -68,13 +76,14 @@
 .lira-nav__linkbtn {
   text-decoration: none;
   color: var(--ink, #3a3a3a);
-  font-weight: 500;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
   font-size: 0.88rem;
   background: none;
   border: none;
   cursor: pointer;
-  font-family: inherit;
   padding: 0;
+  transition: color 0.15s ease;
 }
 
 .lira-nav__links a:hover,
@@ -84,7 +93,7 @@
 
 .lira-nav__linkbtn--active {
   color: var(--green-text, #4a7a5a);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .lira-nav__actions {
@@ -107,12 +116,16 @@
   font-size: 0.85rem;
 }
 
-/* Buttons (shared across the app) */
+/* Buttons */
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   border: none;
   cursor: pointer;
+  font-family: "Poppins", sans-serif;
   font-weight: 600;
-  font-family: inherit;
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 

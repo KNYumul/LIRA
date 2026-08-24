@@ -1,8 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700;800&display=swap');
+
 .lira-footer {
   background: #fffaf1;
   border-top: 1px solid #000000;
   color: #9d9b98;
-  font-family: "Poppins", "Segoe UI", sans-serif;
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
   padding: 54px 40px 36px;
 }
 
@@ -37,12 +40,14 @@
   max-width: 440px;
   margin: 12px 0 0;
   color: #6f6e6d;
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
   font-size: 1rem;
   line-height: 1.42;
 }
 
 .lira-footer__intro strong {
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .lira-footer__column {
@@ -53,10 +58,11 @@
   font-style: normal;
 }
 
+/* Footer Section Headings: Quicksand */
 .lira-footer__column h2 {
   margin: 0 0 27px;
   color: #999794;
-  font-family: "Baloo 2", "Poppins", sans-serif;
+  font-family: "Quicksand", sans-serif;
   font-size: 1.35rem;
   font-weight: 700;
   line-height: 1;
@@ -65,9 +71,12 @@
 .lira-footer__column a,
 .lira-footer__column span {
   color: inherit;
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
   font-size: 1rem;
   line-height: 1.48;
   text-decoration: none;
+  transition: color 0.15s ease;
 }
 
 .lira-footer__column a:hover,
@@ -91,6 +100,8 @@
   padding-top: 22px;
   border-top: 1px solid #7b7975;
   color: #9d9b98;
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
   font-size: 0.73rem;
   line-height: 1.3;
 }
