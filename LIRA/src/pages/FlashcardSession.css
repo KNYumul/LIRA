@@ -79,7 +79,7 @@
   position: relative;
   background: #fdf6ee;
   border: 2px solid var(--accent-blue);
-  border-radius: 22px;
+  border-radius: 25px;
   padding: 28px 32px 36px;
   display: flex;
   flex-direction: column;
