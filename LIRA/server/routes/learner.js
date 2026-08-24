@@ -6,7 +6,7 @@ const router = express.Router();
 // GET all learners
 router.get("/", async (req, res) => {
   try {
-    const learners = await Learner.find();
+    const learners = await Learner.find().select("lastName birthdate section");
 
     res.json(learners);
   } catch (error) {
@@ -40,13 +40,9 @@ router.post("/login", async (req, res) => {
       message: "Login successful!",
       learner: {
         id: learner._id,
-        studentId: learner.studentId,
-        firstName: learner.firstName,
         lastName: learner.lastName,
         birthdate: learner.birthdate,
-        email: learner.email,
-        course: learner.course,
-        yearLevel: learner.yearLevel
+        section: learner.section
       }
     });
 
