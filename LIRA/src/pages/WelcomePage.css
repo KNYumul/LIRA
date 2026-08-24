@@ -63,6 +63,10 @@
 }
 
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap; /* Ensures text stays strictly on one line */
   border: none;
   cursor: pointer;
   font-weight: 600;
@@ -72,13 +76,13 @@
 
 .btn--pill {
   border-radius: 999px;
-  padding: 10px 22px;
-  font-size: 0.95rem;
+  padding: 10px 24px; /* Balanced vertical and horizontal padding */
+  font-size: 0.92rem;
 }
 
 .btn--lg {
-  padding: 14px 30px;
-  font-size: 1rem;
+  padding: 12px 28px;
+  font-size: 0.95rem;
 }
 
 .btn--coral {
@@ -166,6 +170,9 @@
 
 .lira-hero__ctas {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
   gap: 16px;
   margin-top: 8px;
 }
@@ -406,5 +413,9 @@
 
   .lira-steps {
     grid-template-columns: 1fr;
+  }
+
+  .lira-hero__ctas {
+    flex-wrap: wrap;
   }
 }

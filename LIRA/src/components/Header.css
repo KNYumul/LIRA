@@ -1,10 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Quicksand:wght@600;700;800&display=swap');
+
 .lira-header {
+  position: relative;
+  z-index: 100;
   display: flex;
   justify-content: center;
-  padding: 12px 10px;
-  background: #fbe9dc;
+  padding: 20px 32px;
+  background-color: #fdf6ec; /* Clean cream matching the hero top background */
   color: #3a3a3a;
-  font-family: "Poppins", "Segoe UI", sans-serif;
+  font-family: "Poppins", sans-serif;
+  box-shadow: 0 5px 20px #696e6a; /* Soft divider shadow */
 }
 
 .lira-header *,
@@ -18,7 +23,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 1280px;
+  max-width: 100%px;
 }
 
 .lira-header__brand,
@@ -29,51 +34,60 @@
   align-items: center;
 }
 
+/* ============ Brand Logo & Title ============ */
 .lira-header__brand {
-  gap: 10px;
+  gap: 12px;
   color: inherit;
   text-decoration: none;
 }
 
 .lira-header__logo {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
 }
 
 .lira-header__brand-text {
   display: flex;
-  flex-direction: column;
-  line-height: 1.15;
+  align-items: baseline;
+  gap: 8px;
+  line-height: 1;
 }
 
 .lira-header__brand-text strong {
-  font-size: 1.05rem;
+  font-family: "Quicksand", sans-serif;
+  font-size: 1.15rem;
   font-weight: 800;
-  letter-spacing: 0.3px;
+  color: #4a7a5a;
+  letter-spacing: 0.5px;
 }
 
 .lira-header__brand-text small {
-  color: #6b6b6b;
-  font-size: 0.5rem;
-  font-weight: 500;
-  letter-spacing: 0.3px;
+  font-family: "Poppins", sans-serif;
+  color: #7b857a;
+  font-size: 0.58rem;
+  font-weight: 400;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
+/* ============ Nav Links & Actions ============ */
 .lira-header__right {
-  gap: 40px;
+  gap: 32px;
 }
 
 .lira-header__links {
-  gap: 30px;
+  gap: 28px;
 }
 
 .lira-header__links a {
-  color: inherit;
-  font-size: 0.88rem;
-  font-weight: 500;
+  color: #555;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 400;
   text-decoration: none;
+  transition: color 0.15s ease;
 }
 
 .lira-header__links a:hover,
@@ -86,18 +100,20 @@
 }
 
 .lira-header__icon {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   object-fit: contain;
+  border-radius: 50%;
 }
 
 .lira-header__login {
   border-radius: 999px;
-  padding: 8px 18px;
+  padding: 6px 18px;
   background: #e8908a;
-  box-shadow: 0 6px 16px rgba(232, 144, 138, 0.35);
+  box-shadow: 0 4px 10px rgba(232, 144, 138, 0.35);
   color: #fff;
-  font-size: 0.85rem;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.78rem;
   font-weight: 600;
   text-decoration: none;
   transition: background 0.15s ease, transform 0.15s ease;
@@ -109,15 +125,16 @@
   transform: translateY(-1px);
 }
 
-@media (max-width: 700px) {
+/* ============ Responsive ============ */
+@media (max-width: 768px) {
   .lira-header {
-    padding: 14px 20px;
+    padding: 10px 18px;
   }
 
   .lira-header__inner,
   .lira-header__right {
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 12px;
   }
 
   .lira-header__right {
@@ -126,17 +143,16 @@
   }
 
   .lira-header__links {
-    gap: 14px;
+    gap: 16px;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .lira-header__links a {
-    font-size: 0.78rem;
+    font-size: 0.74rem;
   }
 
-  .lira-header__brand-text small,
-  .lira-header__icon {
+  .lira-header__brand-text small {
     display: none;
   }
 }

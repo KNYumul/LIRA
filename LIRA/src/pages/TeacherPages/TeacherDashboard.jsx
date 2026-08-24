@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Heart, Pencil, MinusCircle, ChevronDown, ChevronUp, Upload, Search, X, Plus, CheckCircle2, Sparkles, FileText, ScanLine, Loader2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import * as pdfjsLib from "pdfjs-dist";
@@ -117,6 +117,24 @@ function seedStudents() {
   for (let i = 22; i <= 28; i++) push(`Surname ${i}`, 75 + (i % 12), 70 + (i % 20));
   for (let i = 29; i <= 32; i++) push(`Surname ${i}`, 50 + (i % 15), 40 + (i % 15));
   return rows;
+}
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+function learnerToStudent(learner) {
+  const [birthYear = "", birthMonth = "", birthDay = ""] = (learner.birthdate || "").split("-");
+  return {
+    id: learner._id,
+    lastName: learner.lastName,
+    section: learner.section,
+    birthMonth,
+    birthDay,
+    birthYear,
+    wpm: 0,
+    accuracy: 0,
+    historyDate: "--",
+    expanded: false,
+  };
 }
 
 function riskOf(accuracy) {
@@ -322,7 +340,15 @@ function StatCard({ value, dotColor, label }) {
 }
 
 // ---------- Dashboard page ----------
-function Dashboard({ students, sectionName, sectionCount, onCycleSection }) {
+function SectionSelect({ sections, selectedSection, onChange, className = "" }) {
+  return (
+    <select value={selectedSection} onChange={(event) => onChange(event.target.value)} className={`font-medium text-sm outline-none cursor-pointer ${className}`} style={{ background: C.coral, color: "#fff" }} aria-label="Select section">
+      {sections.map((section) => <option key={section} value={section}>{section}</option>)}
+    </select>
+  );
+}
+
+function Dashboard({ students, sections, sectionName, onSectionChange }) {
   const total = students.length;
   const low = students.filter((s) => riskOf(s.accuracy) === "low").length;
   const mod = students.filter((s) => riskOf(s.accuracy) === "moderate").length;
@@ -358,16 +384,18 @@ function Dashboard({ students, sectionName, sectionCount, onCycleSection }) {
 </div>
       <p className="text-sm mt-1" style={{ color: C.textMuted }}>School Year 2025–2026</p>
 
-      <button
-        onClick={onCycleSection}
-        className="w-full text-left rounded-2xl px-6 py-4 mt-6"
+      <div
+        className="w-full rounded-2xl px-6 py-4 mt-6"
         style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}
       >
-        <div className="flex items-center gap-2 text-lg font-semibold" style={{ color: C.text }}>
-          {sectionCount} <Heart size={18} fill="#7FAE6C" color="#7FAE6C" />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-lg font-semibold" style={{ color: C.text }}>
+            {sections.length} <Heart size={18} fill="#7FAE6C" color="#7FAE6C" />
+          </div>
+          {sections.length > 0 && <SectionSelect sections={sections} selectedSection={sectionName} onChange={onSectionChange} className="rounded-full px-4 py-2" />}
         </div>
-        <div className="text-sm" style={{ color: C.textMuted }}>Total Sections - Tap to switch.</div>
-      </button>
+        <div className="text-sm" style={{ color: C.textMuted }}>Total sections — choose one to view its learners.</div>
+      </div>
 
       <div className="flex gap-4 mt-4 flex-wrap">
         <StatCard value={total} dotColor={C.blueDot} label="Total learners" />
@@ -581,7 +609,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle }) {
   );
 }
 
-function Students({ students, setStudents, sectionName }) {
+function Students({ students, setStudents, sections, sectionName, onSectionChange, loading, error, onRefresh }) {
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState(null); // {type:'add'|'edit'|'delete', student}
   const fileRef = useRef(null);
@@ -590,33 +618,50 @@ function Students({ students, setStudents, sectionName }) {
 
   const toggle = (id) => setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, expanded: !s.expanded } : s)));
 
-  const addLearner = (data) => {
-    setStudents((prev) => [
-      ...prev,
-      {
-        id: Math.max(0, ...prev.map((s) => s.id)) + 1,
-        lastName: data.lastName,
-        wpm: 0,
-        accuracy: 0,
-        historyDate: "--",
-        birthMonth: data.birthMonth,
-        birthDay: data.birthDay,
-        birthYear: data.birthYear,
-        classNumber: data.classNumber,
-        expanded: false,
-      },
-    ]);
-    setModal(null);
+  const saveLearner = async (data, id) => {
+    const payload = {
+      lastName: data.lastName,
+      birthdate: `${data.birthYear}-${data.birthMonth}-${data.birthDay}`,
+      section: sectionName,
+    };
+    const response = await fetch(`${API_URL}/api/learners${id ? `/${id}` : ""}`, {
+      method: id ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error((await response.json()).message || "Could not save learner.");
+    return learnerToStudent(await response.json());
   };
 
-  const editLearner = (data) => {
-    setStudents((prev) => prev.map((s) => (s.id === modal.student.id ? { ...s, ...data } : s)));
-    setModal(null);
+  const addLearner = async (data) => {
+    try {
+      const learner = await saveLearner(data);
+      setStudents((prev) => [...prev, learner]);
+      setModal(null);
+    } catch (requestError) {
+      alert(requestError.message);
+    }
   };
 
-  const deleteLearner = () => {
-    setStudents((prev) => prev.filter((s) => s.id !== modal.student.id));
-    setModal(null);
+  const editLearner = async (data) => {
+    try {
+      const learner = await saveLearner(data, modal.student.id);
+      setStudents((prev) => prev.map((s) => (s.id === learner.id ? { ...learner, expanded: s.expanded } : s)));
+      setModal(null);
+    } catch (requestError) {
+      alert(requestError.message);
+    }
+  };
+
+  const deleteLearner = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/learners/${modal.student.id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error((await response.json()).message || "Could not delete learner.");
+      setStudents((prev) => prev.filter((s) => s.id !== modal.student.id));
+      setModal(null);
+    } catch (requestError) {
+      alert(requestError.message);
+    }
   };
 
   const handleFile = (file) => {
@@ -645,7 +690,9 @@ function Students({ students, setStudents, sectionName }) {
           expanded: false,
         });
       }
-      setStudents((prev) => [...prev, ...newRows]);
+      Promise.all(newRows.map(({ lastName, birthMonth, birthDay, birthYear }) => saveLearner({ lastName, birthMonth, birthDay, birthYear })))
+        .then((learners) => setStudents((prev) => [...prev, ...learners]))
+        .catch((requestError) => alert(requestError.message));
     };
     reader.readAsText(file);
   };
@@ -656,6 +703,7 @@ function Students({ students, setStudents, sectionName }) {
     <div>
       <h1 className="text-3xl font-bold" style={{ color: C.text }}>Manage Students</h1>
       <p className="text-sm mt-1" style={{ color: C.textMuted }}>Your class roster and quick-view reading stats</p>
+      {error && <div className="text-sm mt-3" style={{ color: "#C0504D" }}>{error} <button onClick={onRefresh} className="underline">Try again</button></div>}
 
       <div
         className="mt-6 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center py-8 cursor-pointer"
@@ -671,9 +719,7 @@ function Students({ students, setStudents, sectionName }) {
       </div>
 
       <div className="flex items-center gap-3 mt-4 flex-wrap">
-        <div className="px-4 py-2 rounded-full font-medium text-sm" style={{ background: C.coral, color: "#fff" }}>
-          {sectionName} ▾
-        </div>
+        {sections.length > 0 && <SectionSelect sections={sections} selectedSection={sectionName} onChange={onSectionChange} className="rounded-full px-4 py-2" />}
         <div className="flex items-center gap-2 flex-1 min-w-[200px] rounded-full px-4 py-2" style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}>
           <Search size={16} color={C.textMuted} />
           <input
@@ -698,7 +744,8 @@ function Students({ students, setStudents, sectionName }) {
         <div>Learner</div><div>WPM</div><div>Accuracy</div><div>History</div><div>Risk Level</div><div className="text-right">Actions</div>
       </div>
 
-      {filtered.map((s) => (
+      {loading && <div className="text-center py-10 text-sm" style={{ color: C.textMuted }}>Loading learners...</div>}
+      {!loading && filtered.map((s) => (
         <StudentRow
           key={s.id}
           s={s}
@@ -707,7 +754,7 @@ function Students({ students, setStudents, sectionName }) {
           onToggle={toggle}
         />
       ))}
-      {filtered.length === 0 && (
+      {!loading && filtered.length === 0 && (
         <div className="text-center py-10 text-sm" style={{ color: C.textMuted }}>No learners match your search.</div>
       )}
 
@@ -1570,8 +1617,38 @@ function Stories() {
 export default function TeacherDashboard() {
   const navigate = useNavigate();
   const [page, setPage] = useState("dashboard");
-  const [students, setStudents] = useState(seedStudents);
-  const sectionName = "SAMPAGUITA";
+  const [students, setStudents] = useState([]);
+  const [learnersLoading, setLearnersLoading] = useState(true);
+  const [learnersError, setLearnersError] = useState("");
+  const [selectedSection, setSelectedSection] = useState("");
+  const sections = useMemo(
+    () => [...new Set(students.map((student) => student.section?.trim()).filter(Boolean))].sort(),
+    [students]
+  );
+  const sectionName = selectedSection || sections[0] || "";
+  const sectionStudents = sectionName
+    ? students.filter((student) => student.section === sectionName)
+    : [];
+
+  const loadLearners = async () => {
+    setLearnersLoading(true);
+    setLearnersError("");
+    try {
+      const response = await fetch(`${API_URL}/api/learners`);
+      if (!response.ok) throw new Error("Could not load learners from the database.");
+      const learners = await response.json();
+      const databaseStudents = learners.map(learnerToStudent);
+      const databaseSections = [...new Set(databaseStudents.map((student) => student.section?.trim()).filter(Boolean))].sort();
+      setStudents(databaseStudents);
+      setSelectedSection((currentSection) => databaseSections.includes(currentSection) ? currentSection : (databaseSections[0] || ""));
+    } catch (requestError) {
+      setLearnersError(requestError.message);
+    } finally {
+      setLearnersLoading(false);
+    }
+  };
+
+  useEffect(() => { loadLearners(); }, []);
 
   function handleLogout() {
     localStorage.removeItem("liraSession");
@@ -1583,9 +1660,9 @@ export default function TeacherDashboard() {
       <Sidebar page={page} setPage={setPage} onLogout={handleLogout} />
       <div className="flex-1 p-8 overflow-auto">
         {page === "dashboard" && (
-          <Dashboard students={students} sectionName={sectionName} sectionCount={1} onCycleSection={() => {}} />
+          <Dashboard students={sectionStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} />
         )}
-        {page === "students" && <Students students={students} setStudents={setStudents} sectionName={sectionName} />}
+        {page === "students" && <Students students={sectionStudents} setStudents={setStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} loading={learnersLoading} error={learnersError} onRefresh={loadLearners} />}
         {page === "flashcards" && <Flashcards />}
         {page === "stories" && <Stories />}
       </div>
