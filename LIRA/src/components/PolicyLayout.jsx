@@ -43,7 +43,7 @@ export default function PolicyLayout({ badge, title, subtitle, sections }) {
   return (
     <div className="lira-page" style={{ backgroundImage: `url(${BACKDROP})` }}>
       <main className="lira-main">
-        <div className="lira-hero">
+        <div className="">
           <div className="lira-badge-row">
             <span className="lira-badge">{badge}</span>
             {/* <nav className="lira-page-links" aria-label="Policy pages">
