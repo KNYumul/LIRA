@@ -15,9 +15,8 @@ export default function AdminTeachersPage({ teachers, onDelete, onSaveEdit }) {
     )
   }, [teachers, search])
 
-  function handleSave(id, updates) {
-    onSaveEdit(id, updates)
-    setEditingTeacher(null)
+  async function handleSave(id, updates) {
+    if (await onSaveEdit(id, updates)) setEditingTeacher(null)
   }
 
   return (

@@ -1,32 +1,86 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clearSession } from '../utils/session'
 import AdminSidebar from '../components/AdminSidebar.jsx'
 import AdminDashboard from './AdminPages/AdminDashboard.jsx'
 import AdminTeachersPage from './AdminPages/AdminTeachersPage.jsx'
 
-const INITIAL_TEACHERS = [
-  { id: 1, name: 'Teacher 1', email: 'teacher1@deped.gov.ph', status: 'Active' },
-  { id: 2, name: 'Teacher 2', email: 'teacher2@deped.gov.ph', status: 'Active' },
-  { id: 3, name: 'Teacher 3', email: 'teacher3@deped.gov.ph', status: 'Active' },
-  { id: 4, name: 'Teacher 4', email: 'teacher4@deped.gov.ph', status: 'Active' }
-]
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
+function toDashboardTeacher(teacher) {
+  return {
+    ...teacher,
+    name: `${teacher.firstName} ${teacher.lastName}`.trim(),
+    status: teacher.active ? 'Active' : 'Inactive'
+  }
+}
 
 export default function AdminTeacherDashboard() {
   const navigate = useNavigate()
-  const [teachers, setTeachers] = useState(INITIAL_TEACHERS)
+  const [teachers, setTeachers] = useState([])
+  const [loadError, setLoadError] = useState('')
   const [activeNav, setActiveNav] = useState('dashboard')
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadTeachers() {
+      try {
+        const response = await fetch(`${API_URL}/api/teachers`)
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.message || 'Could not load teacher accounts.')
+        if (!cancelled) setTeachers(data.map(toDashboardTeacher))
+      } catch (error) {
+        if (!cancelled) setLoadError(error.message || 'Could not load teacher accounts.')
+      }
+    }
+
+    loadTeachers()
+    return () => { cancelled = true }
+  }, [])
 
   function handleDelete(id) {
     const teacher = teachers.find(t => t.id === id)
     const ok = window.confirm(`Remove ${teacher.name} from the teacher list?`)
     if (ok) {
-      setTeachers(prev => prev.filter(t => t.id !== id))
+      fetch(`${API_URL}/api/teachers/${id}`, { method: 'DELETE' })
+        .then(async response => {
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}))
+            throw new Error(data.message || 'Could not delete teacher account.')
+          }
+          setTeachers(prev => prev.filter(t => t.id !== id))
+        })
+        .catch(error => window.alert(error.message))
     }
   }
 
-  function handleSaveEdit(id, updates) {
-    setTeachers(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)))
+  async function handleSaveEdit(id, updates) {
+    const existingTeacher = teachers.find(teacher => teacher.id === id)
+    const nameParts = updates.name.trim().split(/\s+/)
+    const firstName = nameParts.shift()
+    const lastName = nameParts.join(' ') || existingTeacher.lastName
+
+    try {
+      const response = await fetch(`${API_URL}/api/teachers/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email: updates.email,
+          active: updates.status === 'Active'
+        })
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || 'Could not update teacher account.')
+      const updatedTeacher = toDashboardTeacher(data.teacher)
+      setTeachers(prev => prev.map(teacher => teacher.id === id ? updatedTeacher : teacher))
+      return true
+    } catch (error) {
+      window.alert(error.message)
+      return false
+    }
   }
 
   function handleLogout() {
@@ -43,7 +97,7 @@ export default function AdminTeacherDashboard() {
 
       <main className="main">
         {activeNav === 'dashboard' ? (
-          <AdminDashboard teachers={teachers} />
+          <AdminDashboard teachers={teachers} loadError={loadError} />
         ) : (
           <AdminTeachersPage
             teachers={teachers}

@@ -30,7 +30,7 @@ export default function AdminEditTeacherModal({ teacher, onCancel, onSave }) {
     setErrors({})
   }
 
-  function handleSave() {
+  async function handleSave() {
     const nextErrors = {}
     if (!form.name.trim()) nextErrors.name = 'Name is required'
     if (!form.email.trim()) {
@@ -44,7 +44,7 @@ export default function AdminEditTeacherModal({ teacher, onCancel, onSave }) {
       return
     }
 
-    onSave(teacher.id, {
+    await onSave(teacher.id, {
       name: form.name.trim(),
       email: form.email.trim(),
       status: form.status === 'active' ? 'Active' : 'Inactive'
