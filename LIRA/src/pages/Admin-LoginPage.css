@@ -85,6 +85,7 @@
   font-weight: 400;
   font-size: 0.78rem;
   padding: 0 10px;
+  box-sizing: border-box;
 }
 
 .admin-login-card input:focus {
@@ -92,7 +93,45 @@
   box-shadow: 0 0 0 3px rgba(112, 112, 112, 0.15);
 }
 
-.admin-login-card button {
+/* Password wrapper & Toggle button */
+.admin-password-wrapper {
+  position: relative;
+  width: 100%;
+  margin: 0 0 17px;
+}
+
+.admin-password-wrapper input {
+  margin: 0;
+  padding-right: 36px;
+}
+
+.admin-toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 4px !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  border-radius: 0 !important;
+}
+
+.admin-toggle-password:hover {
+  transform: translateY(-50%) !important;
+  background: transparent !important;
+  color: #4d4d4d;
+}
+
+/* Submit Button */
+.admin-submit-btn {
   height: 45px;
   margin: 16px auto 0;
   width: min(100%, 187px);
@@ -107,8 +146,8 @@
   transition: background 160ms ease, transform 160ms ease;
 }
 
-.admin-login-card button:hover,
-.admin-login-card button:focus-visible {
+.admin-submit-btn:hover,
+.admin-submit-btn:focus-visible {
   background: #646464;
   transform: translateY(-1px);
 }
