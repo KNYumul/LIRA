@@ -10,7 +10,6 @@
   color: #3a3a3a;
   font-family: "Poppins", sans-serif;
   box-shadow: 0 6px 16px #686968;
-
 }
 
 .lira-header *,
@@ -39,7 +38,7 @@
 .lira-header__brand {
   display: flex;
   align-items: center;
-  gap: 0px; /* Removed spacing */
+  gap: 0px;
   color: inherit;
   text-decoration: none;
 }
@@ -49,7 +48,7 @@
   width: auto;
   max-width: 220px;
   object-fit: contain;
-  margin: 0 -45px 0 0; /* Negative right margin to pull the text closer */
+  margin: 0 -45px 0 0;
   padding: 0;
   display: block;
 }
@@ -61,7 +60,6 @@
   padding: 0;
 }
 
-/* Hide duplicate LIRA word if rendered via HTML */
 .lira-header__brand-text strong {
   display: none;
 }
@@ -94,11 +92,16 @@
   font-weight: 400;
   text-decoration: none;
   transition: color 0.15s ease;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .lira-header__links a:hover,
-.lira-header__links a:focus-visible {
+.lira-header__links a:focus-visible,
+.lira-header__links a.active {
   color: #4a7a5a;
+  font-weight: 600;
 }
 
 .lira-header__actions {
@@ -122,6 +125,8 @@
   font-size: 0.78rem;
   font-weight: 600;
   text-decoration: none;
+  border: none;
+  cursor: pointer;
   transition: background 0.15s ease, transform 0.15s ease;
 }
 
