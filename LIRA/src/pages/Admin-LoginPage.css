@@ -32,8 +32,8 @@
 }
 
 .admin-login-mascot {
-  width: 83px;
-  height: 75px;
+  width: 55px;
+  height: 50px;
   margin: 0 auto 3px;
   object-fit: contain;
 }
@@ -150,6 +150,66 @@
 .admin-submit-btn:focus-visible {
   background: #646464;
   transform: translateY(-1px);
+}
+
+/* Divider Line */
+.admin-login-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 22px 0 16px;
+}
+
+.admin-login-divider::before,
+.admin-login-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.admin-login-divider span {
+  padding: 0 12px;
+  color: #a0a0a0;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Rounded Google Button */
+.admin-google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid #f3bcac;
+  border-radius: 50px;
+  background: #ffffff;
+  color: #555555;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 160ms ease;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.admin-google-btn:hover {
+  background-color: #fff9f6;
+  border-color: #e59c86;
+  transform: translateY(-1px);
+}
+
+/* Blue dot icon inside Google button */
+.google-dot {
+  width: 7px;
+  height: 7px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 @media (max-width: 600px) {

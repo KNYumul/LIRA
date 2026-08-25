@@ -248,9 +248,11 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  max-width: 240px;
+  width: max-content;
+  max-width: 100%;
+  white-space: nowrap;
   margin: 0 auto;
-  padding: 6px 14px;
+  padding: 8px 20px;
   border: 1px solid #f1c6b6;
   border-radius: 999px;
   background: #fff;
@@ -332,5 +334,10 @@
   .portal-submit {
     min-width: 100%;
     margin-top: 18px;
+  }
+  
+  .google-button {
+    width: 100%;
+    white-space: normal;
   }
 }

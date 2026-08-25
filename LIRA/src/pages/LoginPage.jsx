@@ -574,7 +574,7 @@ function LoginPage() {
                 <span>OR</span>
               </div>
               <button className="google-button" type="button">
-                <b aria-hidden="true">●</b> Connect thru Gmail / Google Workspace
+                <b aria-hidden="true">●</b> Connect through Gmail / Google Workspace
               </button>
             </>
           )}

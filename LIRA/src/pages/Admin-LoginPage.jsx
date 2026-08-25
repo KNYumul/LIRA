@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Admin-LoginPage.css";
 import { saveSession } from "../utils/session";
-
-const mascot = "/UI_Designs/ANIMALS/K_Squirrel.png";
+// Importing directly fixes broken image paths across bundlers
+import mascot from "../assets/icons/Squirrel.png"; 
 
 function AdminLoginPage() {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
@@ -13,14 +13,12 @@ function AdminLoginPage() {
 
   const depedEmailRegex = /^[a-zA-Z._%+-]+@deped\.gov\.ph$/i;
 
-  // Real-time invalid domain detection once user inputs '@'
   const isEmailDomainInvalid =
     credentials.email.includes("@") && !depedEmailRegex.test(credentials.email);
 
   function updateField(event) {
     const { name, value } = event.target;
 
-    // 1. Email: Strip numbers completely and hard-cap at 75 characters
     if (name === "email") {
       const lettersAndSymbolsOnly = value.replace(/[0-9]/g, "");
       if (lettersAndSymbolsOnly.length <= 75) {
@@ -29,7 +27,6 @@ function AdminLoginPage() {
       return;
     }
 
-    // 2. Password: Hard-cap at 50 characters
     if (name === "password") {
       if (value.length <= 50) {
         setCredentials((current) => ({ ...current, password: value }));
@@ -47,7 +44,6 @@ function AdminLoginPage() {
     const email = credentials.email.trim();
     const password = credentials.password;
 
-    // 1. Empty field check & JSON warning
     if (!email || !password) {
       const warning = {
         status: 400,
@@ -63,7 +59,6 @@ function AdminLoginPage() {
       return;
     }
 
-    // 2. Email Length Check
     if (email.length > 75) {
       const warning = {
         status: 400,
@@ -75,7 +70,6 @@ function AdminLoginPage() {
       return;
     }
 
-    // 3. Email Domain Validation
     if (!depedEmailRegex.test(email)) {
       const warning = {
         status: 400,
@@ -88,7 +82,6 @@ function AdminLoginPage() {
       return;
     }
 
-    // 4. Password Validation (8-50 chars, uppercase, number, special char)
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,50}$/;
     if (!passwordRegex.test(password)) {
       const warning = {
@@ -138,11 +131,16 @@ function AdminLoginPage() {
     }
   }
 
+  // Google OAuth Login Action
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:5000/api/auth/google?role=admin";
+  };
+
   return (
     <main className="admin-login-page">
       <section className="admin-login-hero" aria-labelledby="admin-login-title">
         <form className="admin-login-card" onSubmit={handleSubmit} noValidate>
-          <img className="admin-login-mascot" src={mascot} alt="" />
+          <img className="admin-login-mascot" src={mascot} alt="Admin Squirrel Mascot" />
           <h1 id="admin-login-title">Admin Login</h1>
           <p>
             For authorized school personnel or
@@ -243,6 +241,22 @@ function AdminLoginPage() {
           <button type="submit" className="admin-submit-btn">
             Log in
           </button>
+
+          {/* OR Divider */}
+          <div className="admin-login-divider">
+            <span>OR</span>
+          </div>
+
+          {/* Google SSO Button matching exact design */}
+          <button
+            type="button"
+            className="admin-google-btn"
+            onClick={handleGoogleLogin}
+          >
+            <span className="google-dot"></span>
+            <span>Connect through Gmail / Google Workspace</span>
+          </button>
+
           {error && (
             <p role="alert" style={{ color: "#d9534f", textAlign: "center", marginTop: "14px" }}>
               {error}

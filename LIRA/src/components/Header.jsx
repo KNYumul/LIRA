@@ -1,30 +1,58 @@
-import "./Header.css";
+import React from "react";
+import "../components/Header.css";
 import { Link } from "react-router-dom";
 
-const logo = "/UI_Designs/LOGO/lira_logo_horizontal.svg";
-const foxIcon = "/UI_Designs/ANIMALS/F_Fox.png";
+import foxIcon from "../assets/icons/cat.svg";
+const defaultLogo = "/UI_Designs/LOGO/lira_logo_horizontal.svg";
 
-function Header() {
+function Header({ logoSrc, links, actionLabel, onAction }) {
   return (
     <header className="lira-header">
       <div className="lira-header__inner">
         <Link className="lira-header__brand" to="/" aria-label="LIRA home">
-          <img src={logo} alt="LIRA" className="lira-header__logo" />
+          <img 
+            src={logoSrc || defaultLogo} 
+            alt="LIRA" 
+            className="lira-header__logo" 
+          />
           <span className="lira-header__brand-text">
-            {/* <strong>LIRA</strong> */}
             <small>Literacy Intelligence and Reading Assessment</small>
           </span>
         </Link>
 
         <div className="lira-header__right">
           <nav className="lira-header__links" aria-label="Primary navigation">
-            <Link to="/#about">About</Link>
-            <Link to="/#how-it-works">How It Works</Link>
-            <Link to="/#features">Features</Link>
+            {links ? (
+              links.map((link, idx) => (
+                <Link
+                  key={idx}
+                  to={link.to || "#"}
+                  onClick={link.onClick}
+                  className={link.active ? "active" : ""}
+                >
+                  {link.label}
+                </Link>
+              ))
+            ) : (
+              <>
+                <Link to="/#about">About</Link>
+                <Link to="/#how-it-works">How It Works</Link>
+                <Link to="/#features">Features</Link>
+              </>
+            )}
           </nav>
+
           <div className="lira-header__actions">
             <img src={foxIcon} alt="" className="lira-header__icon" />
-            <Link className="lira-header__login" to="/login">Login</Link>
+            {onAction ? (
+              <button className="lira-header__login" onClick={onAction}>
+                {actionLabel || "Logout"}
+              </button>
+            ) : (
+              <Link className="lira-header__login" to="/login">
+                {actionLabel || "Login"}
+              </Link>
+            )}
           </div>
         </div>
       </div>
