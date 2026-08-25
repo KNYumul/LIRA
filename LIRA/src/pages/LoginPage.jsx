@@ -32,13 +32,25 @@ function LoginPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const isStudent = portal === "student";
   const isSignUp = teacherMode === "signup";
 
-  // Today's date in YYYY-MM-DD format for max date restriction
   const todayString = new Date().toISOString().split("T")[0];
+  const depedEmailRegex = /^[a-zA-Z._%+-]+@deped\.gov\.ph$/i;
+
+  // Real-time invalid domain detection once user inputs '@'
+  const isEmailDomainInvalid = email.includes("@") && !depedEmailRegex.test(email);
+
+  // Live password checklist rules
+  const passwordRules = {
+    length: password.length >= 8 && password.length <= 50,
+    hasUpper: /[A-Z]/.test(password),
+    hasNumber: /\d/.test(password),
+    hasSpecial: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
+  };
 
   // Name formatter: letters, spaces, hyphens only (no numbers), max 50 chars, auto-capitalize words
   const formatNameInput = (value) => {
@@ -67,18 +79,25 @@ function LoginPage() {
     setLastName(formatNameInput(e.target.value));
   };
 
+  // Email handler: block numbers and limit to 75 characters
   const handleEmailChange = (e) => {
-    const value = e.target.value;
-    if (value.length <= 75) {
-      setEmail(value);
+    const lettersAndSymbolsOnly = e.target.value.replace(/[0-9]/g, "");
+    if (lettersAndSymbolsOnly.length <= 75) {
+      setEmail(lettersAndSymbolsOnly);
+    }
+  };
+
+  // Password handler: hard-cap at 50 characters
+  const handlePasswordChange = (e) => {
+    const val = e.target.value;
+    if (val.length <= 50) {
+      setPassword(val);
     }
   };
 
   async function submitForm(event) {
     event.preventDefault();
     setError("");
-
-    const formData = new FormData(event.target);
 
     // ================= STUDENT LOGIN =================
     if (isStudent) {
@@ -168,11 +187,11 @@ function LoginPage() {
     } else {
       // ================= TEACHER PORTAL (LOGIN & SIGNUP) =================
       const userEmail = email.trim();
-      const password = formData.get("password") || "";
+      const userPassword = password;
       const trimmedFirstName = firstName.trim();
       const trimmedLastName = lastName.trim();
 
-      if (!userEmail || !password || (isSignUp && (!trimmedFirstName || !trimmedLastName))) {
+      if (!userEmail || !userPassword || (isSignUp && (!trimmedFirstName || !trimmedLastName))) {
         const warning = {
           status: 400,
           type: "VALIDATION_WARNING",
@@ -183,7 +202,7 @@ function LoginPage() {
               lastName: !trimmedLastName ? "Missing" : "Provided",
             }),
             email: !userEmail ? "Missing" : "Provided",
-            password: !password ? "Missing" : "Provided",
+            password: !userPassword ? "Missing" : "Provided",
           },
         };
         console.warn("JSON Warning (Teacher Portal):", JSON.stringify(warning, null, 2));
@@ -204,7 +223,6 @@ function LoginPage() {
         }
       }
 
-      const depedEmailRegex = /^[a-zA-Z0-9._%+-]+@deped\.gov\.ph$/i;
       if (userEmail.length > 75) {
         const warning = {
           status: 400,
@@ -228,8 +246,8 @@ function LoginPage() {
         return;
       }
 
-      const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
-      if (!passwordRegex.test(password)) {
+      const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,50}$/;
+      if (!passwordRegex.test(userPassword)) {
         const warning = {
           status: 400,
           type: "VALIDATION_WARNING",
@@ -237,13 +255,13 @@ function LoginPage() {
         };
         console.warn("JSON Warning (Weak Password):", JSON.stringify(warning, null, 2));
         setError(
-          "Password must be at least 8 characters long and contain at least one uppercase letter, one number, and one special character."
+          "Password must be 8-50 characters long and contain at least one uppercase letter, one number, and one special character."
         );
         return;
       }
 
       const endpoint = isSignUp ? "/signup" : "/login";
-      const payload = { email: userEmail, password };
+      const payload = { email: userEmail, password: userPassword };
 
       if (isSignUp) {
         payload.firstName = trimmedFirstName;
@@ -444,13 +462,27 @@ function LoginPage() {
                   </span>
                   <input
                     name="email"
-                    type="email"
+                    type="text"
                     value={email}
                     onChange={handleEmailChange}
                     maxLength={75}
                     autoComplete="email"
+                    style={
+                      isEmailDomainInvalid
+                        ? {
+                            borderColor: "#d9534f",
+                            boxShadow: "0 0 0 2px rgba(217, 83, 79, 0.2)",
+                          }
+                        : {}
+                    }
+                    placeholder="user@deped.gov.ph"
                     required
                   />
+                  {isEmailDomainInvalid && (
+                    <span style={{ color: "#d9534f", fontSize: "0.65rem", marginTop: "3px", display: "block" }}>
+                      Must end with @deped.gov.ph
+                    </span>
+                  )}
                 </label>
                 <label>
                   <span className="field-label">
@@ -460,6 +492,9 @@ function LoginPage() {
                     <input
                       name="password"
                       type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={handlePasswordChange}
+                      maxLength={50}
                       autoComplete={isSignUp ? "new-password" : "current-password"}
                       style={{ width: "100%", paddingRight: "40px" }}
                       required
@@ -508,12 +543,28 @@ function LoginPage() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         >
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
                           <circle cx="12" cy="12" r="3" />
                         </svg>
                       )}
                     </button>
                   </div>
+                  {isSignUp && password.length > 0 && (
+                    <div style={{ marginTop: "6px", fontSize: "0.62rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2px" }}>
+                      <span style={{ color: passwordRules.length ? "#2e7d32" : "#d9534f" }}>
+                        {passwordRules.length ? "✓" : "✗"} 8-50 characters
+                      </span>
+                      <span style={{ color: passwordRules.hasUpper ? "#2e7d32" : "#d9534f" }}>
+                        {passwordRules.hasUpper ? "✓" : "✗"} 1 uppercase letter
+                      </span>
+                      <span style={{ color: passwordRules.hasNumber ? "#2e7d32" : "#d9534f" }}>
+                        {passwordRules.hasNumber ? "✓" : "✗"} 1 number
+                      </span>
+                      <span style={{ color: passwordRules.hasSpecial ? "#2e7d32" : "#d9534f" }}>
+                        {passwordRules.hasSpecial ? "✓" : "✗"} 1 special char
+                      </span>
+                    </div>
+                  )}
                 </label>
               </div>
               <button className="portal-submit" type="submit">

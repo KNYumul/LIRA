@@ -11,10 +11,29 @@ function AdminLoginPage() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  const depedEmailRegex = /^[a-zA-Z._%+-]+@deped\.gov\.ph$/i;
+
+  // Real-time invalid domain detection once user inputs '@'
+  const isEmailDomainInvalid =
+    credentials.email.includes("@") && !depedEmailRegex.test(credentials.email);
+
   function updateField(event) {
     const { name, value } = event.target;
 
-    if (name === "email" && value.length > 75) {
+    // 1. Email: Strip numbers completely and hard-cap at 75 characters
+    if (name === "email") {
+      const lettersAndSymbolsOnly = value.replace(/[0-9]/g, "");
+      if (lettersAndSymbolsOnly.length <= 75) {
+        setCredentials((current) => ({ ...current, email: lettersAndSymbolsOnly }));
+      }
+      return;
+    }
+
+    // 2. Password: Hard-cap at 50 characters
+    if (name === "password") {
+      if (value.length <= 50) {
+        setCredentials((current) => ({ ...current, password: value }));
+      }
       return;
     }
 
@@ -28,6 +47,7 @@ function AdminLoginPage() {
     const email = credentials.email.trim();
     const password = credentials.password;
 
+    // 1. Empty field check & JSON warning
     if (!email || !password) {
       const warning = {
         status: 400,
@@ -43,7 +63,7 @@ function AdminLoginPage() {
       return;
     }
 
-    const depedEmailRegex = /^[a-zA-Z0-9._%+-]+@deped\.gov\.ph$/i;
+    // 2. Email Length Check
     if (email.length > 75) {
       const warning = {
         status: 400,
@@ -55,6 +75,7 @@ function AdminLoginPage() {
       return;
     }
 
+    // 3. Email Domain Validation
     if (!depedEmailRegex.test(email)) {
       const warning = {
         status: 400,
@@ -67,7 +88,8 @@ function AdminLoginPage() {
       return;
     }
 
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+    // 4. Password Validation (8-50 chars, uppercase, number, special char)
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,50}$/;
     if (!passwordRegex.test(password)) {
       const warning = {
         status: 400,
@@ -76,7 +98,7 @@ function AdminLoginPage() {
       };
       console.warn("JSON Warning (Weak Password):", JSON.stringify(warning, null, 2));
       setError(
-        "Password must be at least 8 characters long and contain at least one uppercase letter, one number, and one special character."
+        "Password must be 8-50 characters long and contain at least one uppercase letter, one number, and one special character."
       );
       return;
     }
@@ -134,13 +156,35 @@ function AdminLoginPage() {
           <input
             id="admin-email"
             name="email"
-            type="email"
+            type="text"
             autoComplete="email"
             maxLength={75}
             value={credentials.email}
             onChange={updateField}
+            placeholder="user@deped.gov.ph"
+            style={
+              isEmailDomainInvalid
+                ? {
+                    borderColor: "#d9534f",
+                    boxShadow: "0 0 0 2px rgba(217, 83, 79, 0.2)",
+                  }
+                : {}
+            }
             required
           />
+          {isEmailDomainInvalid && (
+            <span
+              style={{
+                color: "#d9534f",
+                fontSize: "0.62rem",
+                marginTop: "-12px",
+                marginBottom: "12px",
+                display: "block",
+              }}
+            >
+              Must end with @deped.gov.ph
+            </span>
+          )}
 
           <label htmlFor="admin-password">
             Password <span aria-hidden="true" style={{ color: "#d9534f" }}>*</span>
@@ -151,6 +195,7 @@ function AdminLoginPage() {
               name="password"
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
+              maxLength={50}
               value={credentials.password}
               onChange={updateField}
               required
@@ -188,7 +233,7 @@ function AdminLoginPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
                   <circle cx="12" cy="12" r="3" />
                 </svg>
               )}
