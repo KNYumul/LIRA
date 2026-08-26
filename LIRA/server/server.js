@@ -6,6 +6,7 @@ require("dotenv").config();
 const learnerRoutes = require("./routes/learner");
 const teacherRoutes = require("./routes/teacher");
 const adminRoutes = require("./routes/admin");
+const storyRoutes = require("./routes/story");
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use("/api/learners", learnerRoutes);
 app.use("/api/teachers", teacherRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/stories", storyRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI, {dbname: "LIRA"} )

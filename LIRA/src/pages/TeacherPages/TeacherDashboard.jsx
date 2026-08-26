@@ -6,7 +6,7 @@ import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { createWorker } from "tesseract.js";
 import { useNavigate } from "react-router-dom";
 import './TeacherDashboard.css';
-import { clearSession } from "../../utils/session";
+import { clearSession, getSession } from "../../utils/session";
 
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -1016,17 +1016,17 @@ function Flashcards() {
 }
 
 // ---------- Story cover card ----------
-function StoryCover({ story, onEdit, onDeleteRequest }) {
+function StoryCover({ story, canManage, onEdit, onDeleteRequest }) {
   return (
     <div className="relative">
       <div
-        className="relative rounded-xl overflow-hidden flex flex-col justify-between p-3 cursor-pointer"
+        className={`relative rounded-xl overflow-hidden flex flex-col justify-between p-3 ${canManage ? "cursor-pointer" : ""}`}
         style={{ background: story.coverImage ? "#000" : story.cover, aspectRatio: "3/3.6", border: "1px solid rgba(0,0,0,0.05)" }}
-        onClick={() => onEdit(story)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === "Enter") onEdit(story); }}
-        aria-label={`Open ${story.title}`}
+        onClick={() => canManage && onEdit(story)}
+        role={canManage ? "button" : undefined}
+        tabIndex={canManage ? 0 : undefined}
+        onKeyDown={(e) => { if (canManage && e.key === "Enter") onEdit(story); }}
+        aria-label={canManage ? `Open ${story.title}` : undefined}
       >
         {story.coverImage && (
           <img
@@ -1051,21 +1051,22 @@ function StoryCover({ story, onEdit, onDeleteRequest }) {
           </span>
         </div>
       </div>
-      <button
+      <div className="text-xs mt-2 truncate" style={{ color: C.textMuted }}>Uploaded by {story.uploadedBy || "Unknown teacher"}</div>
+      {canManage && <button
         onClick={(e) => { e.stopPropagation(); onDeleteRequest(story); }}
         className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-white"
         style={{ background: "#C0504D" }}
         aria-label={`Remove ${story.title}`}
       >
         <MinusCircle size={16} />
-      </button>
-      <button
+      </button>}
+      {canManage && <button
         onClick={(e) => { e.stopPropagation(); onEdit(story); }}
         className="absolute top-6 -right-2 w-6 h-6 rounded-full flex items-center justify-center bg-white shadow"
         aria-label={`Edit ${story.title}`}
       >
         <Pencil size={12} color="#666" />
-      </button>
+      </button>}
     </div>
   );
 }
@@ -1509,17 +1510,38 @@ function seedStories() {
   ];
 }
 
-function Stories() {
-  const [stories, setStories] = useState(seedStories);
+function Stories({ currentTeacher }) {
+  const [stories, setStories] = useState([]);
   const [lang, setLang] = useState("ENG");
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [showAddStory, setShowAddStory] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const storyUrl = (id = "") => `${API_URL}/api/stories${id ? `/${id}` : ""}`;
+  const teacherHeaders = () => ({ "X-Teacher-Id": currentTeacher?.id || "" });
+
+  const loadStories = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch(storyUrl());
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not load stories from the database."));
+      const databaseStories = await response.json();
+      setStories(databaseStories.map((story) => ({ ...story, id: story._id })));
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadStories(); }, []);
 
   const filtered = stories.filter((s) => s.lang === lang);
 
-  const createStory = ({ method, file, pages: extractedPages }) => {
-    const nextId = Math.max(0, ...stories.map((s) => s.id)) + 1;
+  const createStory = async ({ method, file, pages: extractedPages }) => {
     let newStory;
     if (method === "pdf" || method === "scan") {
       const name = file ? file.name.replace(/\.[^/.]+$/, "") : (method === "pdf" ? "Imported PDF" : "Scanned Document");
@@ -1528,7 +1550,6 @@ function Stories() {
           ? extractedPages
           : [{ id: 1, text: file ? `Content extracted from "${file.name}". Edit this page to add or fix the story text.` : "Edit this page to add your story content." }];
       newStory = {
-        id: nextId,
         title: name,
         lang,
         badge: "Custom Story",
@@ -1544,7 +1565,6 @@ function Stories() {
       };
     } else {
       newStory = {
-        id: nextId,
         title: "AI Generated Story",
         lang,
         badge: "AI-generated",
@@ -1558,20 +1578,50 @@ function Stories() {
         ],
       };
     }
-    setStories((prev) => [...prev, newStory]);
-    setShowAddStory(false);
-    setEditTarget(newStory);
+    try {
+      const response = await fetch(storyUrl(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...teacherHeaders() },
+        body: JSON.stringify(newStory),
+      });
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not save story."));
+      const savedStory = await response.json();
+      const story = { ...savedStory, id: savedStory._id };
+      setStories((prev) => [story, ...prev]);
+      setShowAddStory(false);
+      setEditTarget(story);
+    } catch (requestError) {
+      setError(requestError.message);
+    }
   };
 
-  const saveStory = (updated) => {
-    setStories((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
-    setEditTarget(null);
+  const saveStory = async (updated) => {
+    try {
+      const response = await fetch(storyUrl(updated.id), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...teacherHeaders() },
+        body: JSON.stringify(updated),
+      });
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not update story."));
+      const savedStory = await response.json();
+      const story = { ...savedStory, id: savedStory._id };
+      setStories((prev) => prev.map((existing) => (existing.id === story.id ? story : existing)));
+      setEditTarget(null);
+    } catch (requestError) {
+      setError(requestError.message);
+    }
   };
 
-  const confirmDeleteStory = () => {
-    setStories((prev) => prev.filter((s) => s.id !== deleteTarget.id));
-    setDeleteTarget(null);
-    setEditTarget((prev) => (prev && prev.id === deleteTarget.id ? null : prev));
+  const confirmDeleteStory = async () => {
+    try {
+      const response = await fetch(storyUrl(deleteTarget.id), { method: "DELETE", headers: teacherHeaders() });
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not delete story."));
+      setStories((prev) => prev.filter((story) => story.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      setEditTarget((prev) => (prev && prev.id === deleteTarget.id ? null : prev));
+    } catch (requestError) {
+      setError(requestError.message);
+    }
   };
 
   return (
@@ -1601,11 +1651,13 @@ function Stories() {
 
       <div className="grid mt-6 gap-6" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" }}>
         {filtered.map((story) => (
-          <StoryCover key={story.id} story={story} onEdit={setEditTarget} onDeleteRequest={setDeleteTarget} />
+          <StoryCover key={story.id} story={story} canManage={story.teacherId === currentTeacher?.id} onEdit={setEditTarget} onDeleteRequest={setDeleteTarget} />
         ))}
         <AddStoryCard onAdd={() => setShowAddStory(true)} />
       </div>
-      {filtered.length === 0 && (
+      {loading && <div className="text-sm mt-4" style={{ color: C.textMuted }}>Loading stories from the database…</div>}
+      {error && <div className="text-sm mt-4" style={{ color: "#C0504D" }}>{error}</div>}
+      {!loading && !error && filtered.length === 0 && (
         <div className="text-sm mt-2" style={{ color: C.textMuted }}>No stories yet in this language — add one with the + card.</div>
       )}
 
@@ -1632,6 +1684,7 @@ export default function TeacherDashboard() {
   const [learnersLoading, setLearnersLoading] = useState(true);
   const [learnersError, setLearnersError] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
+  const currentTeacher = getSession()?.user;
   const sections = useMemo(
     () => [...new Set(students.map((student) => student.section?.trim()).filter(Boolean))].sort(),
     [students]
@@ -1675,7 +1728,7 @@ export default function TeacherDashboard() {
         )}
         {page === "students" && <Students students={sectionStudents} setStudents={setStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} loading={learnersLoading} error={learnersError} onRefresh={loadLearners} />}
         {page === "flashcards" && <Flashcards />}
-        {page === "stories" && <Stories />}
+        {page === "stories" && <Stories currentTeacher={currentTeacher} />}
       </div>
     </div>
   );
