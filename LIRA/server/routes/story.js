@@ -37,8 +37,20 @@ async function ownedStory(req, res) {
 
 router.get("/", async (req, res) => {
   try {
-    const stories = await Story.find().sort({ createdAt: -1 });
-    res.json(stories);
+    const stories = await Story.find()
+      .populate("teacherId", "firstName lastName")
+      .sort({ createdAt: -1 });
+    res.json(stories.map((story) => {
+      const result = story.toObject();
+      const teacher = result.teacherId;
+      if (teacher && typeof teacher === "object" && teacher._id) {
+        result.teacherId = teacher._id;
+        if (!result.uploadedBy || result.uploadedBy === "Unknown teacher") {
+          result.uploadedBy = [teacher.firstName, teacher.lastName].filter(Boolean).join(" ") || "Unknown teacher";
+        }
+      }
+      return result;
+    }));
   } catch (error) {
     console.error("Could not load stories:", error);
     res.status(500).json({ message: "Could not load stories." });
