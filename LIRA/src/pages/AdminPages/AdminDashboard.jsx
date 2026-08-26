@@ -1,14 +1,15 @@
 import { HeartIcon, DotIcon } from '../../components/AdminIcons.jsx'
 
 const SCHOOL_YEAR = '2026–2027'
-const SECTIONS_COUNT = 7 // no sections data source yet — wire this to real data when available
 
-export default function AdminDashboard({ teachers }) {
+export default function AdminDashboard({ teachers, loadError }) {
   const totalTeachers = teachers.length
   const activeAccounts = teachers.filter(t => t.status === 'Active').length
+  const sectionsCount = new Set(teachers.map(t => t.section).filter(Boolean)).size
 
-  // Most recently added first (highest id = most recently created)
-  const recentlyAdded = [...teachers].sort((a, b) => b.id - a.id)
+  const recentlyAdded = [...teachers].sort((a, b) =>
+    new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+  )
 
   return (
     <>
@@ -32,7 +33,7 @@ export default function AdminDashboard({ teachers }) {
 
         <div className="stat-card">
           <div className="stat-number">
-            {SECTIONS_COUNT} <DotIcon className="stat-icon dot-green" />
+            {sectionsCount} <DotIcon className="stat-icon dot-green" />
           </div>
           <div className="stat-label">Sections</div>
         </div>
@@ -47,7 +48,9 @@ export default function AdminDashboard({ teachers }) {
         </div>
 
         <div className="recent-list">
-          {recentlyAdded.length === 0 ? (
+          {loadError ? (
+            <div className="empty-state">{loadError}</div>
+          ) : recentlyAdded.length === 0 ? (
             <div className="empty-state">No teachers yet.</div>
           ) : (
             recentlyAdded.map(t => (

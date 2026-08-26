@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AppHeader from "../components/AppHeader";
+import Header from "../components/Header";
 import "./Category.css";
 import { clearSession } from "../utils/session";
 
@@ -11,30 +11,21 @@ const bgDashboard = "/UI_Designs/BACKGROUND/backdrop_coral_peach_sunrise.svg";
 
 export default function Category() {
   const navigate = useNavigate();
+  const [lang, setLang] = useState("ENG");
 
   function handleLogout() {
     clearSession();
     navigate("/");
   }
-  const [lang, setLang] = useState("ENG");
 
   return (
     <div
       className="dash-page"
       style={{ backgroundImage: `url(${bgDashboard})` }}
     >
-      <AppHeader
-        links={[
-          {
-            label: "Flashcards",
-            active: true,
-            onClick: () => navigate("/flashcards"),
-          },
-          {
-            label: "Story Mode",
-            onClick: () => navigate("/story-mode"),
-          },
-        ]}
+      <Header
+        logoSrc="/UI_Designs/LOGO/lira_logo_horizontal.svg"
+        links={[]}
         actionLabel="Logout"
         onAction={handleLogout}
       />
@@ -64,7 +55,7 @@ export default function Category() {
             className="dash-card"
             onClick={() => navigate("/flashcards")}
           >
-            <img src={penguinIcon} alt="" className="dash-card__icon" />
+            <img src={penguinIcon} alt="Flashcards" className="dash-card__icon" />
             <h2>Flashcards</h2>
             <p>Practice sight words out loud</p>
           </button>
@@ -73,7 +64,7 @@ export default function Category() {
             className="dash-card"
             onClick={() => navigate("/story-mode")}
           >
-            <img src={catIcon} alt="" className="dash-card__icon" />
+            <img src={catIcon} alt="Story Mode" className="dash-card__icon" />
             <h2>Story Mode</h2>
             <p>Read stories and answer questions</p>
           </button>

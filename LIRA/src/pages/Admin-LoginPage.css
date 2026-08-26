@@ -1,6 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Quicksand:wght@500;600;700&display=swap');
+
 .admin-login-page {
   color: #575757;
   font-family: "Poppins", "Segoe UI", sans-serif;
+  font-weight: 300;
 }
 
 .admin-login-hero {
@@ -29,25 +32,29 @@
 }
 
 .admin-login-mascot {
-  width: 83px;
-  height: 75px;
+  width: 55px;
+  height: 50px;
   margin: 0 auto 3px;
   object-fit: contain;
 }
 
+/* Header / Title: Quicksand */
 .admin-login-card h1 {
   margin: 0;
   color: #555;
-  font-family: "Baloo 2", "Poppins", sans-serif;
+  font-family: "Quicksand", sans-serif;
   font-size: 1.45rem;
   font-weight: 700;
   line-height: 1.15;
   text-align: center;
 }
 
+/* Description / Subtitle: Poppins Thin */
 .admin-login-card > p {
   margin: 8px 0 23px;
   color: #686868;
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
   font-size: 0.69rem;
   line-height: 1.35;
   text-align: center;
@@ -56,6 +63,7 @@
 .admin-login-card label {
   margin: 0 0 7px;
   color: #777;
+  font-family: "Poppins", sans-serif;
   font-size: 0.61rem;
   font-weight: 700;
 }
@@ -73,9 +81,11 @@
   outline: none;
   background: #fffdf8;
   color: #4d4d4d;
-  font: inherit;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
   font-size: 0.78rem;
   padding: 0 10px;
+  box-sizing: border-box;
 }
 
 .admin-login-card input:focus {
@@ -83,7 +93,45 @@
   box-shadow: 0 0 0 3px rgba(112, 112, 112, 0.15);
 }
 
-.admin-login-card button {
+/* Password wrapper & Toggle button */
+.admin-password-wrapper {
+  position: relative;
+  width: 100%;
+  margin: 0 0 17px;
+}
+
+.admin-password-wrapper input {
+  margin: 0;
+  padding-right: 36px;
+}
+
+.admin-toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 4px !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  border-radius: 0 !important;
+}
+
+.admin-toggle-password:hover {
+  transform: translateY(-50%) !important;
+  background: transparent !important;
+  color: #4d4d4d;
+}
+
+/* Submit Button */
+.admin-submit-btn {
   height: 45px;
   margin: 16px auto 0;
   width: min(100%, 187px);
@@ -92,16 +140,76 @@
   background: #7d7d7d;
   color: #fff;
   cursor: pointer;
-  font: inherit;
+  font-family: "Poppins", sans-serif;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   transition: background 160ms ease, transform 160ms ease;
 }
 
-.admin-login-card button:hover,
-.admin-login-card button:focus-visible {
+.admin-submit-btn:hover,
+.admin-submit-btn:focus-visible {
   background: #646464;
   transform: translateY(-1px);
+}
+
+/* Divider Line */
+.admin-login-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 22px 0 16px;
+}
+
+.admin-login-divider::before,
+.admin-login-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.admin-login-divider span {
+  padding: 0 12px;
+  color: #a0a0a0;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Rounded Google Button */
+.admin-google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid #f3bcac;
+  border-radius: 50px;
+  background: #ffffff;
+  color: #555555;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 160ms ease;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.admin-google-btn:hover {
+  background-color: #fff9f6;
+  border-color: #e59c86;
+  transform: translateY(-1px);
+}
+
+/* Blue dot icon inside Google button */
+.google-dot {
+  width: 7px;
+  height: 7px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 @media (max-width: 600px) {

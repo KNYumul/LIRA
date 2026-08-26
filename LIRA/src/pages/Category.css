@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700;800&display=swap');
+
 .dash-page {
   --ink: #3a3a3a;
   --ink-soft: #6b6b6b;
@@ -9,8 +11,8 @@
   position: relative;
   min-height: 100vh;
   width: 100%;
-  font-family: "Poppins", "Segoe UI", -apple-system, BlinkMacSystemFont,
-    sans-serif;
+  font-family: "Poppins", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 300;
   color: var(--ink);
   background-color: #fbe4d8;
   background-size: cover;
@@ -48,10 +50,10 @@
   border: none;
   background: none;
   cursor: pointer;
-  font-family: inherit;
-  font-weight: 800px;
-  font-size: large;
-  padding: px 90px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 8px 32px;
   border-radius: 999px;
   color: var(--ink-soft);
   transition: background 0.15s ease, color 0.15s ease;
@@ -75,13 +77,13 @@
   border-radius: 24px;
   width: 400px;
   height: 300px;
-  padding: 60px 60px;
+  padding: 30px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: center;       /* Centers horizontally */
+  justify-content: center;   /* Centers vertically */
   text-align: center;
   cursor: pointer;
-  font-family: inherit;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -94,19 +96,25 @@
   width: 80px;
   height: 80px;
   object-fit: contain;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
+/* Card Title: Quicksand */
 .dash-card h2 {
+  font-family: "Quicksand", sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
-  margin: 0 15 15px;
+  margin: 0 0 10px;
 }
 
+/* Card Description: Poppins Thin */
 .dash-card p {
-  font-size: 1rem;
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  font-size: 0.95rem;
+  line-height: 1.5;
   color: var(--ink-soft);
-  margin: 10;
+  margin: 0;
 }
 
 /* ============ Frog mascot ============ */

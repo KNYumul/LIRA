@@ -13,9 +13,55 @@ function publicTeacher(teacher) {
     school: teacher.school,
     gradeLevel: teacher.gradeLevel,
     section: teacher.section,
+    active: teacher.active,
+    createdAt: teacher.createdAt,
     role: "teacher"
   };
 }
+
+// GET all teacher accounts for the admin dashboard.
+router.get("/", async (_req, res) => {
+  try {
+    const teachers = await Teacher.find().sort({ createdAt: -1 });
+    res.json(teachers.map(publicTeacher));
+  } catch (error) {
+    console.error("Could not load teachers:", error);
+    res.status(500).json({ message: "Could not load teacher accounts." });
+  }
+});
+
+// UPDATE a teacher account from the admin dashboard.
+router.put("/:id", async (req, res) => {
+  try {
+    const { firstName, lastName, email, active } = req.body;
+    if (!firstName || !lastName || !email || typeof active !== "boolean") {
+      return res.status(400).json({ message: "First name, last name, email, and account status are required." });
+    }
+
+    const teacher = await Teacher.findByIdAndUpdate(
+      req.params.id,
+      { firstName, lastName, email: email.trim().toLowerCase(), active },
+      { new: true, runValidators: true }
+    );
+    if (!teacher) return res.status(404).json({ message: "Teacher not found." });
+
+    res.json({ message: "Teacher account updated.", teacher: publicTeacher(teacher) });
+  } catch (error) {
+    if (error.code === 11000) return res.status(409).json({ message: "A teacher account already uses this email." });
+    res.status(400).json({ message: "Could not update teacher account." });
+  }
+});
+
+// DELETE a teacher account from the admin dashboard.
+router.delete("/:id", async (req, res) => {
+  try {
+    const teacher = await Teacher.findByIdAndDelete(req.params.id);
+    if (!teacher) return res.status(404).json({ message: "Teacher not found." });
+    res.status(204).send();
+  } catch (error) {
+    res.status(400).json({ message: "Could not delete teacher account." });
+  }
+});
 
 router.post("/signup", async (req, res) => {
   try {
