@@ -6,7 +6,7 @@ import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { createWorker } from "tesseract.js";
 import { useNavigate } from "react-router-dom";
 import './TeacherDashboard.css';
-import { clearSession } from "../../utils/session";
+import { clearSession, getSession } from "../../utils/session";
 
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -351,14 +351,47 @@ function StatCard({ value, dotColor, label }) {
 
 // ---------- Dashboard page ----------
 function SectionSelect({ sections, selectedSection, onChange, className = "" }) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <select value={selectedSection} onChange={(event) => onChange(event.target.value)} className={`font-medium text-sm outline-none cursor-pointer ${className}`} style={{ background: C.coral, color: "#fff" }} aria-label="Select section">
-      {sections.map((section) => <option key={section} value={section}>{section}</option>)}
-    </select>
+    <div className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className={`flex items-center gap-2 font-semibold text-sm transition-colors ${className}`}
+        style={{ background: C.coral, color: "#fff" }}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span>{selectedSection}</span>
+        <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div
+          className="absolute left-0 top-full z-30 mt-2 min-w-full overflow-hidden rounded-2xl py-1 shadow-lg"
+          style={{ background: "#FFFFFF", border: `1px solid ${C.cardBorder}` }}
+          role="listbox"
+        >
+          {sections.map((section) => (
+            <button
+              key={section}
+              type="button"
+              role="option"
+              aria-selected={section === selectedSection}
+              onClick={() => { onChange(section); setOpen(false); }}
+              className="block w-full whitespace-nowrap px-4 py-2 text-left text-sm font-medium transition-colors hover:bg-[#FBEDEA]"
+              style={{ color: section === selectedSection ? C.coralDark : C.text }}
+            >
+              {section}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
-function Dashboard({ students, sections, sectionName, onSectionChange }) {
+function Dashboard({ students, sections, sectionName, onSectionChange, teacherName }) {
   const total = students.length;
   const low = students.filter((s) => riskOf(s.accuracy) === "low").length;
   const mod = students.filter((s) => riskOf(s.accuracy) === "moderate").length;
@@ -385,7 +418,7 @@ function Dashboard({ students, sections, sectionName, onSectionChange }) {
   return (
     <div>
         <div className="flex items-center gap-3">
-      <h1 className="text-3xl font-bold" style={{ color: C.text }}>Good morning, Teacher Wilby! </h1>
+      <h1 className="text-3xl font-bold" style={{ color: C.text }}>Good morning, Teacher {teacherName}!</h1>
       <img
   src="/icons/owl.png"
   alt="Owl"
@@ -1640,6 +1673,8 @@ export default function TeacherDashboard() {
   const sectionStudents = sectionName
     ? students.filter((student) => student.section === sectionName)
     : [];
+  const teacher = getSession()?.user;
+  const teacherName = [teacher?.firstName, teacher?.lastName].filter(Boolean).join(" ") || "";
 
   const loadLearners = async () => {
     setLearnersLoading(true);
@@ -1671,7 +1706,7 @@ export default function TeacherDashboard() {
       <Sidebar page={page} setPage={setPage} onLogout={handleLogout} />
       <div className="flex-1 p-8 overflow-auto">
         {page === "dashboard" && (
-          <Dashboard students={sectionStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} />
+          <Dashboard students={sectionStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} teacherName={teacherName} />
         )}
         {page === "students" && <Students students={sectionStudents} setStudents={setStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} loading={learnersLoading} error={learnersError} onRefresh={loadLearners} />}
         {page === "flashcards" && <Flashcards />}
