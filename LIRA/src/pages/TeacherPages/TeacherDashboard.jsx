@@ -567,11 +567,11 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
   return (
     <div>
         <div className="flex items-center gap-3">
-      <h1 className="text-3xl font-bold" style={{ color: C.text }}>Good morning, Teacher {teacherName}!</h1>
+      <h1 className="text-3xl font-bold" style={{ color: C.text }}>Good day, Teacher {teacherName}!</h1>
       <img
-  src="/icons/owl.png"
+  src="/UI_Designs/ANIMALS/mascot_owl.svg"
   alt="Owl"
-  className="w-8 h-8 object-contain"
+  className="w-13 h-13 object-contain"
 />
 </div>
       <p className="text-sm mt-1" style={{ color: C.textMuted }}>School Year 2025–2026</p>
@@ -991,7 +991,7 @@ return (
           style={{ color: C.text }}
         >
           <img
-            src="/icons/pig.png"
+            src="/UI_Designs/ANIMALS/I_Pig.png"
             alt="Pig"
             className="w-8 h-8 object-contain"
           />
@@ -1361,8 +1361,8 @@ function AddStoryModal({ onCancel, onSubmit }) {
         style={{ color: C.text }}
       >
         <img
-          src="/icons/squirrel.png"
-          alt="Squirrel"
+          src="/UI_Designs/ANIMALS/K_Squirrel.png"
+          alt="squirrel"
           className="w-8 h-8 object-contain"
         />
 
