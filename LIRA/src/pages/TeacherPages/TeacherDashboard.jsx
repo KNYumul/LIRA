@@ -1279,7 +1279,8 @@ function AddStoryModal({ onCancel, onSubmit }) {
   const [scanError, setScanError] = useState("");
   const [generation, setGeneration] = useState({
     topic: "",
-    readingLevel: "Grade 2",
+    // readingLevel: "Grade 2",
+    readingLevel: "Grade 3",
     paragraphCount: 6,
     questionCount: 5,
     moral: "",
@@ -1433,6 +1434,7 @@ function AddStoryModal({ onCancel, onSubmit }) {
                 style={{ background: "#F6F3EE", border: `1px solid ${C.cardBorder}` }}
               />
             </label>
+            {/* Grade-level selection is hidden while AI stories are fixed to Grade 3.
             <label className="text-xs font-semibold" style={{ color: C.text }}>
               Reading level
               <select
@@ -1444,6 +1446,7 @@ function AddStoryModal({ onCancel, onSubmit }) {
                 {["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"].map((level) => <option key={level}>{level}</option>)}
               </select>
             </label>
+            */}
             <label className="text-xs font-semibold" style={{ color: C.text }}>
               Paragraphs
               <input
