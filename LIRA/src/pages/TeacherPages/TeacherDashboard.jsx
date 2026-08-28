@@ -656,9 +656,8 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
   const clear = () => { setLastName(""); setMonth(""); setDay(""); setYear(""); };
   const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0"));
-  const years = Array.from({ length: 15 }, (_, i) => String(2011 + i));
 
-  const valid = lastName.trim() && month && day && year;
+  const valid = lastName.trim() && month && day && /^\d{4}$/.test(year);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "rgba(60,50,45,0.35)" }}>
@@ -701,10 +700,17 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
               <option value="">Day</option>
               {days.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
-            <select value={year} onChange={(e) => setYear(e.target.value)} className="w-full rounded-lg px-2 py-2" style={selectStyle}>
-              <option value="">Year</option>
-              {years.map((y) => <option key={y} value={y}>{y}</option>)}
-            </select>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={year}
+              onChange={(e) => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              placeholder="Year"
+              maxLength={4}
+              className="w-full rounded-lg px-2 py-2 outline-none"
+              style={selectStyle}
+              aria-label="Birth year"
+            />
           </div>
         </Field>
 
