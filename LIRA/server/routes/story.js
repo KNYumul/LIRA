@@ -121,7 +121,8 @@ router.post("/generate", async (req, res) => {
     const teacher = await currentTeacher(req, res);
     if (!teacher) return;
     const language = req.body.language === "FIL" ? "Filipino" : "English";
-    const readingLevel = String(req.body.readingLevel || "Grade 2").trim().slice(0, 40);
+    // const readingLevel = String(req.body.readingLevel || "Grade 2").trim().slice(0, 40);
+    const readingLevel = "Grade 3";
     const topic = String(req.body.topic || "friendship and curiosity").trim().slice(0, 180);
     const moral = String(req.body.moral || "").trim().slice(0, 180);
     const paragraphCount = clampInteger(req.body.paragraphCount, 3, 15, 6);
