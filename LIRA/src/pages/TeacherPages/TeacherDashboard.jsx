@@ -674,14 +674,22 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
           <button onClick={clear} className="text-xs px-3 py-1 rounded-full" style={{ background: C.low, color: C.lowText }}>clear</button>
         </div>
 
-        <Field label="Type your Last Name" required>
-          <input
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className="w-full rounded-lg px-3 py-2 outline-none"
-            style={selectStyle}
-          />
-        </Field>
+      <Field label="Type your Last Name" required>
+  <input
+    value={lastName}
+    maxLength={50}
+    onChange={(e) => {
+      const value = e.target.value;
+
+      // Prevent numbers and other unwanted characters
+      if (/^[A-Za-zÀ-ÖØ-öø-ÿ' -]*$/.test(value)) {
+        setLastName(value);
+      }
+    }}
+    className="w-full rounded-lg px-3 py-2 outline-none"
+    style={selectStyle}
+  />
+</Field>
 
         <Field label="Birthdate" required>
           <div className="flex gap-2">
@@ -824,16 +832,33 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not save learner."));
     return learnerToStudent(await response.json());
   };
+  
 
   const addLearner = async (data) => {
-    try {
-      const learner = await saveLearner(data);
-      setStudents((prev) => [...prev, learner]);
-      setModal(null);
-    } catch (requestError) {
-      alert(requestError.message);
+  try {
+    const lastName = data.lastName?.trim();
+
+    if (!lastName) {
+      alert("Please enter the learner's surname.");
+      return;
     }
-  };
+
+    if (!/^[A-Za-zÀ-ÖØ-öø-ÿ]+(?:[ '-][A-Za-zÀ-ÖØ-öø-ÿ]+)*$/.test(lastName)) {
+      alert("Please enter a valid surname. Letters, spaces, apostrophes, and hyphens are allowed.");
+      return;
+    }
+
+    const learner = await saveLearner({
+      ...data,
+      lastName,
+    });
+
+    setStudents((prev) => [...prev, learner]);
+    setModal(null);
+  } catch (requestError) {
+    alert(requestError.message);
+  }
+};
 
   const editLearner = async (data) => {
     try {
