@@ -1798,7 +1798,7 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory, onRegenerateQu
           {pages.map((p, idx) => (
             <div key={p.id} className="relative rounded-xl p-4 mb-3" style={{ background: "#fff", border: `1.5px solid #9FD8E6` }}>
               <div className="absolute -top-3 left-3 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: "#8FCFE0" }}>
-                {usesParagraphs ? "¶" : "P"}{idx + 1}
+                {usesParagraphs ? "P" : "P"}{idx + 1}
               </div>
               <button onClick={() => setDeletePageTarget({ id: p.id, index: idx + 1 })} className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: "#C0504D" }}>
                 <MinusCircle size={14} />
