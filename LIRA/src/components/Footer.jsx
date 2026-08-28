@@ -38,9 +38,9 @@ function Footer() {
 
         <address className="lira-footer__column lira-footer__contact">
           <h2>Contact</h2>
-          <a href="mailto:hello@lira-reading.ph">hello@lira-reading.ph</a>
+          <a href="mailto:support.lira3@gmail.com">support.lira3@gmail.com</a>
           <span>Department of Education</span>
-          <span>Pasig City, Philippines</span>
+          <span>Navotas Elementary School - Central, Philippines</span>
           <Link className="lira-footer__portal" to="/admin/login"><strong>Admin Portal</strong></Link>
         </address>
       </div>
