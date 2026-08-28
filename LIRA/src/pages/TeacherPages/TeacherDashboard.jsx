@@ -1656,7 +1656,8 @@ function QuestionsModal({ story, onCancel, onSave, onRegenerate }) {
 
 // ---------- Manage Stories (per-story edit) modal ----------
 function StoryEditModal({ story, onCancel, onSave, onDeleteStory, onRegenerateQuestions }) {
-  const [title] = useState(story.title);
+  const [title, setTitle] = useState(story.title);
+  const [editingTitle, setEditingTitle] = useState(false);
   const [pages, setPages] = useState(story.pages);
   const [deletePageTarget, setDeletePageTarget] = useState(null);
   const [showQuestions, setShowQuestions] = useState(false);
@@ -1665,7 +1666,12 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory, onRegenerateQu
   const [coverError, setCoverError] = useState("");
   const [processingCover, setProcessingCover] = useState(false);
   const coverInputRef = useRef(null);
+  const titleInputRef = useRef(null);
   const usesParagraphs = story.contentUnit === "paragraph";
+
+  useEffect(() => {
+    if (editingTitle) titleInputRef.current?.focus();
+  }, [editingTitle]);
 
   const chooseCover = async (event) => {
     const selectedFile = event.target.files?.[0];
@@ -1700,12 +1706,43 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory, onRegenerateQu
                 style={{ background: coverImage ? "#222" : story.cover }}
               >
                 {coverImage
-                  ? <img src={coverImage} alt={`${story.title} cover`} className="w-full h-full object-cover" />
+                  ? <img src={coverImage} alt={`${title} cover`} className="w-full h-full object-cover" />
                   : <FileText size={25} color={story.coverText} />}
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-xl font-bold" style={{ color: C.text }}>Manage Stories</div>
-                <div className="text-sm font-semibold" style={{ color: "#C77C74" }}>{title}</div>
+                {editingTitle ? (
+                  <input
+                    ref={titleInputRef}
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                    onBlur={() => {
+                      if (!title.trim()) setTitle(story.title);
+                      setEditingTitle(false);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") event.currentTarget.blur();
+                      if (event.key === "Escape") {
+                        setTitle(story.title);
+                        setEditingTitle(false);
+                      }
+                    }}
+                    maxLength={120}
+                    className="mt-1 w-full rounded-md px-2 py-1 text-sm outline-none font-semibold"
+                    style={{ background: "#fff", border: `1px solid ${C.cardBorder}`, color: "#C77C74" }}
+                    aria-label="Story title"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setEditingTitle(true)}
+                    className="mt-1 flex max-w-full items-center gap-1.5 text-left"
+                    aria-label="Edit story title"
+                  >
+                    <span className="truncate text-sm font-semibold" style={{ color: "#C77C74" }}>{title}</span>
+                    <Pencil size={13} color="#8A8178" className="shrink-0" />
+                  </button>
+                )}
               </div>
             </div>
             <span className="px-3 py-1 rounded-full text-xs font-bold text-white shrink-0" style={{ background: "#7FAE6C" }}>{story.badge}</span>
@@ -1784,7 +1821,7 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory, onRegenerateQu
           <button onClick={onCancel} className="flex-1 rounded-full py-2 font-medium" style={{ border: `1px solid ${C.cardBorder}`, color: C.text }}>
             Cancel
           </button>
-          <button disabled={processingCover} onClick={() => onSave({ ...story, coverImage, pages, questions })} className="flex-1 rounded-full py-2 font-semibold text-white" style={{ background: processingCover ? "#EAD9BE" : "#EDA751" }}>
+          <button disabled={processingCover || !title.trim()} onClick={() => onSave({ ...story, title: title.trim(), coverImage, pages, questions })} className="flex-1 rounded-full py-2 font-semibold text-white" style={{ background: processingCover || !title.trim() ? "#EAD9BE" : "#EDA751" }}>
             Save
           </button>
         </div>
@@ -1800,7 +1837,7 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory, onRegenerateQu
       )}
       {showQuestions && (
         <QuestionsModal
-          story={{ ...story, pages, questions }}
+          story={{ ...story, title: title.trim() || story.title, pages, questions }}
           onCancel={() => setShowQuestions(false)}
           onSave={(qs) => { setQuestions(qs); setShowQuestions(false); }}
           onRegenerate={(questionCount) => onRegenerateQuestions({
