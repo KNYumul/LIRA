@@ -666,7 +666,7 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 text-xl font-bold" style={{ color: C.text }}>
             <img
-  src="/UI_Designs/ANIMALS/F_Fox.png"
+  src="/icons/fox.png"
   alt="Fox"
   className="w-6 h-6 object-contain"
 /> {mode === "add" ? "Add Learner" : "Edit Learner"}
@@ -708,14 +708,9 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
           </div>
         </Field>
 
-        <div
-        className="mb-5 px-1 text-sm tracking-wide transition-all duration-300 hover:opacity-70"
-        style={{ color: C.text }}
-      >
-        <span className="opacity-50">Section</span>
-        <span className="mx-2 opacity-30">/</span>
-        <strong className="font-medium">{sectionName}</strong>
-      </div>
+        <div className="mb-4 rounded-lg px-3 py-2 text-sm" style={{ background: C.activePill, color: C.text }}>
+          Section: <strong>{sectionName}</strong>
+        </div>
 
         <div className="flex gap-3 mt-5">
           <button onClick={onCancel} className="flex-1 rounded-full py-2 font-medium" style={{ border: `1px solid ${C.cardBorder}`, color: C.text }}>
@@ -1258,17 +1253,11 @@ function StoryCover({ story, canManage, onEdit, onDeleteRequest }) {
         {!story.coverImage && (
           <div className="relative font-extrabold text-lg leading-tight" style={{ color: story.coverText }}>{story.title}</div>
         )}
-        <div className="absolute bottom-3 left-3">
-  <span
-    className="px-2 py-1 rounded-full text-xs font-semibold"
-    style={{
-      background: "#FBE3C0",
-      color: "#8A6B2A",
-    }}
-  >
-    {story.questions.filter((q) => q.question).length} Qs
-  </span>
-</div>
+        <div className="relative">
+          <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: "#FBE3C0", color: "#8A6B2A" }}>
+            {story.questions.filter((q) => q.question).length} Qs
+          </span>
+        </div>
       </div>
       <div className="text-xs mt-2 truncate" style={{ color: C.textMuted }}>Uploaded by {story.uploadedBy || "Unknown teacher"}</div>
       {canManage && <button
@@ -1834,7 +1823,7 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory, onRegenerateQu
           {pages.map((p, idx) => (
             <div key={p.id} className="relative rounded-xl p-4 mb-3" style={{ background: "#fff", border: `1.5px solid #9FD8E6` }}>
               <div className="absolute -top-3 left-3 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: "#8FCFE0" }}>
-                {usesParagraphs ? "¶" : "P"}{idx + 1}
+                {usesParagraphs ? "P" : "P"}{idx + 1}
               </div>
               <button onClick={() => setDeletePageTarget({ id: p.id, index: idx + 1 })} className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: "#C0504D" }}>
                 <MinusCircle size={14} />
