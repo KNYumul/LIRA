@@ -7,6 +7,7 @@ import { createWorker } from "tesseract.js";
 import { useNavigate } from "react-router-dom";
 import './TeacherDashboard.css';
 import { clearSession, getSession } from "../../utils/session";
+import { clearSavedPortalPage, getSavedPortalPage, savePortalPage } from "../../utils/portalPage";
 
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -2109,7 +2110,10 @@ function Stories({ currentTeacher }) {
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
-  const [page, setPage] = useState("dashboard");
+  const [page, setPage] = useState(() => getSavedPortalPage(
+    "liraTeacherPortalPage",
+    ["dashboard", "students", "flashcards", "stories"]
+  ));
   const [students, setStudents] = useState([]);
   const [learnersLoading, setLearnersLoading] = useState(true);
   const [learnersError, setLearnersError] = useState("");
@@ -2145,8 +2149,10 @@ export default function TeacherDashboard() {
   };
 
   useEffect(() => { loadLearners(); }, []);
+  useEffect(() => { savePortalPage("liraTeacherPortalPage", page); }, [page]);
 
   function handleLogout() {
+    clearSavedPortalPage("liraTeacherPortalPage");
     clearSession();
     navigate("/");
   }
