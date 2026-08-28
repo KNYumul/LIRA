@@ -24,15 +24,19 @@ function Footer() {
           <h2>About</h2>
           <Link to="/#about">About LIRA</Link>
           <Link to="/#how-it-works">How It Works</Link>
-          <Link to="/#how-it-works">The Flow</Link>
           <Link to="/login">Login</Link>
         </nav>
 
         <nav className="lira-footer__column" aria-label="Resource links">
           <h2>Resources</h2>
           <Link to="/help-center">Help Center</Link>
-          <a href="#schools">For DepEd Schools</a>
-          <Link to="/privacy-policy">Privacy Policy</Link>
+          <a
+            href="https://ebeis.deped.gov.ph/beis/reports_info/masterlist"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            For DepEd Schools
+          </a>          <Link to="/privacy-policy">Privacy Policy</Link>
           <Link to="/terms-of-use">Terms of Use</Link>
         </nav>
 
