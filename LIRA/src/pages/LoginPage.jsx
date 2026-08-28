@@ -242,7 +242,7 @@ function LoginPage() {
           attemptedEmail: userEmail,
         };
         console.warn("JSON Warning (Invalid Domain):", JSON.stringify(warning, null, 2));
-        setError("Only official @deped.gov.ph email addresses are accepted.");
+        setError("Please enter a valid DepEd email address.");
         return;
       }
 
