@@ -35,6 +35,257 @@ async function ownedStory(req, res) {
   return story;
 }
 
+const clampInteger = (value, minimum, maximum, fallback) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? Math.min(maximum, Math.max(minimum, parsed)) : fallback;
+};
+
+function responseText(response) {
+  if (typeof response.output_text === "string") return response.output_text;
+  return (response.output || [])
+    .flatMap((item) => item.content || [])
+    .filter((item) => item.type === "output_text")
+    .map((item) => item.text)
+    .join("");
+}
+
+function geminiResponseText(response) {
+  return (response.candidates || [])
+    .flatMap((candidate) => candidate.content?.parts || [])
+    .map((part) => part.text || "")
+    .join("");
+}
+
+function geminiSchema(schema) {
+  if (Array.isArray(schema)) return schema.map(geminiSchema);
+  if (!schema || typeof schema !== "object") return schema;
+  return Object.fromEntries(
+    Object.entries(schema)
+      .filter(([key]) => key !== "additionalProperties")
+      .map(([key, value]) => [key, geminiSchema(value)])
+  );
+}
+
+async function generateWithOpenAI(prompt, schema) {
+  if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured on the server.");
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: process.env.OPENAI_STORY_MODEL || "gpt-5.6-terra",
+      input: prompt,
+      text: {
+        format: { type: "json_schema", name: "literacy_story", strict: true, schema }
+      }
+    })
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error?.message || "OpenAI could not generate a story.");
+  return responseText(result);
+}
+
+async function generateWithGemini(prompt, schema) {
+  if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured on the server.");
+  const model = process.env.GEMINI_STORY_MODEL || "gemini-3.5-flash-lite";
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": process.env.GEMINI_API_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: geminiSchema(schema)
+        }
+      })
+    }
+  );
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error?.message || "Gemini could not generate a story.");
+  const text = geminiResponseText(result);
+  if (!text && result.promptFeedback?.blockReason) {
+    throw new Error(`Gemini blocked the request: ${result.promptFeedback.blockReason}.`);
+  }
+  return text;
+}
+
+router.post("/generate", async (req, res) => {
+  try {
+    const teacher = await currentTeacher(req, res);
+    if (!teacher) return;
+    const language = req.body.language === "FIL" ? "Filipino" : "English";
+    const readingLevel = String(req.body.readingLevel || "Grade 2").trim().slice(0, 40);
+    const topic = String(req.body.topic || "friendship and curiosity").trim().slice(0, 180);
+    const moral = String(req.body.moral || "").trim().slice(0, 180);
+    const paragraphCount = clampInteger(req.body.paragraphCount, 3, 15, 6);
+    const questionCount = clampInteger(req.body.questionCount, 3, 10, 5);
+
+    const schema = {
+      type: "object",
+      additionalProperties: false,
+      required: ["title", "description", "paragraphs", "questions"],
+      properties: {
+        title: { type: "string" },
+        description: { type: "string" },
+        paragraphs: {
+          type: "array",
+          minItems: paragraphCount,
+          maxItems: paragraphCount,
+          items: { type: "string" }
+        },
+        questions: {
+          type: "array",
+          minItems: questionCount,
+          maxItems: questionCount,
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["question", "options", "correct"],
+            properties: {
+              question: { type: "string" },
+              options: {
+                type: "array",
+                minItems: 4,
+                maxItems: 4,
+                items: { type: "string" }
+              },
+              correct: { type: "integer", minimum: 0, maximum: 3 }
+            }
+          }
+        }
+      }
+    };
+
+    const prompt = [
+      `Write an original, child-appropriate literacy story in ${language} for ${readingLevel} learners.`,
+      `Topic or theme: ${topic}.`,
+      moral ? `Lesson or moral: ${moral}.` : "Include a positive, age-appropriate lesson.",
+      `Write exactly ${paragraphCount} coherent paragraphs using vocabulary suitable for the reading level.`,
+      `Create exactly ${questionCount} multiple-choice comprehension questions with four plausible choices each.`,
+      "Questions must be answerable only from the story. Avoid frightening, discriminatory, sexual, violent, or otherwise age-inappropriate content."
+    ].join(" ");
+
+    const provider = String(process.env.AI_PROVIDER || (process.env.GEMINI_API_KEY ? "gemini" : "openai")).toLowerCase();
+    if (!new Set(["openai", "gemini"]).has(provider)) {
+      return res.status(503).json({ message: `Unsupported AI_PROVIDER: ${provider}.` });
+    }
+    if (provider === "gemini" && !process.env.GEMINI_API_KEY) {
+      return res.status(503).json({ message: "GEMINI_API_KEY is not configured on the server." });
+    }
+    if (provider === "openai" && !process.env.OPENAI_API_KEY) {
+      return res.status(503).json({ message: "OPENAI_API_KEY is not configured on the server." });
+    }
+    let text;
+    try {
+      text = provider === "gemini"
+        ? await generateWithGemini(prompt, schema)
+        : await generateWithOpenAI(prompt, schema);
+    } catch (providerError) {
+      console.error(`${provider} story generation failed:`, providerError.message);
+      return res.status(502).json({ message: providerError.message });
+    }
+    if (!text) return res.status(502).json({ message: "The AI returned an empty story." });
+    const generated = JSON.parse(text);
+    res.json({
+      title: generated.title,
+      description: generated.description,
+      pages: generated.paragraphs.map((paragraph, index) => ({ id: index + 1, text: paragraph })),
+      questions: generated.questions.map((question, index) => ({ id: index + 1, ...question }))
+    });
+  } catch (error) {
+    console.error("Could not generate story:", error);
+    res.status(500).json({ message: "Could not generate the story. Please try again." });
+  }
+});
+
+router.post("/generate-questions", async (req, res) => {
+  try {
+    const teacher = await currentTeacher(req, res);
+    if (!teacher) return;
+
+    const storyText = (Array.isArray(req.body.pages) ? req.body.pages : [])
+      .map((page) => String(page?.text || "").trim())
+      .filter(Boolean)
+      .join("\n\n")
+      .slice(0, 50000);
+    if (!storyText) return res.status(400).json({ message: "Add story text before generating questions." });
+
+    const questionCount = clampInteger(req.body.questionCount, 3, 10, 5);
+    const language = req.body.language === "FIL" ? "Filipino" : "English";
+    const schema = {
+      type: "object",
+      additionalProperties: false,
+      required: ["questions"],
+      properties: {
+        questions: {
+          type: "array",
+          minItems: questionCount,
+          maxItems: questionCount,
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["question", "options", "correct"],
+            properties: {
+              question: { type: "string" },
+              options: {
+                type: "array",
+                minItems: 4,
+                maxItems: 4,
+                items: { type: "string" }
+              },
+              correct: { type: "integer", minimum: 0, maximum: 3 }
+            }
+          }
+        }
+      }
+    };
+    const prompt = [
+      `Create exactly ${questionCount} child-appropriate multiple-choice comprehension questions in ${language} for the story below.`,
+      "Each question must have exactly four plausible options and one correct answer.",
+      "Questions and answers must be supported directly by the story. Mix literal understanding with age-appropriate inference.",
+      "STORY:",
+      storyText
+    ].join("\n\n");
+
+    const provider = String(process.env.AI_PROVIDER || (process.env.GEMINI_API_KEY ? "gemini" : "openai")).toLowerCase();
+    if (!new Set(["openai", "gemini"]).has(provider)) {
+      return res.status(503).json({ message: `Unsupported AI_PROVIDER: ${provider}.` });
+    }
+    if (provider === "gemini" && !process.env.GEMINI_API_KEY) {
+      return res.status(503).json({ message: "GEMINI_API_KEY is not configured on the server." });
+    }
+    if (provider === "openai" && !process.env.OPENAI_API_KEY) {
+      return res.status(503).json({ message: "OPENAI_API_KEY is not configured on the server." });
+    }
+
+    let text;
+    try {
+      text = provider === "gemini"
+        ? await generateWithGemini(prompt, schema)
+        : await generateWithOpenAI(prompt, schema);
+    } catch (providerError) {
+      console.error(`${provider} question generation failed:`, providerError.message);
+      return res.status(502).json({ message: providerError.message });
+    }
+    if (!text) return res.status(502).json({ message: "The AI returned no questions." });
+
+    const generated = JSON.parse(text);
+    res.json({
+      questions: generated.questions.map((question, index) => ({ id: index + 1, ...question }))
+    });
+  } catch (error) {
+    console.error("Could not regenerate questions:", error);
+    res.status(500).json({ message: "Could not regenerate the questions. Please try again." });
+  }
+});
+
 router.get("/", async (req, res) => {
   try {
     const stories = await Story.find()
@@ -78,7 +329,7 @@ router.put("/:id", async (req, res) => {
     const existingStory = await ownedStory(req, res);
     if (!existingStory) return;
     const updates = {};
-    ["title", "lang", "badge", "cover", "coverText", "coverImage", "description", "pages", "questions"].forEach((field) => {
+    ["title", "lang", "badge", "cover", "coverText", "coverImage", "description", "contentUnit", "pages", "questions"].forEach((field) => {
       if (Object.hasOwn(req.body, field)) updates[field] = req.body[field];
     });
     Object.assign(existingStory, updates);

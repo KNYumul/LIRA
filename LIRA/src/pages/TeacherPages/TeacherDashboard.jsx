@@ -39,25 +39,174 @@ async function extractImagePages(file) {
   }
 }
 
-// ---------- extract real text content from an uploaded PDF, one story page per PDF page ----------
+function removeRepeatedPdfHeader(pageTexts) {
+  if (pageTexts.length < 2) return pageTexts;
+
+  const tokenizedPages = pageTexts.map((text) => text.split(/\s+/));
+  const shortestLength = Math.min(...tokenizedPages.map((tokens) => tokens.length));
+  let sharedTokens = 0;
+  while (
+    sharedTokens < shortestLength
+    && tokenizedPages.every((tokens) => tokens[sharedTokens] === tokenizedPages[0][sharedTokens])
+  ) {
+    sharedTokens += 1;
+  }
+
+  // A recurring four-or-more-word prefix is normally a school/document header.
+  if (sharedTokens < 4) return pageTexts;
+
+  const escapePattern = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const headerPattern = new RegExp(
+    `^${tokenizedPages[0].slice(0, sharedTokens).map(escapePattern).join("\\s+")}\\s*`
+  );
+  return pageTexts.map((text) => text.replace(headerPattern, "").trim());
+}
+
+function parseMultipleChoiceQuestions(text) {
+  const questions = [];
+  const questionPattern = /(\d+)\.\s+([\s\S]*?)(?=\s+\d+\.\s+|$)/g;
+  let questionMatch;
+
+  while ((questionMatch = questionPattern.exec(text)) !== null) {
+    const body = questionMatch[2].trim();
+    const firstOption = body.search(/\bA\)\s+/);
+    if (firstOption < 0) continue;
+
+    const question = body.slice(0, firstOption).trim();
+    const optionText = body.slice(firstOption);
+    const options = [];
+    const optionPattern = /([A-D])\)\s+([\s\S]*?)(?=\s+[A-D]\)\s+|$)/g;
+    let optionMatch;
+    while ((optionMatch = optionPattern.exec(optionText)) !== null) {
+      options.push(optionMatch[2].trim());
+    }
+
+    if (question && options.length >= 2) {
+      questions.push({
+        id: Number(questionMatch[1]),
+        question,
+        options,
+        // Assessment PDFs do not necessarily contain an answer key.
+        correct: null,
+      });
+    }
+  }
+  return questions;
+}
+
+function splitPdfStoryAndQuestions(pageTexts) {
+  const cleanedPages = removeRepeatedPdfHeader(pageTexts);
+  const markerPattern = /\bQUESTIONS?\b/i;
+  const questionStartPage = cleanedPages.findIndex((text) => markerPattern.test(text));
+
+  if (questionStartPage < 0) {
+    return {
+      pages: cleanedPages.map((text, index) => ({ id: index + 1, text })),
+      questions: [],
+    };
+  }
+
+  const markerMatch = cleanedPages[questionStartPage].match(markerPattern);
+  const markerIndex = markerMatch?.index ?? cleanedPages[questionStartPage].length;
+  const storyTextSections = [
+    ...cleanedPages.slice(0, questionStartPage),
+    cleanedPages[questionStartPage].slice(0, markerIndex).trim(),
+  ].filter(Boolean);
+  // Assessment cover material ends at the byline; the story starts after it.
+  storyTextSections[0] = storyTextSections[0]
+    .replace(/^[\s\S]*?\bStory by\b[^\n]*(?:\n\s*\n|$)/i, "")
+    .trim();
+  const storyParagraphs = storyTextSections
+    .flatMap((text) => text.split(/\n\s*\n/))
+    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+  const questionText = [
+    cleanedPages[questionStartPage].slice(markerIndex + (markerMatch?.[0].length ?? 0)),
+    ...cleanedPages.slice(questionStartPage + 1),
+  ].join(" ");
+
+  return {
+    pages: storyParagraphs.map((text, index) => ({ id: index + 1, text })),
+    questions: parseMultipleChoiceQuestions(questionText),
+  };
+}
+
+function extractPdfPageText(content) {
+  const lines = [];
+  for (const item of content.items) {
+    const value = "str" in item ? item.str.trim() : "";
+    if (!value || !item.transform) continue;
+    const y = item.transform[5];
+    const currentLine = lines.at(-1);
+    if (currentLine && Math.abs(currentLine.y - y) < 1) {
+      currentLine.text = `${currentLine.text} ${value}`.replace(/\s+/g, " ").trim();
+    } else {
+      lines.push({ y, text: value });
+    }
+  }
+
+  const ordinaryGaps = lines
+    .slice(1)
+    .map((line, index) => Math.abs(lines[index].y - line.y))
+    .filter((gap) => gap > 1 && gap < 24)
+    .sort((a, b) => a - b);
+  const lineHeight = ordinaryGaps[Math.floor(ordinaryGaps.length / 2)] || 16;
+
+  return lines.map((line, index) => {
+    if (index === lines.length - 1) return line.text;
+    const gap = Math.abs(line.y - lines[index + 1].y);
+    return `${line.text}${gap > lineHeight * 1.45 ? "\n\n" : " "}`;
+  }).join("").trim();
+}
+
+// ---------- extract story pages and any multiple-choice questions from an uploaded PDF ----------
 async function extractPdfPages(file) {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  const pages = [];
+  const pageTexts = [];
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    const text = content.items
-      .map((item) => ("str" in item ? item.str : ""))
-      .join(" ")
-      .replace(/\s+/g, " ")
-      .trim();
-    pages.push({
-      id: i,
-      text: text || `(No selectable text was found on page ${i} of the PDF — it may be a scanned image. You can type the content in manually.)`,
-    });
+    const text = extractPdfPageText(content);
+    pageTexts.push(text || `(No selectable text was found on page ${i} of the PDF — it may be a scanned image. You can type the content in manually.)`);
   }
-  return pages;
+  return splitPdfStoryAndQuestions(pageTexts);
+}
+
+function isPdfFile(file) {
+  return Boolean(file) && (file.type === "application/pdf" || /\.pdf$/i.test(file.name));
+}
+
+function prepareCoverImage(file) {
+  return new Promise((resolve, reject) => {
+    if (!file?.type.startsWith("image/")) {
+      reject(new Error("Please choose a JPG, PNG, or WebP image."));
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      reject(new Error("Please choose an image smaller than 8 MB."));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("The selected image could not be read."));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error("The selected image could not be opened."));
+      image.onload = () => {
+        const maxWidth = 900;
+        const maxHeight = 1080;
+        const scale = Math.min(1, maxWidth / image.width, maxHeight / image.height);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(image.width * scale);
+        canvas.height = Math.round(image.height * scale);
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/webp", 0.86));
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 // ---------- palette (sampled from the provided design) ----------
@@ -1128,6 +1277,13 @@ function AddStoryModal({ onCancel, onSubmit }) {
   const [file, setFile] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState("");
+  const [generation, setGeneration] = useState({
+    topic: "",
+    readingLevel: "Grade 2",
+    paragraphCount: 6,
+    questionCount: 5,
+    moral: "",
+  });
   const fileRef = useRef(null);
 
   const chooseMethod = (m) => {
@@ -1140,22 +1296,50 @@ function AddStoryModal({ onCancel, onSubmit }) {
     }
   };
 
-  const valid = method !== null && !scanning;
+  const needsFile = method === "pdf" || method === "scan";
+  const valid = method !== null
+    && !scanning
+    && (!needsFile || Boolean(file))
+    && (method !== "ai" || Boolean(generation.topic.trim()));
+
+  const updateGeneration = (field, value) => {
+    setGeneration((current) => ({ ...current, [field]: value }));
+  };
 
   const handleSubmit = async () => {
     if (!valid) return;
-    if ((method === "pdf" || method === "scan") && file) {
+    if (method === "ai") {
       setScanning(true);
       setScanError("");
       try {
-        const pages = method === "pdf" ? await extractPdfPages(file) : await extractImagePages(file);
-        onSubmit({ method, file, pages });
-      } catch (err) {
+        await onSubmit({ method, generation });
+      } catch (error) {
+        setScanError(error.message || "Could not generate a story. Please try again.");
+      } finally {
+        setScanning(false);
+      }
+      return;
+    }
+    if (needsFile && file) {
+      setScanning(true);
+      setScanError("");
+      try {
+        const extracted = method === "pdf" ? await extractPdfPages(file) : { pages: await extractImagePages(file), questions: [] };
+        onSubmit({ method, file, ...extracted });
+      } catch {
         setScanError(
           method === "pdf"
-            ? "Couldn't read that PDF. You can still add it and type the content in manually."
+            ? "We couldn't extract text from that PDF. An editable story has been created so you can add the text manually."
             : "Couldn't scan that image. You can still add it and type the content in manually."
         );
+        onSubmit({
+          method,
+          file,
+          pages: [{
+            id: 1,
+            text: `We couldn't extract text from "${file.name}". Type or paste the story content here.`,
+          }],
+        });
         setScanning(false);
       }
       return;
@@ -1169,7 +1353,7 @@ function AddStoryModal({ onCancel, onSubmit }) {
     style={{ background: "rgba(60,50,45,0.35)" }}
   >
     <div
-      className="rounded-3xl p-7 w-[480px]"
+      className="rounded-3xl p-7 w-[480px] max-h-[90vh] overflow-y-auto"
       style={{ background: C.cream }}
     >
       <div
@@ -1193,34 +1377,118 @@ function AddStoryModal({ onCancel, onSubmit }) {
               <button
                 key={m.key}
                 onClick={() => chooseMethod(m)}
-                className="rounded-2xl py-6 flex flex-col items-center gap-2"
+                aria-pressed={selected}
+                className="relative rounded-2xl py-6 flex flex-col items-center gap-2 transition-all"
                 style={{
-                  background: "#fff",
-                  border: `2px solid ${selected ? "#4FA96A" : "#8FBF9F"}`,
-                  boxShadow: selected ? "0 0 0 3px rgba(79,169,106,0.15)" : "none",
+                  background: selected ? "#EAF7EE" : "#fff",
+                  border: `${selected ? 3 : 2}px solid ${selected ? "#3D995A" : "#8FBF9F"}`,
+                  boxShadow: selected ? "0 0 0 4px rgba(61,153,90,0.18), 0 6px 14px rgba(61,153,90,0.16)" : "none",
+                  transform: selected ? "translateY(-2px)" : "none",
                 }}
               >
+                {selected && (
+                  <span
+                    className="absolute -top-3 -right-3 rounded-full p-1 text-white"
+                    style={{ background: "#3D995A", border: `3px solid ${C.cream}` }}
+                    aria-label="Selected"
+                  >
+                    <CheckCircle2 size={17} strokeWidth={3} />
+                  </span>
+                )}
                 <Icon size={26} color={m.iconColor} />
-                <span className="text-xs font-medium text-center" style={{ color: C.text }}>{m.label}</span>
+                <span className="text-xs text-center" style={{ color: selected ? "#287A42" : C.text, fontWeight: selected ? 700 : 500 }}>
+                  {m.label}
+                </span>
               </button>
             );
           })}
         </div>
 
         {method && (method === "pdf" || method === "scan") && !scanning && (
-          <div className="text-xs text-center mt-3" style={{ color: C.textMuted }}>
-            {file ? `Selected: ${file.name}` : "Choose a file to continue…"}
+          <div
+            className="mt-4 rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-sm"
+            style={{
+              color: file ? "#287A42" : C.textMuted,
+              background: file ? "#EAF7EE" : "rgba(255,255,255,0.55)",
+              border: `1.5px solid ${file ? "#7ABB8D" : C.cardBorder}`,
+            }}
+          >
+            {file && <CheckCircle2 size={18} color="#3D995A" className="shrink-0" />}
+            <span className="min-w-0">
+              {file && <strong>Selected: </strong>}
+              <span className={file ? "font-medium break-all" : ""}>{file ? file.name : "Choose a file to continue…"}</span>
+            </span>
           </div>
         )}
         {method === "ai" && (
-          <div className="text-xs text-center mt-3" style={{ color: C.textMuted }}>
-            A new story will be generated automatically for you to review.
+          <div className="mt-4 rounded-2xl p-4 grid grid-cols-2 gap-3" style={{ background: "#fff", border: `1px solid ${C.cardBorder}` }}>
+            <label className="col-span-2 text-xs font-semibold" style={{ color: C.text }}>
+              Topic or theme
+              <input
+                value={generation.topic}
+                onChange={(event) => updateGeneration("topic", event.target.value)}
+                maxLength={180}
+                placeholder="e.g. friendship, courage, caring for nature"
+                className="mt-1 w-full rounded-lg px-3 py-2 text-sm outline-none font-normal"
+                style={{ background: "#F6F3EE", border: `1px solid ${C.cardBorder}` }}
+              />
+            </label>
+            <label className="text-xs font-semibold" style={{ color: C.text }}>
+              Reading level
+              <select
+                value={generation.readingLevel}
+                onChange={(event) => updateGeneration("readingLevel", event.target.value)}
+                className="mt-1 w-full rounded-lg px-3 py-2 text-sm outline-none font-normal"
+                style={{ background: "#F6F3EE", border: `1px solid ${C.cardBorder}` }}
+              >
+                {["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"].map((level) => <option key={level}>{level}</option>)}
+              </select>
+            </label>
+            <label className="text-xs font-semibold" style={{ color: C.text }}>
+              Paragraphs
+              <input
+                type="number"
+                min="3"
+                max="15"
+                value={generation.paragraphCount}
+                onChange={(event) => updateGeneration("paragraphCount", event.target.value)}
+                className="mt-1 w-full rounded-lg px-3 py-2 text-sm outline-none font-normal"
+                style={{ background: "#F6F3EE", border: `1px solid ${C.cardBorder}` }}
+              />
+            </label>
+            <label className="text-xs font-semibold" style={{ color: C.text }}>
+              Questions
+              <input
+                type="number"
+                min="3"
+                max="10"
+                value={generation.questionCount}
+                onChange={(event) => updateGeneration("questionCount", event.target.value)}
+                className="mt-1 w-full rounded-lg px-3 py-2 text-sm outline-none font-normal"
+                style={{ background: "#F6F3EE", border: `1px solid ${C.cardBorder}` }}
+              />
+            </label>
+            <label className="text-xs font-semibold" style={{ color: C.text }}>
+              Lesson (optional)
+              <input
+                value={generation.moral}
+                onChange={(event) => updateGeneration("moral", event.target.value)}
+                maxLength={180}
+                placeholder="e.g. honesty matters"
+                className="mt-1 w-full rounded-lg px-3 py-2 text-sm outline-none font-normal"
+                style={{ background: "#F6F3EE", border: `1px solid ${C.cardBorder}` }}
+              />
+            </label>
           </div>
         )}
         {scanning && (
           <div className="flex items-center justify-center gap-2 text-xs mt-3" style={{ color: C.textMuted }}>
             <Loader2 size={14} className="animate-spin" />
-            {method === "pdf" ? "Scanning your PDF and pulling out the text…" : "Scanning your image and pulling out the text…"}
+            {method === "pdf"
+              ? "Scanning your PDF and pulling out the text…"
+              : method === "ai"
+                ? "Generating your story and questions…"
+                : "Scanning your image and pulling out the text…"}
           </div>
         )}
         {scanError && (
@@ -1232,7 +1500,18 @@ function AddStoryModal({ onCancel, onSubmit }) {
           type="file"
           accept={ADD_STORY_METHODS.find((m) => m.key === method)?.accept || undefined}
           className="hidden"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
+          onChange={(e) => {
+            const selectedFile = e.target.files?.[0] || null;
+            if (method === "pdf" && selectedFile && !isPdfFile(selectedFile)) {
+              setFile(null);
+              setScanError("Please choose a PDF file.");
+            } else {
+              setFile(selectedFile);
+              setScanError("");
+            }
+            // Allow selecting the same file again after an unsuccessful attempt.
+            e.target.value = "";
+          }}
         />
 
         <div className="flex gap-3 mt-6">
@@ -1246,7 +1525,7 @@ function AddStoryModal({ onCancel, onSubmit }) {
             style={{ background: valid ? "#EDA751" : "#EAD9BE" }}
           >
             {scanning && <Loader2 size={16} className="animate-spin" />}
-            Add Story
+            {needsFile && !file ? "Choose a File" : method === "ai" ? "Generate Story" : "Add Story"}
           </button>
         </div>
       </div>
@@ -1255,9 +1534,11 @@ function AddStoryModal({ onCancel, onSubmit }) {
 }
 
 // ---------- Manage Questions modal ----------
-function QuestionsModal({ story, onCancel, onSave, onOpenAdd }) {
+function QuestionsModal({ story, onCancel, onSave, onRegenerate }) {
   const [questions, setQuestions] = useState(story.questions);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenerateError, setRegenerateError] = useState("");
 
   const updateQuestion = (id, field, value) =>
     setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, [field]: value } : q)));
@@ -1269,8 +1550,17 @@ function QuestionsModal({ story, onCancel, onSave, onOpenAdd }) {
     setQuestions((prev) => prev.filter((q) => q.id !== deleteTarget.id));
     setDeleteTarget(null);
   };
-  const regenerate = () => {
-    setQuestions((prev) => prev.map((q) => ({ ...q, question: q.question ? `${q.question}` : q.question })));
+  const regenerate = async () => {
+    setRegenerating(true);
+    setRegenerateError("");
+    try {
+      const regenerated = await onRegenerate(Math.max(3, questions.length || 5));
+      setQuestions(regenerated);
+    } catch (error) {
+      setRegenerateError(error.message || "Could not regenerate the questions.");
+    } finally {
+      setRegenerating(false);
+    }
   };
 
   return (
@@ -1279,18 +1569,24 @@ function QuestionsModal({ story, onCancel, onSave, onOpenAdd }) {
         <div className="p-6 pb-3">
           <div className="flex items-start justify-between">
             <div className="text-xl font-bold" style={{ color: C.text }}>Manage Questions</div>
-            <span className="px-3 py-1 rounded-full text-xs font-bold text-white" style={{ background: "#7FAE6C" }}>AI-generated</span>
+            <span className="px-3 py-1 rounded-full text-xs font-bold text-white" style={{ background: "#7FAE6C" }}>
+              {story.badge === "AI-generated" ? "AI-generated" : "Imported"}
+            </span>
           </div>
           <div className="text-sm font-semibold mt-1" style={{ color: "#C77C74" }}>{story.title}</div>
           <p className="text-xs mt-2" style={{ color: C.textMuted }}>
-            These comprehension questions were generated automatically from the story text. Review them, tweak the wording, or regenerate a fresh set before assigning them to your class.
+            {story.badge === "AI-generated"
+              ? "These comprehension questions were generated automatically from the story text. Review them before assigning them to your class."
+              : "These comprehension questions were imported from the PDF. Review the wording and select the correct answer for any question whose answer was not included in the document."}
           </p>
           <div className="flex items-center justify-between mt-3">
             <span className="text-sm font-semibold" style={{ color: C.text }}>{questions.length} questions</span>
-            <button onClick={regenerate} className="text-xs px-4 py-2 rounded-full font-semibold" style={{ background: "#fff", border: `1px solid ${C.cardBorder}`, color: C.text }}>
-              Re-generate with AI
+            <button disabled={regenerating} onClick={regenerate} className="text-xs px-4 py-2 rounded-full font-semibold flex items-center gap-2" style={{ background: "#fff", border: `1px solid ${C.cardBorder}`, color: C.text, opacity: regenerating ? 0.7 : 1 }}>
+              {regenerating && <Loader2 size={13} className="animate-spin" />}
+              {regenerating ? "Generating…" : "Re-generate with AI"}
             </button>
           </div>
+          {regenerateError && <div className="text-xs mt-2" style={{ color: "#C0504D" }}>{regenerateError}</div>}
         </div>
 
         <div className="flex-1 overflow-y-auto px-6" style={{ scrollbarGutter: "stable" }}>
@@ -1337,7 +1633,7 @@ function QuestionsModal({ story, onCancel, onSave, onOpenAdd }) {
           <button onClick={onCancel} className="flex-1 rounded-full py-2 font-medium" style={{ border: `1px solid ${C.cardBorder}`, color: C.text }}>
             Cancel
           </button>
-          <button onClick={() => onSave(questions)} className="flex-1 rounded-full py-2 font-semibold text-white" style={{ background: "#EDA751" }}>
+          <button disabled={regenerating} onClick={() => onSave(questions)} className="flex-1 rounded-full py-2 font-semibold text-white" style={{ background: regenerating ? "#EAD9BE" : "#EDA751" }}>
             Save
           </button>
         </div>
@@ -1355,12 +1651,32 @@ function QuestionsModal({ story, onCancel, onSave, onOpenAdd }) {
 }
 
 // ---------- Manage Stories (per-story edit) modal ----------
-function StoryEditModal({ story, onCancel, onSave, onDeleteStory }) {
+function StoryEditModal({ story, onCancel, onSave, onDeleteStory, onRegenerateQuestions }) {
   const [title] = useState(story.title);
   const [pages, setPages] = useState(story.pages);
   const [deletePageTarget, setDeletePageTarget] = useState(null);
   const [showQuestions, setShowQuestions] = useState(false);
   const [questions, setQuestions] = useState(story.questions);
+  const [coverImage, setCoverImage] = useState(story.coverImage || null);
+  const [coverError, setCoverError] = useState("");
+  const [processingCover, setProcessingCover] = useState(false);
+  const coverInputRef = useRef(null);
+  const usesParagraphs = story.contentUnit === "paragraph";
+
+  const chooseCover = async (event) => {
+    const selectedFile = event.target.files?.[0];
+    event.target.value = "";
+    if (!selectedFile) return;
+    setProcessingCover(true);
+    setCoverError("");
+    try {
+      setCoverImage(await prepareCoverImage(selectedFile));
+    } catch (error) {
+      setCoverError(error.message);
+    } finally {
+      setProcessingCover(false);
+    }
+  };
 
   const updatePage = (id, text) => setPages((prev) => prev.map((p) => (p.id === id ? { ...p, text } : p)));
   const addPage = () => setPages((prev) => [...prev, { id: Math.max(0, ...prev.map((p) => p.id)) + 1, text: "" }]);
@@ -1375,9 +1691,14 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory }) {
         <div className="p-6 pb-3">
           <div className="flex items-start gap-4 justify-between">
             <div className="flex items-center gap-3">
-              {story.coverImage && (
-                <img src={story.coverImage} alt={story.title} className="w-12 h-16 rounded-lg object-cover shadow" />
-              )}
+              <div
+                className="w-16 h-20 rounded-lg overflow-hidden shadow flex items-center justify-center shrink-0"
+                style={{ background: coverImage ? "#222" : story.cover }}
+              >
+                {coverImage
+                  ? <img src={coverImage} alt={`${story.title} cover`} className="w-full h-full object-cover" />
+                  : <FileText size={25} color={story.coverText} />}
+              </div>
               <div>
                 <div className="text-xl font-bold" style={{ color: C.text }}>Manage Stories</div>
                 <div className="text-sm font-semibold" style={{ color: "#C77C74" }}>{title}</div>
@@ -1385,9 +1706,42 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory }) {
             </div>
             <span className="px-3 py-1 rounded-full text-xs font-bold text-white shrink-0" style={{ background: "#7FAE6C" }}>{story.badge}</span>
           </div>
+          <div className="mt-3 flex items-center gap-2">
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={chooseCover}
+            />
+            <button
+              type="button"
+              disabled={processingCover}
+              onClick={() => coverInputRef.current?.click()}
+              className="rounded-full px-4 py-2 text-xs font-semibold flex items-center gap-2"
+              style={{ background: "#fff", border: `1px solid ${C.cardBorder}`, color: C.text }}
+            >
+              {processingCover ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+              {processingCover ? "Preparing…" : coverImage ? "Replace cover" : "Upload cover"}
+            </button>
+            {coverImage && (
+              <button
+                type="button"
+                onClick={() => { setCoverImage(null); setCoverError(""); }}
+                className="rounded-full px-3 py-2 text-xs font-semibold flex items-center gap-1"
+                style={{ background: "#fff", border: "1px solid #DFA5A2", color: "#A94844" }}
+              >
+                <X size={13} /> Remove
+              </button>
+            )}
+            <span className="text-[11px]" style={{ color: C.textMuted }}>JPG, PNG or WebP · max 8 MB</span>
+          </div>
+          {coverError && <div className="text-xs mt-2" style={{ color: "#C0504D" }}>{coverError}</div>}
           <p className="text-xs mt-2" style={{ color: C.textMuted }}>{story.description}</p>
           <div className="flex items-center justify-between mt-3">
-            <span className="text-sm font-semibold" style={{ color: C.text }}>{pages.length} pages</span>
+            <span className="text-sm font-semibold" style={{ color: C.text }}>
+              {pages.length} {usesParagraphs ? "paragraphs" : "pages"}
+            </span>
             <div className="flex gap-2">
               <button onClick={() => setShowQuestions(true)} className="text-xs px-4 py-2 rounded-full font-semibold" style={{ background: "#fff", border: `1px solid ${C.cardBorder}`, color: C.text }}>
                 Manage Questions
@@ -1403,7 +1757,7 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory }) {
           {pages.map((p, idx) => (
             <div key={p.id} className="relative rounded-xl p-4 mb-3" style={{ background: "#fff", border: `1.5px solid #9FD8E6` }}>
               <div className="absolute -top-3 left-3 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: "#8FCFE0" }}>
-                P{idx + 1}
+                {usesParagraphs ? "¶" : "P"}{idx + 1}
               </div>
               <button onClick={() => setDeletePageTarget({ id: p.id, index: idx + 1 })} className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: "#C0504D" }}>
                 <MinusCircle size={14} />
@@ -1418,7 +1772,7 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory }) {
             </div>
           ))}
           <button onClick={addPage} className="w-full rounded-full py-2 mb-4 text-sm font-medium border-2 border-dashed" style={{ borderColor: "#D8CFC2", color: C.textMuted }}>
-            + Add page
+            + Add {usesParagraphs ? "paragraph" : "page"}
           </button>
         </div>
 
@@ -1426,7 +1780,7 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory }) {
           <button onClick={onCancel} className="flex-1 rounded-full py-2 font-medium" style={{ border: `1px solid ${C.cardBorder}`, color: C.text }}>
             Cancel
           </button>
-          <button onClick={() => onSave({ ...story, pages, questions })} className="flex-1 rounded-full py-2 font-semibold text-white" style={{ background: "#EDA751" }}>
+          <button disabled={processingCover} onClick={() => onSave({ ...story, coverImage, pages, questions })} className="flex-1 rounded-full py-2 font-semibold text-white" style={{ background: processingCover ? "#EAD9BE" : "#EDA751" }}>
             Save
           </button>
         </div>
@@ -1434,17 +1788,22 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory }) {
 
       {deletePageTarget && (
         <DeleteConfirmModal
-          title="Remove this Page?"
-          subtitle={`Page ${deletePageTarget.index} will be removed from your story pages.`}
+          title={`Remove this ${usesParagraphs ? "paragraph" : "page"}?`}
+          subtitle={`${usesParagraphs ? "Paragraph" : "Page"} ${deletePageTarget.index} will be removed from your story.`}
           onCancel={() => setDeletePageTarget(null)}
           onConfirm={confirmDeletePage}
         />
       )}
       {showQuestions && (
         <QuestionsModal
-          story={{ ...story, questions }}
+          story={{ ...story, pages, questions }}
           onCancel={() => setShowQuestions(false)}
           onSave={(qs) => { setQuestions(qs); setShowQuestions(false); }}
+          onRegenerate={(questionCount) => onRegenerateQuestions({
+            pages,
+            language: story.lang,
+            questionCount,
+          })}
         />
       )}
     </div>
@@ -1574,7 +1933,7 @@ function Stories({ currentTeacher }) {
 
   const filtered = stories.filter((s) => s.lang === lang);
 
-  const createStory = async ({ method, file, pages: extractedPages }) => {
+  const createStory = async ({ method, file, pages: extractedPages, questions: extractedQuestions = [], generation }) => {
     let newStory;
     if (method === "pdf" || method === "scan") {
       const name = file ? file.name.replace(/\.[^/.]+$/, "") : (method === "pdf" ? "Imported PDF" : "Scanned Document");
@@ -1591,24 +1950,39 @@ function Stories({ currentTeacher }) {
         coverImage: null,
         description:
           method === "pdf"
-            ? "This story's pages were scanned and pulled from your uploaded PDF. Review the text below, fix anything that didn't come through cleanly, or generate comprehension questions before assigning it to your class."
+            ? "The story pages and multiple-choice questions were pulled from your uploaded PDF. Review the extracted content and mark any correct answers that were not included in the document before assigning it to your class."
             : "This story's text was scanned (OCR) from your uploaded photo. Review the text below, fix anything that didn't come through cleanly, or generate comprehension questions before assigning it to your class.",
         pages,
-        questions: [],
+        contentUnit: method === "pdf" ? "paragraph" : "page",
+        questions: extractedQuestions,
       };
     } else {
+      let generated;
+      try {
+        const generationResponse = await fetch(`${storyUrl()}/generate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...teacherHeaders() },
+          body: JSON.stringify({ ...generation, language: lang }),
+        });
+        if (!generationResponse.ok) {
+          throw new Error(await apiErrorMessage(generationResponse, "Could not generate a story."));
+        }
+        generated = await generationResponse.json();
+      } catch (generationError) {
+        setError(generationError.message);
+        throw generationError;
+      }
       newStory = {
-        title: "AI Generated Story",
+        title: generated.title,
         lang,
         badge: "AI-generated",
         cover: "linear-gradient(160deg,#D7E7F5 0%,#9AB7D6 100%)",
         coverText: "#1E3A4A",
         coverImage: null,
-        description: "These reading stories were generated automatically for your library. Review the text, tweak the content, or generate a fresh batch before assigning them to your class.",
-        pages: [{ id: 1, text: "Once upon a time, in a small village, a curious child set out to learn something new every day." }],
-        questions: [
-          { id: 1, question: "Who is the main character?", options: ["A curious child", "A teacher", "A dog", "A king"], correct: 0 },
-        ],
+        description: generated.description || "An AI-generated literacy story. Review all content before assigning it to your class.",
+        contentUnit: "paragraph",
+        pages: generated.pages,
+        questions: generated.questions,
       };
     }
     try {
@@ -1643,6 +2017,19 @@ function Stories({ currentTeacher }) {
     } catch (requestError) {
       setError(requestError.message);
     }
+  };
+
+  const regenerateQuestions = async ({ pages, language, questionCount }) => {
+    const response = await fetch(`${storyUrl()}/generate-questions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...teacherHeaders() },
+      body: JSON.stringify({ pages, language, questionCount }),
+    });
+    if (!response.ok) {
+      throw new Error(await apiErrorMessage(response, "Could not regenerate the questions."));
+    }
+    const result = await response.json();
+    return result.questions;
   };
 
   const confirmDeleteStory = async () => {
@@ -1697,7 +2084,14 @@ function Stories({ currentTeacher }) {
       {showAddStory && (
         <AddStoryModal onCancel={() => setShowAddStory(false)} onSubmit={createStory} />
       )}
-      {editTarget && <StoryEditModal story={editTarget} onCancel={() => setEditTarget(null)} onSave={saveStory} />}
+      {editTarget && (
+        <StoryEditModal
+          story={editTarget}
+          onCancel={() => setEditTarget(null)}
+          onSave={saveStory}
+          onRegenerateQuestions={regenerateQuestions}
+        />
+      )}
       {deleteTarget && (
         <DeleteConfirmModal
           title="Remove this story?"

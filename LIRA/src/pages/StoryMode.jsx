@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './StoryMode.css';
 
+/* Static story catalog retained for reference; Student Story Mode now loads from /api/stories.
 import coverSiDindoPundido from '../assets/icons/si-dindo-pundido.jpg';
 import coverRosaAlbina from '../assets/icons/rosa-albina.jpg';
 import coverAngPambihirangSombrero from '../assets/icons/ang-pambihirang-sombrero.jpg';
@@ -475,6 +476,66 @@ const STORIES = [
     }
   }
 ];
+*/
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+function fallbackCover(title) {
+  const safeTitle = String(title || 'Story').replace(/[&<>"']/g, '');
+  const words = safeTitle.split(/\s+/).filter(Boolean);
+  const titleLines = [];
+  for (const word of words) {
+    const currentLine = titleLines.at(-1);
+    if (!currentLine || (currentLine.length + word.length + 1 > 20 && titleLines.length < 3)) {
+      titleLines.push(word);
+    } else {
+      titleLines[titleLines.length - 1] = `${currentLine} ${word}`;
+    }
+  }
+  if (titleLines[2]?.length > 23) titleLines[2] = `${titleLines[2].slice(0, 20).trim()}…`;
+  const titleText = titleLines
+    .slice(0, 3)
+    .map((line, index) => `<tspan x="300" y="${520 + (index * 42)}">${line}</tspan>`)
+    .join('');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="720" viewBox="0 0 600 720">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#D7E7F5"/><stop offset="1" stop-color="#9AB7D6"/></linearGradient></defs>
+    <rect width="600" height="720" rx="32" fill="url(#g)"/>
+    <path d="M170 205h260v250H170z" fill="#fff" opacity=".75"/><path d="M300 205v250" stroke="#7895B2" stroke-width="8"/>
+    <text text-anchor="middle" font-family="Arial,sans-serif" font-size="32" font-weight="700" fill="#1E3A4A">${titleText}</text>
+  </svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function learnerPage(text) {
+  const cleaned = String(text || '').trim();
+  const firstSentence = cleaned.match(/^.*?[.!?](?:\s|$)/)?.[0] || '';
+  return {
+    highlight: firstSentence,
+    rest: cleaned.slice(firstSentence.length),
+  };
+}
+
+function databaseStory(story) {
+  const language = story.lang === 'FIL' ? 'FIL' : 'ENG';
+  return {
+    id: story._id,
+    title: story.title,
+    titleFil: story.title,
+    cover: story.coverImage || fallbackCover(story.title),
+    languageType: language,
+    starred: false,
+    pages: { [language]: (story.pages || []).map((page) => learnerPage(page.text)).filter((page) => page.highlight || page.rest) },
+    quiz: {
+      [language]: (story.questions || [])
+        .filter((question) => question.question && Array.isArray(question.options) && question.options.length > 1)
+        .map((question) => ({
+          question: question.question,
+          options: question.options,
+          correct: question.correct,
+        })),
+    },
+  };
+}
 
 function BackButton({ onClick }) {
   return (
@@ -512,6 +573,9 @@ function KoalaMascot() {
 
 function StoryMode({ onExit }) {
   const navigate = useNavigate();
+  const [stories, setStories] = useState([]);
+  const [storiesLoading, setStoriesLoading] = useState(true);
+  const [storiesError, setStoriesError] = useState('');
   const [view, setView] = useState('selection'); // 'selection' | 'reading' | 'quiz'
   const [language, setLanguage] = useState('ENG'); // 'ENG' | 'FIL'
   const [activeStory, setActiveStory] = useState(null);
@@ -528,7 +592,29 @@ function StoryMode({ onExit }) {
   const [carouselOffset, setCarouselOffset] = useState(0);
   const listenTimer = useRef(null);
 
-  const filteredStories = STORIES.filter((s) => s.languageType === language);
+  const filteredStories = stories.filter((story) => story.languageType === language);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadStories = async () => {
+      setStoriesLoading(true);
+      setStoriesError('');
+      try {
+        const response = await fetch(`${API_URL}/api/stories`);
+        if (!response.ok) throw new Error('Could not load stories from the library.');
+        const result = await response.json();
+        if (!cancelled) {
+          setStories(result.map(databaseStory).filter((story) => story.pages[story.languageType]?.length));
+        }
+      } catch (error) {
+        if (!cancelled) setStoriesError(error.message || 'Could not load stories from the library.');
+      } finally {
+        if (!cancelled) setStoriesLoading(false);
+      }
+    };
+    loadStories();
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (isListening) {
@@ -641,7 +727,13 @@ function StoryMode({ onExit }) {
 
         <div className="sm-categories">
           <div className="sm-category-block">
-            <span className="sm-category-pill">Default Stories ({language})</span>
+            <span className="sm-category-pill">Class Stories ({language})</span>
+
+            {storiesLoading && <p className="sm-choose-label">Loading stories…</p>}
+            {storiesError && <p className="sm-choose-label" style={{ color: '#B94B47' }}>{storiesError}</p>}
+            {!storiesLoading && !storiesError && filteredStories.length === 0 && (
+              <p className="sm-choose-label">No {language} stories have been added yet.</p>
+            )}
 
             <div className="sm-carousel-row">
               <button
@@ -762,6 +854,25 @@ function StoryMode({ onExit }) {
   if (view === 'quiz' && activeStory) {
     const storyQuiz = activeStory.quiz[language] || activeStory.quiz['ENG'];
     const total = storyQuiz.length;
+
+    if (total === 0) {
+      return (
+        <section className="story-mode sm-reading-bg">
+          <div className="sm-header">
+            <div className="sm-header-left">
+              <BackButton onClick={backToSelection} />
+              <h1 className="sm-title">{language === 'FIL' ? activeStory.titleFil : activeStory.title}</h1>
+            </div>
+          </div>
+          <div className="sm-quiz-done">
+            <KoalaMascot />
+            <h2>Story complete!</h2>
+            <p>This story does not have comprehension questions yet.</p>
+            <button type="button" className="sm-quiz-done-btn" onClick={backToSelection}>Back to Stories</button>
+          </div>
+        </section>
+      );
+    }
 
     if (quizDone) {
       return (

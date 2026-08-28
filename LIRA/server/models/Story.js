@@ -30,6 +30,7 @@ const storySchema = new mongoose.Schema(
     coverText: { type: String, default: "#3A2A47" },
     coverImage: { type: String, default: null },
     description: { type: String, default: "" },
+    contentUnit: { type: String, enum: ["page", "paragraph"], default: "page" },
     pages: { type: [pageSchema], default: [] },
     questions: { type: [questionSchema], default: [] }
   },

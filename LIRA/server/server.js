@@ -1,7 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env"), quiet: true });
 
 const learnerRoutes = require("./routes/learner");
 const teacherRoutes = require("./routes/teacher");
@@ -11,7 +12,8 @@ const storyRoutes = require("./routes/story");
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+// Story cover images are resized in the browser and sent as data URLs.
+app.use(express.json({ limit: "3mb" }));
 
 app.use("/api/learners", learnerRoutes);
 app.use("/api/teachers", teacherRoutes);
