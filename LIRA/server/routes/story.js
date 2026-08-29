@@ -1,6 +1,8 @@
 const express = require("express");
 const Story = require("../models/Story");
 const Teacher = require("../models/Teacher");
+const Learner = require("../models/Learner");
+const Section = require("../models/Section");
 
 const router = express.Router();
 
@@ -289,13 +291,31 @@ router.post("/generate-questions", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const teacher = await currentTeacher(req, res);
-    if (!teacher) return;
+    let ownerTeacherId;
+    const teacherId = req.get("X-Teacher-Id");
+    const learnerId = req.get("X-Learner-Id");
+
+    if (teacherId) {
+      const teacher = await currentTeacher(req, res);
+      if (!teacher) return;
+      ownerTeacherId = teacher._id;
+    } else if (learnerId) {
+      const learner = await Learner.findById(learnerId).select("section sectionId");
+      if (!learner) return res.status(401).json({ message: "Your learner account could not be verified." });
+
+      const section = learner.sectionId
+        ? await Section.findById(learner.sectionId).select("teacherId")
+        : await Section.findOne({ name: learner.section }).collation({ locale: "en", strength: 2 }).select("teacherId");
+      if (!section) return res.status(404).json({ message: "Your section could not be found." });
+      ownerTeacherId = section.teacherId;
+    } else {
+      return res.status(401).json({ message: "Please sign in to view stories." });
+    }
 
     const stories = await Story.find({
       $or: [
         { badge: "Library Story" },
-        { teacherId: teacher._id }
+        { teacherId: ownerTeacherId }
       ]
     })
       .populate("teacherId", "firstName lastName")

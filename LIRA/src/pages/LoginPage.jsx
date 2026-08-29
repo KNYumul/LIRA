@@ -23,6 +23,7 @@ function LoginPage() {
   const [portal, setPortal] = useState("student");
   const [teacherMode, setTeacherMode] = useState("login");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // Student state
   const [studentLastName, setStudentLastName] = useState("");
@@ -98,6 +99,7 @@ function LoginPage() {
   async function submitForm(event) {
     event.preventDefault();
     setError("");
+    setSuccess("");
 
     // ================= STUDENT LOGIN =================
     if (isStudent) {
@@ -179,6 +181,7 @@ function LoginPage() {
           )
         );
 
+        saveSession({ role: "student", user: data.learner });
         navigate("/category");
       } catch (error) {
         console.error("Login error:", error);
@@ -300,6 +303,16 @@ function LoginPage() {
           )
         );
 
+        if (isSignUp) {
+          setTeacherMode("login");
+          setFirstName("");
+          setLastName("");
+          setPassword("");
+          setShowPassword(false);
+          setSuccess("Account created successfully. Please log in with your new account.");
+          return;
+        }
+
         saveSession({ role: "teacher", user: data.teacher });
         navigate("/teacher");
       } catch (error) {
@@ -409,6 +422,7 @@ function LoginPage() {
                   type="button"
                   onClick={() => {
                     setError("");
+                    setSuccess("");
                     setTeacherMode("login");
                   }}
                 >
@@ -419,6 +433,7 @@ function LoginPage() {
                   type="button"
                   onClick={() => {
                     setError("");
+                    setSuccess("");
                     setTeacherMode("signup");
                   }}
                 >
@@ -581,6 +596,11 @@ function LoginPage() {
           {error && (
             <p role="alert" style={{ color: "#d9534f", textAlign: "center", marginTop: "14px" }}>
               {error}
+            </p>
+          )}
+          {success && (
+            <p role="status" style={{ color: "#3E6B31", textAlign: "center", marginTop: "14px" }}>
+              {success}
             </p>
           )}
         </form>

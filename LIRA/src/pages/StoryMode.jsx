@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './StoryMode.css';
+import { getSession } from '../utils/session';
 
 /* Static story catalog retained for reference; Student Story Mode now loads from /api/stories.
 import coverSiDindoPundido from '../assets/icons/si-dindo-pundido.jpg';
@@ -600,7 +601,10 @@ function StoryMode({ onExit }) {
       setStoriesLoading(true);
       setStoriesError('');
       try {
-        const response = await fetch(`${API_URL}/api/stories`);
+        const learnerId = getSession()?.user?.id;
+        const response = await fetch(`${API_URL}/api/stories`, {
+          headers: { 'X-Learner-Id': learnerId || '' }
+        });
         if (!response.ok) throw new Error('Could not load stories from the library.');
         const result = await response.json();
         if (!cancelled) {
