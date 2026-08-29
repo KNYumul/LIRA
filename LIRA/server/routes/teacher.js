@@ -6,7 +6,8 @@ const { loginKey, cooldownStatus, failedLogin, clearFailedLogins, sendCooldown }
 
 const router = express.Router();
 
-function publicTeacher(teacher) {
+function publicTeacher(teacher, sections = []) {
+  const managedSections = sections.length > 0 ? sections : (teacher.section ? [teacher.section] : []);
   return {
     id: teacher._id,
     firstName: teacher.firstName,
@@ -15,8 +16,9 @@ function publicTeacher(teacher) {
     school: teacher.school,
     gradeLevel: teacher.gradeLevel,
     section: teacher.section,
+    sections: managedSections,
     active: teacher.active,
-    createdAt: teacher.createdAt,
+    createdAt: teacher.createdAt || teacher._id.getTimestamp(),
     role: "teacher"
   };
 }
@@ -25,7 +27,15 @@ function publicTeacher(teacher) {
 router.get("/", async (_req, res) => {
   try {
     const teachers = await Teacher.find().sort({ createdAt: -1 });
-    res.json(teachers.map(publicTeacher));
+    const teacherIds = teachers.map((teacher) => teacher._id);
+    const sections = await Section.find({ teacherId: { $in: teacherIds } }).sort({ name: 1 });
+    const sectionsByTeacher = sections.reduce((grouped, section) => {
+      const teacherId = section.teacherId.toString();
+      if (!grouped[teacherId]) grouped[teacherId] = [];
+      grouped[teacherId].push(section.name);
+      return grouped;
+    }, {});
+    res.json(teachers.map((teacher) => publicTeacher(teacher, sectionsByTeacher[teacher._id.toString()] || [])));
   } catch (error) {
     console.error("Could not load teachers:", error);
     res.status(500).json({ message: "Could not load teacher accounts." });
@@ -47,7 +57,8 @@ router.put("/:id", async (req, res) => {
     );
     if (!teacher) return res.status(404).json({ message: "Teacher not found." });
 
-    res.json({ message: "Teacher account updated.", teacher: publicTeacher(teacher) });
+    const sections = await Section.find({ teacherId: teacher._id }).sort({ name: 1 }).select("name");
+    res.json({ message: "Teacher account updated.", teacher: publicTeacher(teacher, sections.map((section) => section.name)) });
   } catch (error) {
     if (error.code === 11000) return res.status(409).json({ message: "A teacher account already uses this email." });
     res.status(400).json({ message: "Could not update teacher account." });
@@ -60,7 +71,7 @@ router.delete("/:id", async (req, res) => {
     const teacher = await Teacher.findByIdAndDelete(req.params.id);
     if (!teacher) return res.status(404).json({ message: "Teacher not found." });
     res.status(204).send();
-  } catch (error) {
+  } catch {
     res.status(400).json({ message: "Could not delete teacher account." });
   }
 });

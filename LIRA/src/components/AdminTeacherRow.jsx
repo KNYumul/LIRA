@@ -7,6 +7,11 @@ export default function AdminTeacherRow({ teacher, onEdit, onDelete }) {
     <div className="row">
       <span className="cell">{teacher.name}</span>
       <span className="cell email">{teacher.email}</span>
+      <span className="cell sections">
+        {teacher.sections?.length
+          ? teacher.sections.join(', ')
+          : <span className="no-section-pill">No Section</span>}
+      </span>
       <div className="cell">
         <span className={`status-pill ${statusClass}`}>{teacher.status}</span>
       </div>

@@ -208,7 +208,7 @@ p.page-sub {
 
 .table-head {
   display: grid;
-  grid-template-columns: 1.4fr 1.8fr 0.9fr 1fr;
+  grid-template-columns: 1.2fr 1.6fr 1.4fr 0.8fr 1fr;
   padding: 0 26px;
   margin-bottom: 12px;
 }
@@ -225,7 +225,7 @@ p.page-sub {
 
 .row {
   display: grid;
-  grid-template-columns: 1.4fr 1.8fr 0.9fr 1fr;
+  grid-template-columns: 1.2fr 1.6fr 1.4fr 0.8fr 1fr;
   align-items: center;
   background: #fff;
   border-radius: 14px;
@@ -244,6 +244,25 @@ p.page-sub {
 .row .cell.email {
   font-weight: 300;
   color: #5B4F49;
+}
+
+.row .cell.sections {
+  padding-right: 16px;
+  color: #6B5E57;
+  overflow-wrap: anywhere;
+}
+
+.no-section-pill {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #F8D7D5;
+  color: #B13A36;
+  border: 1px solid #EBA6A2;
+  font-family: 'Poppins', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .status-pill {
@@ -352,7 +371,7 @@ p.page-sub {
   border: 1px solid #E9DED7;
   border-radius: 18px;
   padding: 26px 30px 10px;
-  max-width: 640px;
+  max-width: 960px;
   box-shadow: 0 4px 14px rgba(80,60,50,0.05);
 }
 
@@ -367,7 +386,8 @@ p.page-sub {
 
 .recent-table-head {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1.2fr 1.3fr 1.25fr auto;
+  gap: 18px;
   padding: 0 6px;
   margin-bottom: 6px;
 }
@@ -380,17 +400,16 @@ p.page-sub {
   color: #8A7E77;
 }
 
-.recent-table-head span:last-child { padding-right: 40px; }
+.recent-table-head span:last-child { padding-right: 24px; }
 
 .recent-list {
-  max-height: 230px;
-  overflow-y: auto;
   padding-right: 6px;
 }
 
 .recent-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1.2fr 1.3fr 1.25fr auto;
+  gap: 18px;
   align-items: center;
   padding: 12px 6px;
   border-top: 1px solid #F1E8E2;
@@ -402,6 +421,17 @@ p.page-sub {
   font-weight: 400;
   font-size: 14px;
   color: #4A3B35;
+}
+
+.recent-sections,
+.recent-created {
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  color: #6B5E57;
+}
+
+.recent-sections {
+  overflow-wrap: anywhere;
 }
 
 /* ===== EDIT MODAL ===== */

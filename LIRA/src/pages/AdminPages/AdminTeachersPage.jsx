@@ -11,7 +11,9 @@ export default function AdminTeachersPage({ teachers, onDelete, onSaveEdit }) {
     const q = search.trim().toLowerCase()
     if (!q) return teachers
     return teachers.filter(t =>
-      t.name.toLowerCase().includes(q) || t.email.toLowerCase().includes(q)
+      t.name.toLowerCase().includes(q) ||
+      t.email.toLowerCase().includes(q) ||
+      (t.sections || []).some(section => section.toLowerCase().includes(q))
     )
   }, [teachers, search])
 
@@ -35,8 +37,9 @@ export default function AdminTeachersPage({ teachers, onDelete, onSaveEdit }) {
       </div>
 
       <div className="table-head">
-        <span>Learner</span>
+        <span>Teacher</span>
         <span>DepEd Email</span>
+        <span>Managed Sections</span>
         <span>Status</span>
         <span>Actions</span>
       </div>
