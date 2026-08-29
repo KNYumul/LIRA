@@ -283,6 +283,32 @@ async function apiErrorMessage(response, fallbackMessage) {
   }
 }
 
+function parseCsvLine(line) {
+  const values = [];
+  let value = "";
+  let quoted = false;
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+    if (character === '"' && quoted && line[index + 1] === '"') {
+      value += '"';
+      index += 1;
+    } else if (character === '"') {
+      quoted = !quoted;
+    } else if (character === "," && !quoted) {
+      values.push(value.trim());
+      value = "";
+    } else {
+      value += character;
+    }
+  }
+  values.push(value.trim());
+  return values;
+}
+
+function csvHeaderKey(value) {
+  return String(value || "").replace(/^\uFEFF/, "").toLowerCase().replace(/[^a-z]/g, "");
+}
+
 function learnerToStudent(learner) {
   const [birthYear = "", birthMonth = "", birthDay = ""] = (learner.birthdate || "").split("-");
   return {
@@ -906,23 +932,46 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     const reader = new FileReader();
     reader.onload = async (e) => {
       const text = e.target.result;
-      const lines = text.split(/\r?\n/).filter(Boolean);
-      const startIdx = /last\s*name/i.test(lines[0]) ? 1 : 0;
+      const lines = text.split(/\r?\n/).filter((line) => line.trim());
+      const headers = parseCsvLine(lines[0] || "").map(csvHeaderKey);
+      const lastNameColumn = headers.findIndex((header) => header === "lastname" || header === "surname");
+      const birthdateColumn = headers.findIndex((header) => header === "birthdate" || header === "dateofbirth" || header === "dob");
+      const sectionColumn = headers.findIndex((header) => header === "section");
+      const hasHeaders = lastNameColumn >= 0 && birthdateColumn >= 0 && sectionColumn >= 0;
+      const columns = hasHeaders
+        ? { lastName: lastNameColumn, birthdate: birthdateColumn, section: sectionColumn }
+        : { lastName: 0, birthdate: 1, section: 2 };
+      const startIdx = hasHeaders ? 1 : 0;
       const newRows = [];
       const invalidRows = [];
+      const duplicateRows = [];
+      const csvLearners = new Set();
       for (let i = startIdx; i < lines.length; i++) {
-        const [lastName, birthdate, section] = lines[i].split(",").map((x) => (x || "").trim());
-        const dateParts = (birthdate || "").split(/[-/]/).map((part) => part.trim());
+        const row = parseCsvLine(lines[i]);
+        const lastName = String(row[columns.lastName] || "").trim();
+        const birthdate = String(row[columns.birthdate] || "").trim();
+        const section = String(row[columns.section] || "").trim();
+        const usesSpaceSeparatedDate = /^\d{1,2}\s+\d{1,2}\s+\d{4}$/.test(birthdate);
+        const dateParts = (birthdate || "").split(usesSpaceSeparatedDate ? /\s+/ : /[-/]/).map((part) => part.trim());
         const isIsoDate = /^\d{4}$/.test(dateParts[0]);
         const [by, bm, bd] = isIsoDate
           ? dateParts
-          : [dateParts[2], dateParts[0], dateParts[1]];
+          : usesSpaceSeparatedDate
+            ? [dateParts[2], dateParts[1], dateParts[0]]
+            : [dateParts[2], dateParts[0], dateParts[1]];
 
         if (!lastName) continue;
         if (!section || !/^\d{4}$/.test(by || "") || !/^\d{1,2}$/.test(bm || "") || !/^\d{1,2}$/.test(bd || "")) {
           invalidRows.push(i + 1);
           continue;
         }
+        const normalizedBirthdate = `${by}-${bm.padStart(2, "0")}-${bd.padStart(2, "0")}`;
+        const learnerKey = `${lastName.toLowerCase()}|${normalizedBirthdate}|${section.toLowerCase()}`;
+        if (csvLearners.has(learnerKey)) {
+          duplicateRows.push(i + 1);
+          continue;
+        }
+        csvLearners.add(learnerKey);
         newRows.push({
           lastName,
           birthMonth: bm.padStart(2, "0"),
@@ -931,17 +980,22 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           section,
         });
       }
-      if (invalidRows.length > 0) {
-        alert(`Skipped invalid CSV row(s): ${invalidRows.join(", ")}. Each row needs Lastname, Birthdate, and Section.`);
-      }
       const results = await Promise.allSettled(
         newRows.map(({ lastName, birthMonth, birthDay, birthYear, section }) =>
           saveLearner({ lastName, birthMonth, birthDay, birthYear, section }))
       );
       const failed = results.filter((result) => result.status === "rejected");
+      const storedDuplicates = failed.filter((result) => /already listed/i.test(result.reason?.message || ""));
+      const otherFailures = failed.filter((result) => !/already listed/i.test(result.reason?.message || ""));
       await onRefresh();
-      if (failed.length > 0) {
-        alert(`Imported ${results.length - failed.length} learner(s). ${failed.length} row(s) failed: ${failed[0].reason?.message || "Unknown error"}`);
+      const importedCount = results.length - failed.length;
+      const duplicateCount = duplicateRows.length + storedDuplicates.length;
+      if (duplicateCount > 0 || invalidRows.length > 0 || otherFailures.length > 0) {
+        const summary = [`Imported ${importedCount} learner(s).`];
+        if (duplicateCount > 0) summary.push(`Skipped ${duplicateCount} duplicate row(s).`);
+        if (invalidRows.length > 0) summary.push(`Skipped ${invalidRows.length} invalid row(s): ${invalidRows.join(", ")}.`);
+        if (otherFailures.length > 0) summary.push(`${otherFailures.length} row(s) failed: ${otherFailures[0].reason?.message || "Unknown error"}`);
+        alert(summary.join(" "));
       }
     };
     reader.readAsText(file);
