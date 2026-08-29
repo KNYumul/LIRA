@@ -801,6 +801,11 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
 
       setStudents((prev) => [...prev, learner]);
       setModal(null);
+      await liraAlert.fire({
+        icon: "success",
+        title: "The learner has been added successfully",
+        confirmButtonText: "OK"
+      });
     } catch (requestError) {
       await showError(requestError.message);
     }
@@ -811,20 +816,39 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       const learner = await saveLearner(data, modal.student.id);
       setStudents((prev) => prev.map((s) => (s.id === learner.id ? { ...learner, expanded: s.expanded } : s)));
       setModal(null);
+      await liraAlert.fire({
+        icon: "success",
+        title: "The learner has been updated successfully",
+        confirmButtonText: "OK"
+      });
     } catch (requestError) {
       await showError(requestError.message);
     }
   };
 
-  const deleteLearner = async () => {
+  const deleteLearner = async (student) => {
+    const confirmation = await liraAlert.fire({
+      icon: "warning",
+      title: "Remove this learner?",
+      text: `${student.lastName} will be removed from your class roster.`,
+      showCancelButton: true,
+      confirmButtonText: "Remove",
+      cancelButtonText: "Cancel"
+    });
+    if (!confirmation.isConfirmed) return;
+
     try {
-      const response = await fetch(`${API_URL}/api/learners/${modal.student.id}`, {
+      const response = await fetch(`${API_URL}/api/learners/${student.id}`, {
         method: "DELETE",
         headers: { "X-Teacher-Id": currentTeacher?.id || "" },
       });
       if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not delete learner."));
-      setStudents((prev) => prev.filter((s) => s.id !== modal.student.id));
-      setModal(null);
+      setStudents((prev) => prev.filter((s) => s.id !== student.id));
+      await liraAlert.fire({
+        icon: "success",
+        title: "The learner has been successfully deleted",
+        confirmButtonText: "OK"
+      });
     } catch (requestError) {
       await showError(requestError.message);
     }
@@ -991,7 +1015,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           key={s.id}
           s={s}
           onEdit={(st) => setModal({ type: "edit", student: st })}
-          onDelete={(st) => setModal({ type: "delete", student: st })}
+          onDelete={deleteLearner}
           onToggle={toggle}
         />
       ))}
@@ -1004,14 +1028,6 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       )}
       {modal?.type === "edit" && (
         <LearnerFormModal mode="edit" initial={modal.student} sectionName={sectionName} onCancel={() => setModal(null)} onSubmit={editLearner} />
-      )}
-      {modal?.type === "delete" && (
-        <DeleteConfirmModal
-          title="Remove this learner?"
-          subtitle={`${modal.student?.lastName} will be removed from your class roster.`}
-          onCancel={() => setModal(null)}
-          onConfirm={deleteLearner}
-        />
       )}
     </div>
   );
