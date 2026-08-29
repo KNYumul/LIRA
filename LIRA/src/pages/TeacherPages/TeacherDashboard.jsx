@@ -7,6 +7,7 @@ import { createWorker } from "tesseract.js";
 import { useNavigate } from "react-router-dom";
 import './TeacherDashboard.css';
 import { clearSession, getSession } from "../../utils/session";
+import { clearSavedPortalPage, getSavedPortalPage, savePortalPage } from "../../utils/portalPage";
 
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -567,11 +568,11 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
   return (
     <div>
         <div className="flex items-center gap-3">
-      <h1 className="text-3xl font-bold" style={{ color: C.text }}>Good morning, Teacher {teacherName}!</h1>
+      <h1 className="text-3xl font-bold" style={{ color: C.text }}>Good day, Teacher {teacherName}!</h1>
       <img
-  src="/icons/owl.png"
+  src="/UI_Designs/ANIMALS/mascot_owl.svg"
   alt="Owl"
-  className="w-8 h-8 object-contain"
+  className="w-13 h-13 object-contain"
 />
 </div>
       <p className="text-sm mt-1" style={{ color: C.textMuted }}>School Year 2025–2026</p>
@@ -655,9 +656,8 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
   const clear = () => { setLastName(""); setMonth(""); setDay(""); setYear(""); };
   const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0"));
-  const years = Array.from({ length: 15 }, (_, i) => String(2011 + i));
 
-  const valid = lastName.trim() && month && day && year;
+  const valid = lastName.trim() && month && day && /^\d{4}$/.test(year);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "rgba(60,50,45,0.35)" }}>
@@ -665,7 +665,7 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 text-xl font-bold" style={{ color: C.text }}>
             <img
-  src="/icons/fox.png"
+  src="/UI_Designs/ANIMALS/F_Fox.png"
   alt="Fox"
   className="w-6 h-6 object-contain"
 /> {mode === "add" ? "Add Learner" : "Edit Learner"}
@@ -673,14 +673,22 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
           <button onClick={clear} className="text-xs px-3 py-1 rounded-full" style={{ background: C.low, color: C.lowText }}>clear</button>
         </div>
 
-        <Field label="Type your Last Name" required>
-          <input
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className="w-full rounded-lg px-3 py-2 outline-none"
-            style={selectStyle}
-          />
-        </Field>
+      <Field label="Type your Last Name" required>
+  <input
+    value={lastName}
+    maxLength={50}
+    onChange={(e) => {
+      const value = e.target.value;
+
+      // Prevent numbers and other unwanted characters
+      if (/^[A-Za-zÀ-ÖØ-öø-ÿ' -]*$/.test(value)) {
+        setLastName(value);
+      }
+    }}
+    className="w-full rounded-lg px-3 py-2 outline-none"
+    style={selectStyle}
+  />
+</Field>
 
         <Field label="Birthdate" required>
           <div className="flex gap-2">
@@ -692,16 +700,28 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
               <option value="">Day</option>
               {days.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
-            <select value={year} onChange={(e) => setYear(e.target.value)} className="w-full rounded-lg px-2 py-2" style={selectStyle}>
-              <option value="">Year</option>
-              {years.map((y) => <option key={y} value={y}>{y}</option>)}
-            </select>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={year}
+              onChange={(e) => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              placeholder="Year"
+              maxLength={4}
+              className="w-full rounded-lg px-2 py-2 outline-none"
+              style={selectStyle}
+              aria-label="Birth year"
+            />
           </div>
         </Field>
 
-        <div className="mb-4 rounded-lg px-3 py-2 text-sm" style={{ background: C.activePill, color: C.text }}>
-          Section: <strong>{sectionName}</strong>
-        </div>
+        <div
+        className="mb-5 px-1 text-sm tracking-wide transition-all duration-300 hover:opacity-70"
+        style={{ color: C.text }}
+      >
+        <span className="opacity-50">Section</span>
+        <span className="mx-2 opacity-30">/</span>
+        <strong className="font-medium">{sectionName}</strong>
+      </div>
 
         <div className="flex gap-3 mt-5">
           <button onClick={onCancel} className="flex-1 rounded-full py-2 font-medium" style={{ border: `1px solid ${C.cardBorder}`, color: C.text }}>
@@ -818,16 +838,33 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not save learner."));
     return learnerToStudent(await response.json());
   };
+  
 
   const addLearner = async (data) => {
-    try {
-      const learner = await saveLearner(data);
-      setStudents((prev) => [...prev, learner]);
-      setModal(null);
-    } catch (requestError) {
-      alert(requestError.message);
+  try {
+    const lastName = data.lastName?.trim();
+
+    if (!lastName) {
+      alert("Please enter the learner's surname.");
+      return;
     }
-  };
+
+    if (!/^[A-Za-zÀ-ÖØ-öø-ÿ]+(?:[ '-][A-Za-zÀ-ÖØ-öø-ÿ]+)*$/.test(lastName)) {
+      alert("Please enter a valid surname. Letters, spaces, apostrophes, and hyphens are allowed.");
+      return;
+    }
+
+    const learner = await saveLearner({
+      ...data,
+      lastName,
+    });
+
+    setStudents((prev) => [...prev, learner]);
+    setModal(null);
+  } catch (requestError) {
+    alert(requestError.message);
+  }
+};
 
   const editLearner = async (data) => {
     try {
@@ -1000,7 +1037,7 @@ return (
           style={{ color: C.text }}
         >
           <img
-            src="/icons/pig.png"
+            src="/UI_Designs/ANIMALS/I_Pig.png"
             alt="Pig"
             className="w-8 h-8 object-contain"
           />
@@ -1236,11 +1273,17 @@ function StoryCover({ story, canManage, onEdit, onDeleteRequest }) {
         {!story.coverImage && (
           <div className="relative font-extrabold text-lg leading-tight" style={{ color: story.coverText }}>{story.title}</div>
         )}
-        <div className="relative">
-          <span className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: "#FBE3C0", color: "#8A6B2A" }}>
-            {story.questions.filter((q) => q.question).length} Qs
-          </span>
-        </div>
+        <div className="absolute bottom-3 left-3">
+  <span
+    className="px-2 py-1 rounded-full text-xs font-semibold"
+    style={{
+      background: "#FBE3C0",
+      color: "#8A6B2A",
+    }}
+  >
+    {story.questions.filter((q) => q.question).length} Qs
+  </span>
+</div>
       </div>
       <div className="text-xs mt-2 truncate" style={{ color: C.textMuted }}>Uploaded by {story.uploadedBy || "Unknown teacher"}</div>
       {canManage && <button
@@ -1288,7 +1331,8 @@ function AddStoryModal({ onCancel, onSubmit }) {
   const [scanError, setScanError] = useState("");
   const [generation, setGeneration] = useState({
     topic: "",
-    readingLevel: "Grade 2",
+    // readingLevel: "Grade 2",
+    readingLevel: "Grade 3",
     paragraphCount: 6,
     questionCount: 5,
     moral: "",
@@ -1370,8 +1414,8 @@ function AddStoryModal({ onCancel, onSubmit }) {
         style={{ color: C.text }}
       >
         <img
-          src="/icons/squirrel.png"
-          alt="Squirrel"
+          src="/UI_Designs/ANIMALS/K_Squirrel.png"
+          alt="squirrel"
           className="w-8 h-8 object-contain"
         />
 
@@ -1442,6 +1486,7 @@ function AddStoryModal({ onCancel, onSubmit }) {
                 style={{ background: "#F6F3EE", border: `1px solid ${C.cardBorder}` }}
               />
             </label>
+            {/* Grade-level selection is hidden while AI stories are fixed to Grade 3.
             <label className="text-xs font-semibold" style={{ color: C.text }}>
               Reading level
               <select
@@ -1453,6 +1498,7 @@ function AddStoryModal({ onCancel, onSubmit }) {
                 {["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"].map((level) => <option key={level}>{level}</option>)}
               </select>
             </label>
+            */}
             <label className="text-xs font-semibold" style={{ color: C.text }}>
               Paragraphs
               <input
@@ -1661,7 +1707,8 @@ function QuestionsModal({ story, onCancel, onSave, onRegenerate }) {
 
 // ---------- Manage Stories (per-story edit) modal ----------
 function StoryEditModal({ story, onCancel, onSave, onDeleteStory, onRegenerateQuestions }) {
-  const [title] = useState(story.title);
+  const [title, setTitle] = useState(story.title);
+  const [editingTitle, setEditingTitle] = useState(false);
   const [pages, setPages] = useState(story.pages);
   const [deletePageTarget, setDeletePageTarget] = useState(null);
   const [showQuestions, setShowQuestions] = useState(false);
@@ -1670,7 +1717,12 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory, onRegenerateQu
   const [coverError, setCoverError] = useState("");
   const [processingCover, setProcessingCover] = useState(false);
   const coverInputRef = useRef(null);
+  const titleInputRef = useRef(null);
   const usesParagraphs = story.contentUnit === "paragraph";
+
+  useEffect(() => {
+    if (editingTitle) titleInputRef.current?.focus();
+  }, [editingTitle]);
 
   const chooseCover = async (event) => {
     const selectedFile = event.target.files?.[0];
@@ -1705,12 +1757,43 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory, onRegenerateQu
                 style={{ background: coverImage ? "#222" : story.cover }}
               >
                 {coverImage
-                  ? <img src={coverImage} alt={`${story.title} cover`} className="w-full h-full object-cover" />
+                  ? <img src={coverImage} alt={`${title} cover`} className="w-full h-full object-cover" />
                   : <FileText size={25} color={story.coverText} />}
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-xl font-bold" style={{ color: C.text }}>Manage Stories</div>
-                <div className="text-sm font-semibold" style={{ color: "#C77C74" }}>{title}</div>
+                {editingTitle ? (
+                  <input
+                    ref={titleInputRef}
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                    onBlur={() => {
+                      if (!title.trim()) setTitle(story.title);
+                      setEditingTitle(false);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") event.currentTarget.blur();
+                      if (event.key === "Escape") {
+                        setTitle(story.title);
+                        setEditingTitle(false);
+                      }
+                    }}
+                    maxLength={120}
+                    className="mt-1 w-full rounded-md px-2 py-1 text-sm outline-none font-semibold"
+                    style={{ background: "#fff", border: `1px solid ${C.cardBorder}`, color: "#C77C74" }}
+                    aria-label="Story title"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setEditingTitle(true)}
+                    className="mt-1 flex max-w-full items-center gap-1.5 text-left"
+                    aria-label="Edit story title"
+                  >
+                    <span className="truncate text-sm font-semibold" style={{ color: "#C77C74" }}>{title}</span>
+                    <Pencil size={13} color="#8A8178" className="shrink-0" />
+                  </button>
+                )}
               </div>
             </div>
             <span className="px-3 py-1 rounded-full text-xs font-bold text-white shrink-0" style={{ background: "#7FAE6C" }}>{story.badge}</span>
@@ -1766,7 +1849,7 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory, onRegenerateQu
           {pages.map((p, idx) => (
             <div key={p.id} className="relative rounded-xl p-4 mb-3" style={{ background: "#fff", border: `1.5px solid #9FD8E6` }}>
               <div className="absolute -top-3 left-3 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: "#8FCFE0" }}>
-                {usesParagraphs ? "¶" : "P"}{idx + 1}
+                {usesParagraphs ? "P" : "P"}{idx + 1}
               </div>
               <button onClick={() => setDeletePageTarget({ id: p.id, index: idx + 1 })} className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: "#C0504D" }}>
                 <MinusCircle size={14} />
@@ -1789,7 +1872,7 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory, onRegenerateQu
           <button onClick={onCancel} className="flex-1 rounded-full py-2 font-medium" style={{ border: `1px solid ${C.cardBorder}`, color: C.text }}>
             Cancel
           </button>
-          <button disabled={processingCover} onClick={() => onSave({ ...story, coverImage, pages, questions })} className="flex-1 rounded-full py-2 font-semibold text-white" style={{ background: processingCover ? "#EAD9BE" : "#EDA751" }}>
+          <button disabled={processingCover || !title.trim()} onClick={() => onSave({ ...story, title: title.trim(), coverImage, pages, questions })} className="flex-1 rounded-full py-2 font-semibold text-white" style={{ background: processingCover || !title.trim() ? "#EAD9BE" : "#EDA751" }}>
             Save
           </button>
         </div>
@@ -1805,7 +1888,7 @@ function StoryEditModal({ story, onCancel, onSave, onDeleteStory, onRegenerateQu
       )}
       {showQuestions && (
         <QuestionsModal
-          story={{ ...story, pages, questions }}
+          story={{ ...story, title: title.trim() || story.title, pages, questions }}
           onCancel={() => setShowQuestions(false)}
           onSave={(qs) => { setQuestions(qs); setShowQuestions(false); }}
           onRegenerate={(questionCount) => onRegenerateQuestions({
@@ -2115,7 +2198,10 @@ function Stories({ currentTeacher }) {
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
-  const [page, setPage] = useState("dashboard");
+  const [page, setPage] = useState(() => getSavedPortalPage(
+    "liraTeacherPortalPage",
+    ["dashboard", "students", "flashcards", "stories"]
+  ));
   const [students, setStudents] = useState([]);
   const [learnersLoading, setLearnersLoading] = useState(true);
   const [learnersError, setLearnersError] = useState("");
@@ -2154,8 +2240,10 @@ export default function TeacherDashboard() {
   };
 
   useEffect(() => { loadLearners(); }, []);
+  useEffect(() => { savePortalPage("liraTeacherPortalPage", page); }, [page]);
 
   function handleLogout() {
+    clearSavedPortalPage("liraTeacherPortalPage");
     clearSession();
     navigate("/");
   }

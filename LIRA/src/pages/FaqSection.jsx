@@ -191,9 +191,12 @@ function FaqSection() {
           <p className="faq-cta-subheading">
             Our support team typically responds within one school day.
           </p>
-          <button className="faq-cta-button" type="button">
-            Email Support
-          </button>
+        <a
+        className="faq-cta-button"
+        href="mailto:support.lira3@gmail.com"
+      >
+        Email Support
+      </a>
         </div>
       </div>
     </section>

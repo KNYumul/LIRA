@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clearSession } from '../utils/session'
+import { clearSavedPortalPage, getSavedPortalPage, savePortalPage } from '../utils/portalPage'
 import AdminSidebar from '../components/AdminSidebar.jsx'
 import AdminDashboard from './AdminPages/AdminDashboard.jsx'
 import AdminTeachersPage from './AdminPages/AdminTeachersPage.jsx'
@@ -19,7 +20,14 @@ export default function AdminTeacherDashboard() {
   const navigate = useNavigate()
   const [teachers, setTeachers] = useState([])
   const [loadError, setLoadError] = useState('')
-  const [activeNav, setActiveNav] = useState('dashboard')
+  const [activeNav, setActiveNav] = useState(() => getSavedPortalPage(
+    'liraAdminPortalPage',
+    ['dashboard', 'teachers']
+  ))
+
+  useEffect(() => {
+    savePortalPage('liraAdminPortalPage', activeNav)
+  }, [activeNav])
 
   useEffect(() => {
     let cancelled = false
@@ -86,6 +94,7 @@ export default function AdminTeacherDashboard() {
   function handleLogout() {
     const ok = window.confirm('Are you sure you want to log out?')
     if (ok) {
+      clearSavedPortalPage('liraAdminPortalPage')
       clearSession()
       navigate('/')
     }

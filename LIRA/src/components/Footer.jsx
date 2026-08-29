@@ -24,23 +24,27 @@ function Footer() {
           <h2>About</h2>
           <Link to="/#about">About LIRA</Link>
           <Link to="/#how-it-works">How It Works</Link>
-          <Link to="/#how-it-works">The Flow</Link>
           <Link to="/login">Login</Link>
         </nav>
 
         <nav className="lira-footer__column" aria-label="Resource links">
           <h2>Resources</h2>
           <Link to="/help-center">Help Center</Link>
-          <a href="#schools">For DepEd Schools</a>
-          <Link to="/privacy-policy">Privacy Policy</Link>
+          <a
+            href="https://ebeis.deped.gov.ph/beis/reports_info/masterlist"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            For DepEd Schools
+          </a>          <Link to="/privacy-policy">Privacy Policy</Link>
           <Link to="/terms-of-use">Terms of Use</Link>
         </nav>
 
         <address className="lira-footer__column lira-footer__contact">
           <h2>Contact</h2>
-          <a href="mailto:hello@lira-reading.ph">hello@lira-reading.ph</a>
+          <a href="mailto:support.lira3@gmail.com">support.lira3@gmail.com</a>
           <span>Department of Education</span>
-          <span>Pasig City, Philippines</span>
+          <span>Navotas Elementary School - Central, Philippines</span>
           <Link className="lira-footer__portal" to="/admin/login"><strong>Admin Portal</strong></Link>
         </address>
       </div>
