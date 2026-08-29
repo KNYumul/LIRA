@@ -26,4 +26,10 @@ const learnerSchema = new mongoose.Schema({
   }
 });
 
+// A learner can appear only once in the same section. Last names are compared case-insensitively.
+learnerSchema.index(
+  { sectionId: 1, lastName: 1, birthdate: 1 },
+  { unique: true, collation: { locale: "en", strength: 2 } }
+);
+
 module.exports = mongoose.model("Learner", learnerSchema, "Learners");

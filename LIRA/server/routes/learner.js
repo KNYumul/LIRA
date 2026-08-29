@@ -68,14 +68,20 @@ router.post("/", async (req, res) => {
     if (!teacher) return;
     const section = await teacherSection(teacher, req.body, true);
     if (!section) return res.status(403).json({ message: "That section is already assigned to another teacher." });
+    const lastName = String(req.body.lastName || "").trim();
+    const birthdate = String(req.body.birthdate || "").trim();
+    const duplicate = await Learner.exists({ lastName, birthdate, sectionId: section._id })
+      .collation({ locale: "en", strength: 2 });
+    if (duplicate) return res.status(409).json({ message: `${lastName} is already listed in ${section.name}.` });
     const learner = await Learner.create({
-      lastName: req.body.lastName,
-      birthdate: req.body.birthdate,
+      lastName,
+      birthdate,
       section: section.name,
       sectionId: section._id
     });
     res.status(201).json(learner);
   } catch (error) {
+    if (error.code === 11000) return res.status(409).json({ message: "That learner is already listed in this section." });
     res.status(400).json({ message: error.message });
   }
 });
