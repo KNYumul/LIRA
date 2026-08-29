@@ -860,6 +860,10 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     reader.onload = async (e) => {
       const text = e.target.result;
       const lines = text.split(/\r?\n/).filter((line) => line.trim());
+      if (lines.length === 0) {
+        await showWarning("The uploaded CSV file is empty.", "Empty CSV file");
+        return;
+      }
       const headers = parseCsvLine(lines[0] || "").map(csvHeaderKey);
       const lastNameColumn = headers.findIndex((header) =>
         ["lastname", "surname", "studentlastname", "learnerlastname"].includes(header)
@@ -884,6 +888,10 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       }
       const columns = { lastName: lastNameColumn, birthdate: birthdateColumn, section: sectionColumn };
       const startIdx = 1;
+      if (lines.length === startIdx) {
+        await showWarning("The CSV contains column headers but no learner records.", "Empty CSV file");
+        return;
+      }
       const newRows = [];
       const invalidRows = [];
       const duplicateRows = [];
