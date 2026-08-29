@@ -4,6 +4,7 @@ import 'sweetalert2/dist/sweetalert2.min.css'
 export const liraAlert = Swal.mixin({
   confirmButtonColor: '#D97F76',
   cancelButtonColor: '#9C9793',
+  reverseButtons: true,
   buttonsStyling: true,
   customClass: {
     popup: 'lira-sweet-alert',
