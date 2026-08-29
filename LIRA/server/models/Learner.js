@@ -16,6 +16,13 @@ const learnerSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true
+  },
+
+  // section remains during migration/login compatibility; sectionId is authoritative for ownership.
+  sectionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Section",
+    index: true
   }
 });
 

@@ -217,6 +217,8 @@ const C = {
   moderate: "#F3B86B",
   moderateText: "#8A4E17",
   high: "#C54034",
+  noData: "#D8D5CE",
+  noDataText: "#68645D",
   highRowBg: "#F3D9D4",
   warningBg: "#E9B8AF",
   dropzoneBg: "#CDEEF5",
@@ -253,21 +255,23 @@ function learnerToStudent(learner) {
     birthMonth,
     birthDay,
     birthYear,
-    wpm: 0,
-    accuracy: 0,
+    wpm: null,
+    accuracy: null,
     historyDate: "--",
+    hasReadingData: false,
     expanded: false,
   };
 }
 
-function riskOf(accuracy) {
-  if (accuracy >= 90) return "low";
-  if (accuracy >= 70) return "moderate";
+function riskOf(student) {
+  if (student.hasReadingData === false || student.accuracy == null) return "noData";
+  if (student.accuracy >= 90) return "low";
+  if (student.accuracy >= 70) return "moderate";
   return "high";
 }
-const riskLabel = { low: "Low Risk", moderate: "Moderate Risk", high: "High Risk" };
-const riskColor = { low: C.low, moderate: C.moderate, high: C.high };
-const riskText = { low: C.lowText, moderate: C.moderateText, high: "#FFFFFF" };
+const riskLabel = { low: "Low Risk", moderate: "Moderate Risk", high: "High Risk", noData: "No Data" };
+const riskColor = { low: C.low, moderate: C.moderate, high: C.high, noData: C.noData };
+const riskText = { low: C.lowText, moderate: C.moderateText, high: "#FFFFFF", noData: C.noDataText };
 
 function seedFlashcards() {
   const sample = {
@@ -449,9 +453,10 @@ function SectionSelect({ sections, selectedSection, onChange, className = "" }) 
 
 function Dashboard({ students, sections, sectionName, onSectionChange, teacherName }) {
   const total = students.length;
-  const low = students.filter((s) => riskOf(s.accuracy) === "low").length;
-  const mod = students.filter((s) => riskOf(s.accuracy) === "moderate").length;
-  const high = students.filter((s) => riskOf(s.accuracy) === "high").length;
+  const low = students.filter((s) => riskOf(s) === "low").length;
+  const mod = students.filter((s) => riskOf(s) === "moderate").length;
+  const high = students.filter((s) => riskOf(s) === "high").length;
+  const noData = students.filter((s) => riskOf(s) === "noData").length;
 
   const chartData = useMemo(() => {
     const groups = Array.from({ length: 10 }, (_, i) => ({
@@ -459,10 +464,11 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
       low: 0,
       moderate: 0,
       high: 0,
+      noData: 0,
     }));
     students.forEach((s, i) => {
       const g = groups[i % 10];
-      const r = riskOf(s.accuracy);
+      const r = riskOf(s);
       g[r] += 1;
     });
     return groups;
@@ -500,6 +506,7 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
         <StatCard value={low} dotColor={C.low} label="Low Risk" />
         <StatCard value={mod} dotColor={C.moderate} label="Moderate Risk" />
         <StatCard value={high} dotColor={C.high} label="High Risk" />
+        <StatCard value={noData} dotColor={C.noData} label="No Data" />
       </div>
 
       <div className="flex gap-4 mt-4 flex-col lg:flex-row">
@@ -508,6 +515,7 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: C.low }} /> Low Risk</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: C.moderate }} /> Moderate Risk</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: C.high }} /> High Risk</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: C.noData }} /> No Data</span>
           </div>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={chartData} margin={{ left: -20 }}>
@@ -517,6 +525,7 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
               <Bar dataKey="low" stackId="a" fill={C.low} radius={[0, 0, 0, 0]} />
               <Bar dataKey="moderate" stackId="a" fill={C.moderate} />
               <Bar dataKey="high" stackId="a" fill={C.high} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="noData" stackId="a" fill={C.noData} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -527,9 +536,9 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
             {heatmapCells.map((s) => (
               <div
                 key={s.id}
-                title={`${s.lastName}: ${s.wpm} wpm`}
+                title={`${s.lastName}: ${s.wpm == null ? "No Data" : `${s.wpm} wpm`}`}
                 className="aspect-square rounded-lg"
-                style={{ background: riskColor[riskOf(s.accuracy)] }}
+                style={{ background: riskColor[riskOf(s)] }}
               />
             ))}
           </div>
@@ -674,7 +683,7 @@ function DeleteConfirmModal({ title = "Remove this learner?", subtitle, onCancel
 
 // ---------- Students page ----------
 function StudentRow({ s, onEdit, onDelete, onToggle }) {
-  const risk = riskOf(s.accuracy);
+  const risk = riskOf(s);
   const isHigh = risk === "high";
   return (
     <div className="mb-2 rounded-2xl overflow-hidden" style={{ border: `1px solid ${C.cardBorder}` }}>
@@ -688,8 +697,8 @@ function StudentRow({ s, onEdit, onDelete, onToggle }) {
         onClick={() => onToggle(s.id)}
       >
         <div className="font-semibold">{s.lastName}</div>
-        <div className="font-semibold">{s.wpm} wpm</div>
-        <div className="font-semibold">{s.accuracy}%</div>
+        <div className="font-semibold">{s.wpm == null ? "--" : `${s.wpm} wpm`}</div>
+        <div className="font-semibold">{s.accuracy == null ? "--" : `${s.accuracy}%`}</div>
         <div>{s.historyDate}</div>
         <div>
           <span
@@ -709,7 +718,9 @@ function StudentRow({ s, onEdit, onDelete, onToggle }) {
       </div>
       {s.expanded && (
         <div className="px-5 py-4 text-sm" style={{ background: isHigh ? C.warningBg : "#F7F3EA", color: isHigh ? "#fff" : C.text }}>
-          {isHigh
+          {risk === "noData"
+            ? `No reading data has been recorded for ${s.lastName} yet.`
+            : isHigh
             ? `Warning! ${s.lastName} is at a high risk for low reading comprehension, currently demonstrating a reading fluency of ${s.wpm} WPM at ${s.accuracy}% accuracy; immediate intervention should focus on targeted phonics review and guided oral reading practice to rebuild foundational decoding skills.`
             : `${s.lastName} is reading at ${s.wpm} WPM with ${s.accuracy}% accuracy, which is within the expected range for this section.`}
         </div>
@@ -718,7 +729,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle }) {
   );
 }
 
-function Students({ students, setStudents, sections, sectionName, onSectionChange, loading, error, onRefresh }) {
+function Students({ students, setStudents, sections, sectionName, onSectionChange, loading, error, onRefresh, currentTeacher }) {
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState(null);
   const fileRef = useRef(null);
@@ -735,7 +746,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     };
     const response = await fetch(`${API_URL}/api/learners${id ? `/${id}` : ""}`, {
       method: id ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Teacher-Id": currentTeacher?.id || "" },
       body: JSON.stringify(payload),
     });
     if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not save learner."));
@@ -780,7 +791,10 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
 
   const deleteLearner = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/learners/${modal.student.id}`, { method: "DELETE" });
+      const response = await fetch(`${API_URL}/api/learners/${modal.student.id}`, {
+        method: "DELETE",
+        headers: { "X-Teacher-Id": currentTeacher?.id || "" },
+      });
       if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not delete learner."));
       setStudents((prev) => prev.filter((s) => s.id !== modal.student.id));
       setModal(null);
@@ -792,7 +806,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
   const handleFile = (file) => {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const text = e.target.result;
       const lines = text.split(/\r?\n/).filter(Boolean);
       const startIdx = /last\s*name/i.test(lines[0]) ? 1 : 0;
@@ -822,9 +836,15 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       if (invalidRows.length > 0) {
         alert(`Skipped invalid CSV row(s): ${invalidRows.join(", ")}. Each row needs Lastname, Birthdate, and Section.`);
       }
-      Promise.all(newRows.map(({ lastName, birthMonth, birthDay, birthYear, section }) => saveLearner({ lastName, birthMonth, birthDay, birthYear, section })))
-        .then((learners) => setStudents((prev) => [...prev, ...learners]))
-        .catch((requestError) => alert(requestError.message));
+      const results = await Promise.allSettled(
+        newRows.map(({ lastName, birthMonth, birthDay, birthYear, section }) =>
+          saveLearner({ lastName, birthMonth, birthDay, birthYear, section }))
+      );
+      const failed = results.filter((result) => result.status === "rejected");
+      await onRefresh();
+      if (failed.length > 0) {
+        alert(`Imported ${results.length - failed.length} learner(s). ${failed.length} row(s) failed: ${failed[0].reason?.message || "Unknown error"}`);
+      }
     };
     reader.readAsText(file);
   };
@@ -2034,7 +2054,7 @@ function Stories({ currentTeacher }) {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(storyUrl());
+      const response = await fetch(storyUrl(), { headers: teacherHeaders() });
       if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not load stories from the database."));
       const databaseStories = await response.json();
       setStories(databaseStories.map((story) => ({ ...story, id: story._id })));
@@ -2232,10 +2252,7 @@ export default function TeacherDashboard() {
   const [learnersError, setLearnersError] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
   const currentTeacher = getSession()?.user;
-  const sections = useMemo(
-    () => [...new Set(students.map((student) => student.section?.trim()).filter(Boolean))].sort(),
-    [students]
-  );
+  const [sections, setSections] = useState([]);
   const sectionName = selectedSection || sections[0] || "";
   const sectionStudents = sectionName
     ? students.filter((student) => student.section === sectionName)
@@ -2247,12 +2264,18 @@ export default function TeacherDashboard() {
     setLearnersLoading(true);
     setLearnersError("");
     try {
-      const response = await fetch(`${API_URL}/api/learners`);
-      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not load learners from the database."));
-      const learners = await response.json();
+      const headers = { "X-Teacher-Id": currentTeacher?.id || "" };
+      const [learnersResponse, sectionsResponse] = await Promise.all([
+        fetch(`${API_URL}/api/learners`, { headers }),
+        fetch(`${API_URL}/api/sections`, { headers }),
+      ]);
+      if (!learnersResponse.ok) throw new Error(await apiErrorMessage(learnersResponse, "Could not load learners from the database."));
+      if (!sectionsResponse.ok) throw new Error(await apiErrorMessage(sectionsResponse, "Could not load your sections."));
+      const [learners, ownedSections] = await Promise.all([learnersResponse.json(), sectionsResponse.json()]);
       const databaseStudents = learners.map(learnerToStudent);
-      const databaseSections = [...new Set(databaseStudents.map((student) => student.section?.trim()).filter(Boolean))].sort();
+      const databaseSections = ownedSections.map((section) => section.name).filter(Boolean);
       setStudents(databaseStudents);
+      setSections(databaseSections);
       setSelectedSection((currentSection) => databaseSections.includes(currentSection) ? currentSection : (databaseSections[0] || ""));
     } catch (requestError) {
       setLearnersError(requestError.message);
@@ -2277,7 +2300,7 @@ export default function TeacherDashboard() {
         {page === "dashboard" && (
           <Dashboard students={sectionStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} teacherName={teacherName} />
         )}
-        {page === "students" && <Students students={sectionStudents} setStudents={setStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} loading={learnersLoading} error={learnersError} onRefresh={loadLearners} />}
+        {page === "students" && <Students students={sectionStudents} setStudents={setStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} loading={learnersLoading} error={learnersError} onRefresh={loadLearners} currentTeacher={currentTeacher} />}
         {page === "flashcards" && <Flashcards />}
         {page === "stories" && <Stories currentTeacher={currentTeacher} />}
       </div>
