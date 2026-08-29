@@ -18,6 +18,7 @@ async function hashPassword(password) {
 }
 
 async function verifyPassword(password, storedHash) {
+  if (!storedHash || typeof storedHash !== "string") return false;
   const [salt, hash] = storedHash.split(":");
   if (!salt || !hash) return false;
 

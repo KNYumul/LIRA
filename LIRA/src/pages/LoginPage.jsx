@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./LoginPage.css";
 import { saveSession } from "../utils/session";
@@ -6,6 +6,7 @@ import { showError } from "../utils/alerts";
 
 const fox = "/UI_Designs/ANIMALS/mascot_fox.svg";
 const owl = "/UI_Designs/ANIMALS/mascot_owl.svg";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 async function readApiResponse(response) {
   const responseText = await response.text();
@@ -36,6 +37,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const googleCallbackHandled = useRef(false);
 
   const isStudent = portal === "student";
   const isSignUp = teacherMode === "signup";
@@ -46,6 +48,32 @@ function LoginPage() {
     setError("");
     showError(message, isSignUp ? "Sign-up unsuccessful" : "Login unsuccessful");
   }, [error, isSignUp]);
+
+  useEffect(() => {
+    if (googleCallbackHandled.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const authCode = params.get("google_auth_code");
+    const authError = params.get("google_auth_error");
+    if (!authCode && !authError) return;
+
+    googleCallbackHandled.current = true;
+    window.history.replaceState({}, document.title, window.location.pathname);
+    setPortal("teacher");
+
+    if (authError) {
+      setError(authError);
+      return;
+    }
+
+    fetch(`${API_URL}/api/auth/google/session?code=${encodeURIComponent(authCode)}`)
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Google login failed.");
+        saveSession({ role: "teacher", user: data.teacher });
+        navigate("/teacher");
+      })
+      .catch((googleError) => setError(googleError.message || "Google login failed."));
+  }, [navigate]);
 
   const todayString = new Date().toISOString().split("T")[0];
   const depedEmailRegex = /^[a-zA-Z._%+-]+@deped\.gov\.ph$/i;
@@ -596,7 +624,11 @@ function LoginPage() {
               <div className="portal-divider">
                 <span>OR</span>
               </div>
-              <button className="google-button" type="button">
+              <button
+                className="google-button"
+                type="button"
+                onClick={() => window.location.assign(`${API_URL}/api/auth/google?role=teacher`)}
+              >
                 <b aria-hidden="true">●</b> Connect through Gmail / Google Workspace
               </button>
             </>

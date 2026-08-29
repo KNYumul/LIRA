@@ -9,6 +9,7 @@ const teacherRoutes = require("./routes/teacher");
 const adminRoutes = require("./routes/admin");
 const storyRoutes = require("./routes/story");
 const sectionRoutes = require("./routes/section");
+const authRoutes = require("./routes/auth");
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use("/api/teachers", teacherRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/stories", storyRoutes);
 app.use("/api/sections", sectionRoutes);
+app.use("/api/auth", authRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI, {dbname: "LIRA"} )
