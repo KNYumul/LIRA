@@ -2,6 +2,7 @@ const express = require("express");
 const Teacher = require("../models/Teacher");
 const Section = require("../models/Section");
 const { hashPassword, verifyPassword } = require("../utils/password");
+const { loginKey, cooldownStatus, failedLogin, clearFailedLogins, sendCooldown } = require("../utils/loginCooldown");
 
 const router = express.Router();
 
@@ -101,10 +102,17 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ message: "Email and password are required." });
 
+    const key = loginKey(req, "teacher");
+    const status = cooldownStatus(key);
+    if (status.locked) return sendCooldown(res, status.retryAfterSeconds);
+
     const teacher = await Teacher.findOne({ email: email.trim().toLowerCase() }).select("+passwordHash");
     if (!teacher || !teacher.active || !(await verifyPassword(password, teacher.passwordHash))) {
-      return res.status(401).json({ message: "Invalid email or password." });
+      const failure = failedLogin(key);
+      if (failure.locked) return sendCooldown(res, failure.retryAfterSeconds);
+      return res.status(401).json({ message: `Invalid email or password. ${failure.remainingAttempts} attempt${failure.remainingAttempts === 1 ? "" : "s"} remaining.` });
     }
+    clearFailedLogins(key);
     res.json({ message: "Login successful.", teacher: publicTeacher(teacher) });
   } catch (error) {
     console.error("Teacher login failed:", error);

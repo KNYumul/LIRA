@@ -1,6 +1,7 @@
 const express = require("express");
 const Admin = require("../models/Admin");
 const { hashPassword, verifyPassword } = require("../utils/password");
+const { loginKey, cooldownStatus, failedLogin, clearFailedLogins, sendCooldown } = require("../utils/loginCooldown");
 
 const router = express.Router();
 
@@ -34,10 +35,17 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ message: "Email and password are required." });
 
+    const key = loginKey(req, "admin");
+    const status = cooldownStatus(key);
+    if (status.locked) return sendCooldown(res, status.retryAfterSeconds);
+
     const admin = await Admin.findOne({ email: email.trim().toLowerCase() }).select("+passwordHash");
     if (!admin || !admin.active || !(await verifyPassword(password, admin.passwordHash))) {
-      return res.status(401).json({ message: "Invalid email or password." });
+      const failure = failedLogin(key);
+      if (failure.locked) return sendCooldown(res, failure.retryAfterSeconds);
+      return res.status(401).json({ message: `Invalid email or password. ${failure.remainingAttempts} attempt${failure.remainingAttempts === 1 ? "" : "s"} remaining.` });
     }
+    clearFailedLogins(key);
     res.json({ message: "Login successful.", admin: publicAdmin(admin) });
   } catch (error) {
     console.error("Admin login failed:", error);
