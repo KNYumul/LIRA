@@ -2,6 +2,7 @@ const express = require("express");
 const Learner = require("../models/Learner");
 const Section = require("../models/Section");
 const Teacher = require("../models/Teacher");
+const { loginKey, cooldownStatus, failedLogin, clearFailedLogins, sendCooldown } = require("../utils/loginCooldown");
 
 const router = express.Router();
 
@@ -114,8 +115,19 @@ router.delete("/:id", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { lastName, birthdate } = req.body;
+    if (!lastName || !birthdate) return res.status(400).json({ message: "Last name and birthdate are required." });
+
+    const key = loginKey(req, "learner");
+    const status = cooldownStatus(key);
+    if (status.locked) return sendCooldown(res, status.retryAfterSeconds);
+
     const learner = await Learner.findOne({ lastName, birthdate });
-    if (!learner) return res.status(401).json({ message: "Invalid last name or birthdate." });
+    if (!learner) {
+      const failure = failedLogin(key);
+      if (failure.locked) return sendCooldown(res, failure.retryAfterSeconds);
+      return res.status(401).json({ message: `Invalid last name or birthdate. ${failure.remainingAttempts} attempt${failure.remainingAttempts === 1 ? "" : "s"} remaining.` });
+    }
+    clearFailedLogins(key);
     res.json({
       message: "Login successful!",
       learner: { id: learner._id, lastName: learner.lastName, birthdate: learner.birthdate, section: learner.section }
