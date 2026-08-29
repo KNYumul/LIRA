@@ -289,7 +289,15 @@ router.post("/generate-questions", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const stories = await Story.find()
+    const teacher = await currentTeacher(req, res);
+    if (!teacher) return;
+
+    const stories = await Story.find({
+      $or: [
+        { badge: "Library Story" },
+        { teacherId: teacher._id }
+      ]
+    })
       .populate("teacherId", "firstName lastName")
       .sort({ createdAt: -1 });
     res.json(stories.map((story) => {

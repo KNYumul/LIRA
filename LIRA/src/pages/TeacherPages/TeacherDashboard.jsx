@@ -228,6 +228,8 @@ const C = {
   moderate: "#F3B86B",
   moderateText: "#8A4E17",
   high: "#C54034",
+  noData: "#D8D5CE",
+  noDataText: "#68645D",
   highRowBg: "#F3D9D4",
   warningBg: "#E9B8AF",
   dropzoneBg: "#CDEEF5",
@@ -290,21 +292,23 @@ function learnerToStudent(learner) {
     birthMonth,
     birthDay,
     birthYear,
-    wpm: 0,
-    accuracy: 0,
+    wpm: null,
+    accuracy: null,
     historyDate: "--",
+    hasReadingData: false,
     expanded: false,
   };
 }
 
-function riskOf(accuracy) {
-  if (accuracy >= 90) return "low";
-  if (accuracy >= 70) return "moderate";
+function riskOf(student) {
+  if (student.hasReadingData === false || student.accuracy == null) return "noData";
+  if (student.accuracy >= 90) return "low";
+  if (student.accuracy >= 70) return "moderate";
   return "high";
 }
-const riskLabel = { low: "Low Risk", moderate: "Moderate Risk", high: "High Risk" };
-const riskColor = { low: C.low, moderate: C.moderate, high: C.high };
-const riskText = { low: C.lowText, moderate: C.moderateText, high: "#FFFFFF" };
+const riskLabel = { low: "Low Risk", moderate: "Moderate Risk", high: "High Risk", noData: "No Data" };
+const riskColor = { low: C.low, moderate: C.moderate, high: C.high, noData: C.noData };
+const riskText = { low: C.lowText, moderate: C.moderateText, high: "#FFFFFF", noData: C.noDataText };
 
 // ---------- flashcards seed data ----------
 function seedFlashcards() {
@@ -543,9 +547,10 @@ function SectionSelect({ sections, selectedSection, onChange, className = "" }) 
 
 function Dashboard({ students, sections, sectionName, onSectionChange, teacherName }) {
   const total = students.length;
-  const low = students.filter((s) => riskOf(s.accuracy) === "low").length;
-  const mod = students.filter((s) => riskOf(s.accuracy) === "moderate").length;
-  const high = students.filter((s) => riskOf(s.accuracy) === "high").length;
+  const low = students.filter((s) => riskOf(s) === "low").length;
+  const mod = students.filter((s) => riskOf(s) === "moderate").length;
+  const high = students.filter((s) => riskOf(s) === "high").length;
+  const noData = students.filter((s) => riskOf(s) === "noData").length;
 
   // bucket students into 10 groups for the stacked chart, matching the design's "Surname N" axis
   const chartData = useMemo(() => {
@@ -554,10 +559,11 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
       low: 0,
       moderate: 0,
       high: 0,
+      noData: 0,
     }));
     students.forEach((s, i) => {
       const g = groups[i % 10];
-      const r = riskOf(s.accuracy);
+      const r = riskOf(s);
       g[r] += 1;
     });
     return groups;
@@ -595,6 +601,7 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
         <StatCard value={low} dotColor={C.low} label="Low Risk" />
         <StatCard value={mod} dotColor={C.moderate} label="Moderate Risk" />
         <StatCard value={high} dotColor={C.high} label="High Risk" />
+        <StatCard value={noData} dotColor={C.noData} label="No Data" />
       </div>
 
       <div className="flex gap-4 mt-4 flex-col lg:flex-row">
@@ -603,6 +610,7 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: C.low }} /> Low Risk</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: C.moderate }} /> Moderate Risk</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: C.high }} /> High Risk</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: C.noData }} /> No Data</span>
           </div>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={chartData} margin={{ left: -20 }}>
@@ -612,6 +620,7 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
               <Bar dataKey="low" stackId="a" fill={C.low} radius={[0, 0, 0, 0]} />
               <Bar dataKey="moderate" stackId="a" fill={C.moderate} />
               <Bar dataKey="high" stackId="a" fill={C.high} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="noData" stackId="a" fill={C.noData} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -622,9 +631,9 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
             {heatmapCells.map((s) => (
               <div
                 key={s.id}
-                title={`${s.lastName}: ${s.wpm} wpm`}
+                title={`${s.lastName}: ${s.wpm == null ? "No Data" : `${s.wpm} wpm`}`}
                 className="aspect-square rounded-lg"
-                style={{ background: riskColor[riskOf(s.accuracy)] }}
+                style={{ background: riskColor[riskOf(s)] }}
               />
             ))}
           </div>
@@ -771,7 +780,7 @@ function DeleteConfirmModal({ title = "Remove this learner?", subtitle, onCancel
 
 // ---------- Students page ----------
 function StudentRow({ s, onEdit, onDelete, onToggle }) {
-  const risk = riskOf(s.accuracy);
+  const risk = riskOf(s);
   const isHigh = risk === "high";
   return (
     <div className="mb-2 rounded-2xl overflow-hidden" style={{ border: `1px solid ${C.cardBorder}` }}>
@@ -785,8 +794,8 @@ function StudentRow({ s, onEdit, onDelete, onToggle }) {
         onClick={() => onToggle(s.id)}
       >
         <div className="font-semibold">{s.lastName}</div>
-        <div className="font-semibold">{s.wpm} wpm</div>
-        <div className="font-semibold">{s.accuracy}%</div>
+        <div className="font-semibold">{s.wpm == null ? "--" : `${s.wpm} wpm`}</div>
+        <div className="font-semibold">{s.accuracy == null ? "--" : `${s.accuracy}%`}</div>
         <div>{s.historyDate}</div>
         <div>
           <span
@@ -806,7 +815,9 @@ function StudentRow({ s, onEdit, onDelete, onToggle }) {
       </div>
       {s.expanded && (
         <div className="px-5 py-4 text-sm" style={{ background: isHigh ? C.warningBg : "#F7F3EA", color: isHigh ? "#fff" : C.text }}>
-          {isHigh
+          {risk === "noData"
+            ? `No reading data has been recorded for ${s.lastName} yet.`
+            : isHigh
             ? `Warning! ${s.lastName} is at a high risk for low reading comprehension, currently demonstrating a reading fluency of ${s.wpm} WPM at ${s.accuracy}% accuracy; immediate intervention should focus on targeted phonics review and guided oral reading practice to rebuild foundational decoding skills.`
             : `${s.lastName} is reading at ${s.wpm} WPM with ${s.accuracy}% accuracy, which is within the expected range for this section.`}
         </div>
@@ -2010,7 +2021,7 @@ function Stories({ currentTeacher }) {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(storyUrl());
+      const response = await fetch(storyUrl(), { headers: teacherHeaders() });
       if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not load stories from the database."));
       const databaseStories = await response.json();
       setStories(databaseStories.map((story) => ({ ...story, id: story._id })));
