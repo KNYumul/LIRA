@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./LoginPage.css";
 import { saveSession } from "../utils/session";
+import { showError } from "../utils/alerts";
 
 const fox = "/UI_Designs/ANIMALS/mascot_fox.svg";
 const owl = "/UI_Designs/ANIMALS/mascot_owl.svg";
@@ -38,6 +39,13 @@ function LoginPage() {
 
   const isStudent = portal === "student";
   const isSignUp = teacherMode === "signup";
+
+  useEffect(() => {
+    if (!error) return;
+    const message = error;
+    setError("");
+    showError(message, isSignUp ? "Sign-up unsuccessful" : "Login unsuccessful");
+  }, [error, isSignUp]);
 
   const todayString = new Date().toISOString().split("T")[0];
   const depedEmailRegex = /^[a-zA-Z._%+-]+@deped\.gov\.ph$/i;
@@ -592,11 +600,6 @@ function LoginPage() {
                 <b aria-hidden="true">●</b> Connect through Gmail / Google Workspace
               </button>
             </>
-          )}
-          {error && (
-            <p role="alert" style={{ color: "#d9534f", textAlign: "center", marginTop: "14px" }}>
-              {error}
-            </p>
           )}
           {success && (
             <p role="status" style={{ color: "#3E6B31", textAlign: "center", marginTop: "14px" }}>

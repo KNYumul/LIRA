@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Admin-LoginPage.css";
 import { saveSession } from "../utils/session";
+import { showError } from "../utils/alerts";
 // Importing directly fixes broken image paths across bundlers
 import mascot from "../assets/icons/Squirrel.png"; 
 
@@ -10,6 +11,13 @@ function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!error) return;
+    const message = error;
+    setError("");
+    showError(message, "Admin login unsuccessful");
+  }, [error]);
 
   const depedEmailRegex = /^[a-zA-Z._%+-]+@deped\.gov\.ph$/i;
 
@@ -257,11 +265,6 @@ function AdminLoginPage() {
             <span>Connect through Gmail / Google Workspace</span>
           </button>
 
-          {error && (
-            <p role="alert" style={{ color: "#d9534f", textAlign: "center", marginTop: "14px" }}>
-              {error}
-            </p>
-          )}
         </form>
       </section>
     </main>
