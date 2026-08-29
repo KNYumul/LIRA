@@ -979,3 +979,13 @@ button:focus-visible,
   outline: 3px solid rgba(143, 207, 224, 0.65);
   outline-offset: 2px;
 }
+.lira-sweet-alert {
+  border-radius: 22px;
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+}
+
+.lira-sweet-alert-button {
+  border-radius: 999px !important;
+  padding: 10px 22px !important;
+  font-weight: 600 !important;
+}

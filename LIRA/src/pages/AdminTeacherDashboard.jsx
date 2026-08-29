@@ -5,6 +5,7 @@ import { clearSavedPortalPage, getSavedPortalPage, savePortalPage } from '../uti
 import AdminSidebar from '../components/AdminSidebar.jsx'
 import AdminDashboard from './AdminPages/AdminDashboard.jsx'
 import AdminTeachersPage from './AdminPages/AdminTeachersPage.jsx'
+import { liraAlert, showError } from '../utils/alerts.js'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
@@ -47,19 +48,28 @@ export default function AdminTeacherDashboard() {
     return () => { cancelled = true }
   }, [])
 
-  function handleDelete(id) {
+  async function handleDelete(id) {
     const teacher = teachers.find(t => t.id === id)
-    const ok = window.confirm(`Remove ${teacher.name} from the teacher list?`)
-    if (ok) {
-      fetch(`${API_URL}/api/teachers/${id}`, { method: 'DELETE' })
-        .then(async response => {
-          if (!response.ok) {
-            const data = await response.json().catch(() => ({}))
-            throw new Error(data.message || 'Could not delete teacher account.')
-          }
-          setTeachers(prev => prev.filter(t => t.id !== id))
-        })
-        .catch(error => window.alert(error.message))
+    const result = await liraAlert.fire({
+      icon: 'warning',
+      title: 'Remove teacher?',
+      text: `${teacher.name} will be removed from the teacher list.`,
+      showCancelButton: true,
+      confirmButtonText: 'Remove',
+      cancelButtonText: 'Cancel'
+    })
+    if (!result.isConfirmed) return
+
+    try {
+      const response = await fetch(`${API_URL}/api/teachers/${id}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.message || 'Could not delete teacher account.')
+      }
+      setTeachers(prev => prev.filter(t => t.id !== id))
+      await liraAlert.fire({ icon: 'success', title: 'Teacher removed', timer: 1600, showConfirmButton: false })
+    } catch (error) {
+      await showError(error.message)
     }
   }
 
@@ -86,14 +96,21 @@ export default function AdminTeacherDashboard() {
       setTeachers(prev => prev.map(teacher => teacher.id === id ? updatedTeacher : teacher))
       return true
     } catch (error) {
-      window.alert(error.message)
+      await showError(error.message)
       return false
     }
   }
 
-  function handleLogout() {
-    const ok = window.confirm('Are you sure you want to log out?')
-    if (ok) {
+  async function handleLogout() {
+    const result = await liraAlert.fire({
+      icon: 'question',
+      title: 'Log out?',
+      text: 'Are you sure you want to log out?',
+      showCancelButton: true,
+      confirmButtonText: 'Log out',
+      cancelButtonText: 'Stay logged in'
+    })
+    if (result.isConfirmed) {
       clearSavedPortalPage('liraAdminPortalPage')
       clearSession()
       navigate('/')

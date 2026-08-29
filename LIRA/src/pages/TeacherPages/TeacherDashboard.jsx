@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import './TeacherDashboard.css';
 import { clearSession, getSession } from "../../utils/session";
 import { clearSavedPortalPage, getSavedPortalPage, savePortalPage } from "../../utils/portalPage";
+import { liraAlert, showError, showWarning } from "../../utils/alerts";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -784,12 +785,12 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       const lastName = data.lastName?.trim();
 
       if (!lastName) {
-        alert("Please enter the learner's surname.");
+        await showWarning("Please enter the learner's surname.");
         return;
       }
 
       if (!/^[A-Za-zÀ-ÖØ-öø-ÿ]+(?:[ '-][A-Za-zÀ-ÖØ-öø-ÿ]+)*$/.test(lastName)) {
-        alert("Please enter a valid surname. Letters, spaces, apostrophes, and hyphens are allowed.");
+        await showWarning("Letters, spaces, apostrophes, and hyphens are allowed.", "Please enter a valid surname");
         return;
       }
 
@@ -801,7 +802,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       setStudents((prev) => [...prev, learner]);
       setModal(null);
     } catch (requestError) {
-      alert(requestError.message);
+      await showError(requestError.message);
     }
   };
 
@@ -811,7 +812,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       setStudents((prev) => prev.map((s) => (s.id === learner.id ? { ...learner, expanded: s.expanded } : s)));
       setModal(null);
     } catch (requestError) {
-      alert(requestError.message);
+      await showError(requestError.message);
     }
   };
 
@@ -825,7 +826,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       setStudents((prev) => prev.filter((s) => s.id !== modal.student.id));
       setModal(null);
     } catch (requestError) {
-      alert(requestError.message);
+      await showError(requestError.message);
     }
   };
 
@@ -887,17 +888,23 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           saveLearner({ lastName, birthMonth, birthDay, birthYear, section }))
       );
       const failed = results.filter((result) => result.status === "rejected");
-      const storedDuplicates = failed.filter((result) => /already listed/i.test(result.reason?.message || ""));
-      const otherFailures = failed.filter((result) => !/already listed/i.test(result.reason?.message || ""));
+      const isDuplicateFailure = (result) => /already listed|duplicate key|E11000/i.test(result.reason?.message || "");
+      const storedDuplicates = failed.filter(isDuplicateFailure);
+      const otherFailures = failed.filter((result) => !isDuplicateFailure(result));
       await onRefresh();
       const importedCount = results.length - failed.length;
       const duplicateCount = duplicateRows.length + storedDuplicates.length;
       if (duplicateCount > 0 || invalidRows.length > 0 || otherFailures.length > 0) {
-        const summary = [`Imported ${importedCount} learner(s).`];
-        if (duplicateCount > 0) summary.push(`Skipped ${duplicateCount} duplicate row(s).`);
-        if (invalidRows.length > 0) summary.push(`Skipped ${invalidRows.length} invalid row(s): ${invalidRows.join(", ")}.`);
-        if (otherFailures.length > 0) summary.push(`${otherFailures.length} row(s) failed: ${otherFailures[0].reason?.message || "Unknown error"}`);
-        alert(summary.join(" "));
+        const summary = [`<div><strong>${importedCount}</strong> learner(s) imported</div>`];
+        if (duplicateCount > 0) summary.push(`<div><strong>${duplicateCount}</strong> duplicate row(s) skipped</div>`);
+        if (invalidRows.length > 0) summary.push(`<div><strong>${invalidRows.length}</strong> invalid row(s) skipped</div>`);
+        if (otherFailures.length > 0) summary.push(`<div><strong>${otherFailures.length}</strong> row(s) could not be imported</div>`);
+        await liraAlert.fire({
+          icon: otherFailures.length > 0 ? "warning" : "info",
+          title: "CSV import complete",
+          html: `<div style="display:grid;gap:8px;text-align:left;max-width:300px;margin:0 auto">${summary.join("")}</div>`,
+          footer: otherFailures.length > 0 ? "Please review the CSV data and try again." : undefined
+        });
       }
     };
     reader.readAsText(file);
@@ -1785,7 +1792,6 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
   const [pages, setPages] = useState(story.pages);
   const [questions, setQuestions] = useState(story.questions);
   const [deletePageTarget, setDeletePageTarget] = useState(null);
-  const [deleteQuestionTarget, setDeleteQuestionTarget] = useState(null);
   const [coverImage, setCoverImage] = useState(story.coverImage || null);
   const [coverError, setCoverError] = useState("");
   const [processingCover, setProcessingCover] = useState(false);
@@ -1828,9 +1834,18 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
     setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, options: q.options.map((o, i) => (i === idx ? value : o)) } : q)));
   const addQuestion = () =>
     setQuestions((prev) => [...prev, { id: Math.max(0, ...prev.map((p) => p.id)) + 1, question: "", options: ["", "", "", ""], correct: 0 }]);
-  const confirmDeleteQuestion = () => {
-    setQuestions((prev) => prev.filter((q) => q.id !== deleteQuestionTarget.id));
-    setDeleteQuestionTarget(null);
+  const requestDeleteQuestion = async (question) => {
+    const result = await liraAlert.fire({
+      icon: "warning",
+      title: "Remove this question?",
+      text: `Question ${question.id} will be removed.`,
+      showCancelButton: true,
+      confirmButtonText: "Remove",
+      cancelButtonText: "Cancel"
+    });
+    if (result.isConfirmed) {
+      setQuestions((prev) => prev.filter((q) => q.id !== question.id));
+    }
   };
 
   const regenerate = async () => {
@@ -2020,7 +2035,7 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
                   <div className="absolute -top-3 left-3 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: "#8FCFE0" }}>
                     Q{q.id}
                   </div>
-                  <button onClick={() => setDeleteQuestionTarget(q)} className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: "#C0504D" }}>
+                  <button onClick={() => requestDeleteQuestion(q)} className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: "#C0504D" }}>
                     <MinusCircle size={14} />
                   </button>
                   <input
@@ -2080,14 +2095,6 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
           onConfirm={confirmDeletePage}
         />
       )}
-      {deleteQuestionTarget && (
-        <DeleteConfirmModal
-          title="Remove this question?"
-          subtitle={`Question ${deleteQuestionTarget.id} will be removed.`}
-          onCancel={() => setDeleteQuestionTarget(null)}
-          onConfirm={confirmDeleteQuestion}
-        />
-      )}
     </div>
   );
 }
@@ -2096,7 +2103,6 @@ function Stories({ currentTeacher }) {
   const [stories, setStories] = useState([]);
   const [lang, setLang] = useState("ENG");
   const [editTarget, setEditTarget] = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
   const [showAddStory, setShowAddStory] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -2222,16 +2228,29 @@ function Stories({ currentTeacher }) {
     return result.questions;
   };
 
-  const confirmDeleteStory = async () => {
+  const confirmDeleteStory = async (storyToDelete) => {
     try {
-      const response = await fetch(storyUrl(deleteTarget.id), { method: "DELETE", headers: teacherHeaders() });
+      const response = await fetch(storyUrl(storyToDelete.id), { method: "DELETE", headers: teacherHeaders() });
       if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not delete story."));
-      setStories((prev) => prev.filter((story) => story.id !== deleteTarget.id));
-      setDeleteTarget(null);
-      setEditTarget((prev) => (prev && prev.id === deleteTarget.id ? null : prev));
+      setStories((prev) => prev.filter((story) => story.id !== storyToDelete.id));
+      setEditTarget((prev) => (prev && prev.id === storyToDelete.id ? null : prev));
+      await liraAlert.fire({ icon: "success", title: "Story removed", timer: 1500, showConfirmButton: false });
     } catch (requestError) {
       setError(requestError.message);
+      await showError(requestError.message);
     }
+  };
+
+  const requestDeleteStory = async (story) => {
+    const result = await liraAlert.fire({
+      icon: "warning",
+      title: "Remove this story?",
+      text: `${story.title} will be removed from your stories.`,
+      showCancelButton: true,
+      confirmButtonText: "Remove",
+      cancelButtonText: "Cancel"
+    });
+    if (result.isConfirmed) await confirmDeleteStory(story);
   };
 
   return (
@@ -2262,7 +2281,7 @@ function Stories({ currentTeacher }) {
 
       <div className="grid mt-6 gap-6" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" }}>
         {filtered.map((story) => (
-          <StoryCover key={story.id} story={story} canManage={story.teacherId === currentTeacher?.id} onEdit={setEditTarget} onDeleteRequest={setDeleteTarget} />
+          <StoryCover key={story.id} story={story} canManage={story.teacherId === currentTeacher?.id} onEdit={setEditTarget} onDeleteRequest={requestDeleteStory} />
         ))}
         <AddStoryCard onAdd={() => setShowAddStory(true)} />
       </div>
@@ -2281,14 +2300,6 @@ function Stories({ currentTeacher }) {
           onCancel={() => setEditTarget(null)}
           onSave={saveStory}
           onRegenerateQuestions={regenerateQuestions}
-        />
-      )}
-      {deleteTarget && (
-        <DeleteConfirmModal
-          title="Remove this story?"
-          subtitle={`${deleteTarget.title} will be removed from your stories.`}
-          onCancel={() => setDeleteTarget(null)}
-          onConfirm={confirmDeleteStory}
         />
       )}
     </div>
