@@ -1032,11 +1032,21 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       )}
 
       <section className="student-print-report" aria-hidden="true">
-        <h1>Learner Reading Report</h1>
-        <p>Section: {sectionName || "Unassigned"}</p>
+        <header className="student-report-letterhead">
+          <div className="student-report-school">Navotas Elementary School - Central</div>
+          <div className="student-report-system">
+            LIRA (Literacy Intelligence and Reading Assessment): A Multimodal Artificial Intelligence Framework for Early Literacy Risk Screening and Reading Comprehension Assessment Among Grade 3 Learners
+          </div>
+          <h1>Learner Reading Progress Report</h1>
+          <div className="student-report-details">
+            <span><strong>Section:</strong> {sectionName || "Unassigned"}</span>
+            <span><strong>Teacher:</strong> {[currentTeacher?.firstName, currentTeacher?.lastName].filter(Boolean).join(" ") || "Unassigned"}</span>
+          </div>
+        </header>
         <table>
           <thead>
             <tr>
+              <th>No.</th>
               <th>Learner</th>
               <th>WPM</th>
               <th>Accuracy</th>
@@ -1046,7 +1056,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
             </tr>
           </thead>
           <tbody>
-            {students.map((student) => {
+            {students.map((student, index) => {
               const risk = riskOf(student);
               const action = risk === "high"
                 ? "Immediate reading intervention"
@@ -1057,6 +1067,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
                     : "Record a reading assessment";
               return (
                 <tr key={`print-${student.id}`}>
+                  <td>{index + 1}</td>
                   <td>{student.lastName}</td>
                   <td>{student.wpm == null ? "--" : student.wpm}</td>
                   <td>{student.accuracy == null ? "--" : `${student.accuracy}%`}</td>

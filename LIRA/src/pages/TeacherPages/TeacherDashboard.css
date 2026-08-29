@@ -1019,13 +1019,32 @@ button:focus-visible,
     font-family: 'Poppins', 'Segoe UI', sans-serif;
   }
 
-  .student-print-report h1 {
-    margin: 0 0 4px;
+  .student-report-letterhead {
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .student-report-school {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .student-report-system {
+    max-width: 900px;
+    margin: 5px auto 12px;
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  .student-report-letterhead h1 {
+    margin: 0 0 10px;
     font-size: 22px;
   }
 
-  .student-print-report p {
-    margin: 0 0 18px;
+  .student-report-details {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
     font-size: 13px;
   }
 
