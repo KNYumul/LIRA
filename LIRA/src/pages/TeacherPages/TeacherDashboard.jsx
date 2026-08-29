@@ -837,14 +837,29 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       const text = e.target.result;
       const lines = text.split(/\r?\n/).filter((line) => line.trim());
       const headers = parseCsvLine(lines[0] || "").map(csvHeaderKey);
-      const lastNameColumn = headers.findIndex((header) => header === "lastname" || header === "surname");
-      const birthdateColumn = headers.findIndex((header) => header === "birthdate" || header === "dateofbirth" || header === "dob");
-      const sectionColumn = headers.findIndex((header) => header === "section");
+      const lastNameColumn = headers.findIndex((header) =>
+        ["lastname", "surname", "studentlastname", "learnerlastname"].includes(header)
+      );
+      const birthdateColumn = headers.findIndex((header) =>
+        ["birthdate", "dateofbirth", "dob", "studentbirthdate", "learnerbirthdate"].includes(header)
+      );
+      const sectionColumn = headers.findIndex((header) =>
+        ["section", "sectionname", "classsection", "studentsection", "learnersection"].includes(header)
+      );
       const hasHeaders = lastNameColumn >= 0 && birthdateColumn >= 0 && sectionColumn >= 0;
-      const columns = hasHeaders
-        ? { lastName: lastNameColumn, birthdate: birthdateColumn, section: sectionColumn }
-        : { lastName: 0, birthdate: 1, section: 2 };
-      const startIdx = hasHeaders ? 1 : 0;
+      if (!hasHeaders) {
+        const missingHeaders = [];
+        if (lastNameColumn < 0) missingHeaders.push("Last Name");
+        if (birthdateColumn < 0) missingHeaders.push("Birthdate");
+        if (sectionColumn < 0) missingHeaders.push("Section");
+        await showWarning(
+          `The CSV header is not recognizable. Missing required column${missingHeaders.length === 1 ? "" : "s"}: ${missingHeaders.join(", ")}. Columns may be in any order, and additional columns are allowed.`,
+          "CSV cannot be imported"
+        );
+        return;
+      }
+      const columns = { lastName: lastNameColumn, birthdate: birthdateColumn, section: sectionColumn };
+      const startIdx = 1;
       const newRows = [];
       const invalidRows = [];
       const duplicateRows = [];
@@ -890,20 +905,35 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       const failed = results.filter((result) => result.status === "rejected");
       const isDuplicateFailure = (result) => /already listed|duplicate key|E11000/i.test(result.reason?.message || "");
       const storedDuplicates = failed.filter(isDuplicateFailure);
-      const otherFailures = failed.filter((result) => !isDuplicateFailure(result));
+      const ownershipFailures = failed.filter((result) => /managed by/i.test(result.reason?.message || ""));
+      const otherFailures = failed.filter((result) => !isDuplicateFailure(result) && !/managed by/i.test(result.reason?.message || ""));
       await onRefresh();
       const importedCount = results.length - failed.length;
       const duplicateCount = duplicateRows.length + storedDuplicates.length;
-      if (duplicateCount > 0 || invalidRows.length > 0 || otherFailures.length > 0) {
+      if (duplicateCount > 0 || invalidRows.length > 0 || ownershipFailures.length > 0 || otherFailures.length > 0) {
         const summary = [`<div><strong>${importedCount}</strong> learner(s) imported</div>`];
         if (duplicateCount > 0) summary.push(`<div><strong>${duplicateCount}</strong> duplicate row(s) skipped</div>`);
         if (invalidRows.length > 0) summary.push(`<div><strong>${invalidRows.length}</strong> invalid row(s) skipped</div>`);
+        if (ownershipFailures.length > 0) {
+          summary.push(`<div style="margin-top:8px"><strong>Managed by another teacher:</strong></div>`);
+          ownershipFailures.forEach((result) => {
+            const safeMessage = String(result.reason?.message || "")
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#039;");
+            summary.push(`<div>• ${safeMessage}</div>`);
+          });
+        }
         if (otherFailures.length > 0) summary.push(`<div><strong>${otherFailures.length}</strong> row(s) could not be imported</div>`);
         await liraAlert.fire({
-          icon: otherFailures.length > 0 ? "warning" : "info",
-          title: "CSV import complete",
+          icon: ownershipFailures.length > 0 || otherFailures.length > 0 ? "warning" : "info",
+          title: ownershipFailures.length > 0 ? "Section managed by another teacher" : "CSV import complete",
           html: `<div style="display:grid;gap:8px;text-align:left;max-width:300px;margin:0 auto">${summary.join("")}</div>`,
-          footer: otherFailures.length > 0 ? "Please review the CSV data and try again." : undefined
+          footer: ownershipFailures.length > 0
+            ? "Only the assigned teacher can manage learners in that section."
+            : otherFailures.length > 0 ? "Please review the CSV data and try again." : undefined
         });
       }
     };

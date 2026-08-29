@@ -67,9 +67,21 @@ router.post("/", async (req, res) => {
     const teacher = await currentTeacher(req, res);
     if (!teacher) return;
     const section = await teacherSection(teacher, req.body, true);
-    if (!section) return res.status(403).json({ message: "That section is already assigned to another teacher." });
     const lastName = String(req.body.lastName || "").trim();
     const birthdate = String(req.body.birthdate || "").trim();
+    if (!section) {
+      const requestedSection = String(req.body.section || "").trim();
+      const ownedSection = await Section.findOne({ name: requestedSection })
+        .collation({ locale: "en", strength: 2 })
+        .populate("teacherId", "firstName lastName");
+      const ownerName = ownedSection?.teacherId
+        ? [ownedSection.teacherId.firstName, ownedSection.teacherId.lastName].filter(Boolean).join(" ")
+        : "another teacher";
+      return res.status(403).json({
+        message: `${lastName || "This learner"} belongs to Section ${ownedSection?.name || requestedSection}, which is managed by ${ownerName}.`,
+        code: "SECTION_OWNED_BY_ANOTHER_TEACHER"
+      });
+    }
     const duplicate = await Learner.exists({ lastName, birthdate, sectionId: section._id })
       .collation({ locale: "en", strength: 2 });
     if (duplicate) return res.status(409).json({ message: `${lastName} is already listed in ${section.name}.` });
