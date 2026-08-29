@@ -1844,7 +1844,16 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
       cancelButtonText: "Cancel"
     });
     if (result.isConfirmed) {
-      setQuestions((prev) => prev.filter((q) => q.id !== question.id));
+      setQuestions((prev) =>
+        prev
+          .filter((q) => q.id !== question.id)
+          .map((q, index) => ({ ...q, id: index + 1 }))
+      );
+      await liraAlert.fire({
+        icon: "success",
+        title: "The question has been successfully removed",
+        confirmButtonText: "OK"
+      });
     }
   };
 
@@ -2029,7 +2038,7 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
               {regenerateError && <div className="text-xs mt-2" style={{ color: "#C0504D" }}>{regenerateError}</div>}
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6" style={{ scrollbarGutter: "stable" }}>
+            <div className="flex-1 overflow-y-auto px-6 pt-3" style={{ scrollbarGutter: "stable" }}>
               {questions.map((q) => (
                 <div key={q.id} className="relative rounded-xl p-4 mb-3" style={{ background: "#fff", border: `1.5px solid #9FD8E6` }}>
                   <div className="absolute -top-3 left-3 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: "#8FCFE0" }}>
@@ -2192,7 +2201,7 @@ function Stories({ currentTeacher }) {
       const story = { ...savedStory, id: savedStory._id };
       setStories((prev) => [story, ...prev]);
       setShowAddStory(false);
-      setEditTarget(story);
+      setEditTarget({ ...story, isNewStory: true });
     } catch (requestError) {
       setError(requestError.message);
     }
@@ -2200,16 +2209,24 @@ function Stories({ currentTeacher }) {
 
   const saveStory = async (updated) => {
     try {
+      const { isNewStory, ...storyPayload } = updated;
       const response = await fetch(storyUrl(updated.id), {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...teacherHeaders() },
-        body: JSON.stringify(updated),
+        body: JSON.stringify(storyPayload),
       });
       if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not update story."));
       const savedStory = await response.json();
       const story = { ...savedStory, id: savedStory._id };
       setStories((prev) => prev.map((existing) => (existing.id === story.id ? story : existing)));
       setEditTarget(null);
+      await liraAlert.fire({
+        icon: "success",
+        title: isNewStory
+          ? "New story has been added successfully"
+          : "The story has been modified successfully",
+        confirmButtonText: "OK"
+      });
     } catch (requestError) {
       setError(requestError.message);
     }
@@ -2234,7 +2251,11 @@ function Stories({ currentTeacher }) {
       if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not delete story."));
       setStories((prev) => prev.filter((story) => story.id !== storyToDelete.id));
       setEditTarget((prev) => (prev && prev.id === storyToDelete.id ? null : prev));
-      await liraAlert.fire({ icon: "success", title: "Story removed", timer: 1500, showConfirmButton: false });
+      await liraAlert.fire({
+        icon: "success",
+        title: "The story has been deleted successfully",
+        confirmButtonText: "OK"
+      });
     } catch (requestError) {
       setError(requestError.message);
       await showError(requestError.message);
