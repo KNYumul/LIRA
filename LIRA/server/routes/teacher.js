@@ -1,5 +1,6 @@
 const express = require("express");
 const Teacher = require("../models/Teacher");
+const Section = require("../models/Section");
 const { hashPassword, verifyPassword } = require("../utils/password");
 
 const router = express.Router();
@@ -81,6 +82,13 @@ router.post("/signup", async (req, res) => {
     const teacher = await Teacher.create({
       firstName, lastName, email: normalizedEmail, passwordHash: await hashPassword(password), school, gradeLevel, section
     });
+    if (section?.trim()) {
+      await Section.findOneAndUpdate(
+        { name: section.trim() },
+        { $setOnInsert: { name: section.trim(), teacherId: teacher._id } },
+        { upsert: true, new: true, runValidators: true }
+      );
+    }
     res.status(201).json({ message: "Teacher account created.", teacher: publicTeacher(teacher) });
   } catch (error) {
     console.error("Teacher signup failed:", error);

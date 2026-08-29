@@ -795,7 +795,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle }) {
   );
 }
 
-function Students({ students, setStudents, sections, sectionName, onSectionChange, loading, error, onRefresh }) {
+function Students({ students, setStudents, sections, sectionName, onSectionChange, loading, error, onRefresh, currentTeacher }) {
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState(null); // {type:'add'|'edit'|'delete', student}
   const fileRef = useRef(null);
@@ -812,7 +812,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     };
     const response = await fetch(`${API_URL}/api/learners${id ? `/${id}` : ""}`, {
       method: id ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Teacher-Id": currentTeacher?.id || "" },
       body: JSON.stringify(payload),
     });
     if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not save learner."));
@@ -841,7 +841,10 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
 
   const deleteLearner = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/learners/${modal.student.id}`, { method: "DELETE" });
+      const response = await fetch(`${API_URL}/api/learners/${modal.student.id}`, {
+        method: "DELETE",
+        headers: { "X-Teacher-Id": currentTeacher?.id || "" },
+      });
       if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not delete learner."));
       setStudents((prev) => prev.filter((s) => s.id !== modal.student.id));
       setModal(null);
@@ -853,7 +856,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
   const handleFile = (file) => {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const text = e.target.result;
       const lines = text.split(/\r?\n/).filter(Boolean);
       const startIdx = /last\s*name/i.test(lines[0]) ? 1 : 0;
@@ -883,9 +886,15 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       if (invalidRows.length > 0) {
         alert(`Skipped invalid CSV row(s): ${invalidRows.join(", ")}. Each row needs Lastname, Birthdate, and Section.`);
       }
-      Promise.all(newRows.map(({ lastName, birthMonth, birthDay, birthYear, section }) => saveLearner({ lastName, birthMonth, birthDay, birthYear, section })))
-        .then((learners) => setStudents((prev) => [...prev, ...learners]))
-        .catch((requestError) => alert(requestError.message));
+      const results = await Promise.allSettled(
+        newRows.map(({ lastName, birthMonth, birthDay, birthYear, section }) =>
+          saveLearner({ lastName, birthMonth, birthDay, birthYear, section }))
+      );
+      const failed = results.filter((result) => result.status === "rejected");
+      await onRefresh();
+      if (failed.length > 0) {
+        alert(`Imported ${results.length - failed.length} learner(s). ${failed.length} row(s) failed: ${failed[0].reason?.message || "Unknown error"}`);
+      }
     };
     reader.readAsText(file);
   };
@@ -2112,10 +2121,7 @@ export default function TeacherDashboard() {
   const [learnersError, setLearnersError] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
   const currentTeacher = getSession()?.user;
-  const sections = useMemo(
-    () => [...new Set(students.map((student) => student.section?.trim()).filter(Boolean))].sort(),
-    [students]
-  );
+  const [sections, setSections] = useState([]);
   const sectionName = selectedSection || sections[0] || "";
   const sectionStudents = sectionName
     ? students.filter((student) => student.section === sectionName)
@@ -2127,12 +2133,18 @@ export default function TeacherDashboard() {
     setLearnersLoading(true);
     setLearnersError("");
     try {
-      const response = await fetch(`${API_URL}/api/learners`);
-      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not load learners from the database."));
-      const learners = await response.json();
+      const headers = { "X-Teacher-Id": currentTeacher?.id || "" };
+      const [learnersResponse, sectionsResponse] = await Promise.all([
+        fetch(`${API_URL}/api/learners`, { headers }),
+        fetch(`${API_URL}/api/sections`, { headers }),
+      ]);
+      if (!learnersResponse.ok) throw new Error(await apiErrorMessage(learnersResponse, "Could not load learners from the database."));
+      if (!sectionsResponse.ok) throw new Error(await apiErrorMessage(sectionsResponse, "Could not load your sections."));
+      const [learners, ownedSections] = await Promise.all([learnersResponse.json(), sectionsResponse.json()]);
       const databaseStudents = learners.map(learnerToStudent);
-      const databaseSections = [...new Set(databaseStudents.map((student) => student.section?.trim()).filter(Boolean))].sort();
+      const databaseSections = ownedSections.map((section) => section.name).filter(Boolean);
       setStudents(databaseStudents);
+      setSections(databaseSections);
       setSelectedSection((currentSection) => databaseSections.includes(currentSection) ? currentSection : (databaseSections[0] || ""));
     } catch (requestError) {
       setLearnersError(requestError.message);
@@ -2155,7 +2167,7 @@ export default function TeacherDashboard() {
         {page === "dashboard" && (
           <Dashboard students={sectionStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} teacherName={teacherName} />
         )}
-        {page === "students" && <Students students={sectionStudents} setStudents={setStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} loading={learnersLoading} error={learnersError} onRefresh={loadLearners} />}
+        {page === "students" && <Students students={sectionStudents} setStudents={setStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} loading={learnersLoading} error={learnersError} onRefresh={loadLearners} currentTeacher={currentTeacher} />}
         {page === "flashcards" && <Flashcards />}
         {page === "stories" && <Stories currentTeacher={currentTeacher} />}
       </div>
