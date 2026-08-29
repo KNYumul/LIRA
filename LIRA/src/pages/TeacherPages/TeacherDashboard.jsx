@@ -1031,6 +1031,45 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         <div className="text-center py-10 text-sm" style={{ color: C.textMuted }}>No learners match your search.</div>
       )}
 
+      <section className="student-print-report" aria-hidden="true">
+        <h1>Learner Reading Report</h1>
+        <p>Section: {sectionName || "Unassigned"}</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Learner</th>
+              <th>WPM</th>
+              <th>Accuracy</th>
+              <th>History</th>
+              <th>Risk Level</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {students.map((student) => {
+              const risk = riskOf(student);
+              const action = risk === "high"
+                ? "Immediate reading intervention"
+                : risk === "moderate"
+                  ? "Monitor and provide guided practice"
+                  : risk === "low"
+                    ? "Continue regular reading practice"
+                    : "Record a reading assessment";
+              return (
+                <tr key={`print-${student.id}`}>
+                  <td>{student.lastName}</td>
+                  <td>{student.wpm == null ? "--" : student.wpm}</td>
+                  <td>{student.accuracy == null ? "--" : `${student.accuracy}%`}</td>
+                  <td>{student.historyDate}</td>
+                  <td>{riskLabel[risk]}</td>
+                  <td>{action}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </section>
+
       {modal?.type === "add" && (
         <LearnerFormModal mode="add" sectionName={sectionName} onCancel={() => setModal(null)} onSubmit={addLearner} />
       )}

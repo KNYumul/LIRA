@@ -989,3 +989,63 @@ button:focus-visible,
   padding: 10px 22px !important;
   font-weight: 600 !important;
 }
+
+.student-print-report {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: landscape;
+    margin: 14mm;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .student-print-report,
+  .student-print-report * {
+    visibility: visible !important;
+  }
+
+  .student-print-report {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    color: #222;
+    background: #fff;
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+  }
+
+  .student-print-report h1 {
+    margin: 0 0 4px;
+    font-size: 22px;
+  }
+
+  .student-print-report p {
+    margin: 0 0 18px;
+    font-size: 13px;
+  }
+
+  .student-print-report table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+
+  .student-print-report th,
+  .student-print-report td {
+    padding: 8px;
+    border: 1px solid #999;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .student-print-report th {
+    background: #eee !important;
+    font-weight: 700;
+    print-color-adjust: exact;
+  }
+}
