@@ -1528,6 +1528,11 @@ function Flashcards({ currentTeacher }) {
     try {
       const saved = await updateFlashcard(id, { content });
       setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...saved, id: saved._id } : it)));
+      await liraAlert.fire({
+        icon: "success",
+        title: "Flashcard updated successfully",
+        confirmButtonText: "OK",
+      });
     } catch (saveError) {
       await showError(saveError.message);
     }
@@ -1545,6 +1550,11 @@ function Flashcards({ currentTeacher }) {
       const saved = await response.json();
       setItems((prev) => [...prev, { ...saved, id: saved._id }]);
       setShowAdd(false);
+      await liraAlert.fire({
+        icon: "success",
+        title: "Flashcard added successfully",
+        confirmButtonText: "OK",
+      });
     } catch (saveError) {
       await showError(saveError.message);
     }
@@ -1559,6 +1569,11 @@ function Flashcards({ currentTeacher }) {
       setItems((prev) => prev.filter((it) => it.id !== deleteTarget.id));
       setDeleteTarget(null);
       setOpenId(null);
+      await liraAlert.fire({
+        icon: "success",
+        title: "Flashcard deleted successfully",
+        confirmButtonText: "OK",
+      });
     } catch (deleteError) {
       await showError(deleteError.message);
     }
