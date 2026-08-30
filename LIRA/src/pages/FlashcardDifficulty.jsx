@@ -1,95 +1,57 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./FlashcardDifficulty.css";
+import { getSession } from "../utils/session";
 
-const koalaIcon = "/UI_Designs/ANIMALS/B_Koala.png";
-const turtleIcon = "/UI_Designs/ANIMALS/L_Turtle.png";
-const dinoIcon = "/UI_Designs/ANIMALS/E_Dinosaur.png";
+const API_URL = "http://localhost:5000";
 const bgFlashcards = "/UI_Designs/BACKGROUND/backdrop_flashcards.svg";
-
 const DIFFICULTIES = [
-  {
-    key: "easy",
-    label: "Easy",
-    icon: koalaIcon,
-    accent: "blue",
-    description:
-      "Short, familiar sight words to build reading confidence — perfect for warming up.",
-  },
-  {
-    key: "medium",
-    label: "Medium",
-    icon: turtleIcon,
-    accent: "coral",
-    description:
-      "Short, familiar sight words to build reading confidence — perfect for warming up.",
-  },
-  {
-    key: "hard",
-    label: "Hard",
-    icon: dinoIcon,
-    accent: "green",
-    description:
-      "Short, familiar sight words to build reading confidence — perfect for warming up.",
-  },
+  { key: "easy", label: "Easy", icon: "/UI_Designs/ANIMALS/B_Koala.png", accent: "blue", description: "Short, familiar words and sentences to build reading confidence." },
+  { key: "medium", label: "Medium", icon: "/UI_Designs/ANIMALS/L_Turtle.png", accent: "coral", description: "Longer phrases and sentences for growing readers." },
+  { key: "hard", label: "Hard", icon: "/UI_Designs/ANIMALS/E_Dinosaur.png", accent: "green", description: "More challenging vocabulary and detailed sentences." },
 ];
 
 export default function FlashcardDifficulty() {
   const navigate = useNavigate();
   const [lang, setLang] = useState("ENG");
+  const [counts, setCounts] = useState({ easy: 0, medium: 0, hard: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  return (
-    <div
-      className="fc-page"
-      style={{ backgroundImage: `url(${bgFlashcards})` }}
-    >
-      <header className="fc-header">
-        <button
-          className="fc-back"
-          onClick={() => navigate("/category")}
-          aria-label="Back"
-        >
-          ←
-        </button>
-        <h1 className="fc-title">Flashcards</h1>
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true); setError("");
+      try {
+        const learnerId = getSession()?.user?.id;
+        const response = await fetch(`${API_URL}/api/flashcards?lang=${lang}`, { headers: { "X-Learner-Id": learnerId || "" } });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || "Could not load flashcards.");
+        if (!cancelled) setCounts(data.reduce((result, card) => ({ ...result, [card.category]: result[card.category] + 1 }), { easy: 0, medium: 0, hard: 0 }));
+      } catch (loadError) { if (!cancelled) setError(loadError.message || "Could not load flashcards."); }
+      finally { if (!cancelled) setLoading(false); }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [lang]);
 
-        <div className="lang-toggle" role="group" aria-label="Language">
-          <button
-            className={`lang-toggle__option ${
-              lang === "ENG" ? "lang-toggle__option--active" : ""
-            }`}
-            onClick={() => setLang("ENG")}
-          >
-            ENG
-          </button>
-          <button
-            className={`lang-toggle__option ${
-              lang === "FIL" ? "lang-toggle__option--active" : ""
-            }`}
-            onClick={() => setLang("FIL")}
-          >
-            FIL
-          </button>
+  return <div className="fc-page" style={{ backgroundImage: `url(${bgFlashcards})` }}>
+    <header className="fc-header">
+      <button className="fc-back" onClick={() => navigate("/category")} aria-label="Back">←</button>
+      <h1 className="fc-title">Flashcards</h1>
+      <div className="lang-toggle" role="group" aria-label="Language">{["ENG", "FIL"].map((value) =>
+        <button key={value} className={`lang-toggle__option ${lang === value ? "lang-toggle__option--active" : ""}`} onClick={() => setLang(value)}>{value}</button>
+      )}</div>
+    </header>
+    <main className="fc-main">
+      {error && <p className="fc-library-message">{error}</p>}
+      <div className="fc-cards">{DIFFICULTIES.map((difficulty) =>
+        <div key={difficulty.key} className={`fc-card fc-card--${difficulty.accent}`}>
+          <img src={difficulty.icon} alt="" className="fc-card__icon" /><h2>{difficulty.label}</h2><p>{difficulty.description}</p>
+          <p className="fc-card__count">{loading ? "Loading..." : `${counts[difficulty.key]} card${counts[difficulty.key] === 1 ? "" : "s"}`}</p>
+          <button className="fc-card__start" disabled={loading || counts[difficulty.key] === 0} onClick={() => navigate(`/flashcards/${difficulty.key}?lang=${lang}`)}>Start <span aria-hidden="true">→</span></button>
         </div>
-      </header>
-
-      <main className="fc-main">
-        <div className="fc-cards">
-          {DIFFICULTIES.map((d) => (
-            <div key={d.key} className={`fc-card fc-card--${d.accent}`}>
-              <img src={d.icon} alt="" className="fc-card__icon" />
-              <h2>{d.label}</h2>
-              <p>{d.description}</p>
-              <button
-                className="fc-card__start"
-                onClick={() => navigate(`/flashcards/${d.key}`)}
-              >
-                Start <span aria-hidden="true">→</span>
-              </button>
-            </div>
-          ))}
-        </div>
-      </main>
-    </div>
-  );
+      )}</div>
+    </main>
+  </div>;
 }

@@ -300,39 +300,6 @@ const riskLabel = { low: "Low Risk", moderate: "Moderate Risk", high: "High Risk
 const riskColor = { low: C.low, moderate: C.moderate, high: C.high, noData: C.noData };
 const riskText = { low: C.lowText, moderate: C.moderateText, high: "#FFFFFF", noData: C.noDataText };
 
-function seedFlashcards() {
-  const sample = {
-    easy: [
-      "Pip is a little orange cat. He loves to sleep in the warm sun.",
-      "The sun is up. It is a bright day.",
-      "I see a red ball. The ball is big.",
-      "My dog likes to run and play.",
-      "We eat rice for lunch.",
-    ],
-    medium: [
-      "The garden was full of butterflies dancing between the flowers.",
-      "Maria packed her bag before the long trip to the province.",
-      "The old tree gave shade to the tired travelers.",
-      "Every morning, the fisherman rows his boat to the sea.",
-      "The children practiced their reading every afternoon.",
-    ],
-    hard: [
-      "Despite the storm, the villagers worked together to rebuild the bridge.",
-      "The scientist carefully recorded every observation from the experiment.",
-      "Perseverance and patience helped her finally solve the puzzle.",
-      "The council debated the proposal long into the evening.",
-      "Understanding the story required paying attention to small details.",
-    ],
-  };
-  const rows = [];
-  let id = 1;
-  ["easy", "medium", "hard"].forEach((cat) => {
-    sample[cat].forEach((content, i) => {
-      rows.push({ id: id++, title: `Item ${i + 1}`, content, category: cat });
-    });
-  });
-  return rows;
-}
 const CAT_META = {
   easy: { label: "Easy", border: C.easyBorder, pill: C.easyPill, text: C.easyText, heart: C.easyBorder },
   medium: { label: "Medium", border: C.mediumBorder, pill: C.mediumPill, text: C.mediumText, heart: C.mediumBorder },
@@ -1092,10 +1059,13 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
 }
 
 // ---------- Add Flashcard modal ----------
-function AddFlashcardModal({ onCancel, onSubmit }) {
+function AddFlashcardModal({ initialLang = "ENG", onCancel, onSubmit }) {
   const [text, setText] = useState("");
   const [category, setCategory] = useState("easy");
-  const clear = () => { setText(""); setCategory("easy"); };
+  const [lang, setLang] = useState(initialLang);
+  const [submitting, setSubmitting] = useState(false);
+  const submitLock = useRef(false);
+  const clear = () => { setText(""); setCategory("easy"); setLang(initialLang); };
   
   const words = countWords(text);
   const isOverLimit = words > 250;
@@ -1155,32 +1125,70 @@ function AddFlashcardModal({ onCancel, onSubmit }) {
           <div className="flex gap-3">
             {Object.entries(CAT_META).map(([key, meta]) => (
               <button
+                type="button"
                 key={key}
                 onClick={() => setCategory(key)}
-                className="flex-1 rounded-lg py-2 font-semibold text-sm text-white"
+                className="flex-1 rounded-lg py-2 font-semibold text-sm text-white relative"
                 style={{
                   background: meta.border,
-                  outline: category === key ? `3px solid ${C.text}33` : "none",
-                  opacity: category === key ? 1 : 0.55,
+                  border: category === key ? "3px solid #A96822" : "3px solid transparent",
+                  boxShadow: category === key ? "0 0 0 3px rgba(237, 167, 81, 0.28)" : "none",
+                  opacity: category === key ? 1 : 0.48,
+                  transform: category === key ? "translateY(-1px)" : "none",
                 }}
+                aria-pressed={category === key}
               >
-                {meta.label}
+                {category === key ? `✓ ${meta.label}` : meta.label}
+              </button>
+            ))}
+          </div>
+        </Field>
+
+        <Field label="Language" required>
+          <div className="flex gap-3">
+            {["ENG", "FIL"].map((value) => (
+              <button
+                type="button"
+                key={value}
+                onClick={() => setLang(value)}
+                className="flex-1 rounded-lg py-2 font-semibold text-sm"
+                style={{
+                  background: lang === value ? "#FBE3C0" : "#F4EFE7",
+                  color: lang === value ? "#704719" : C.textMuted,
+                  border: lang === value ? "3px solid #D58B35" : "3px solid transparent",
+                  boxShadow: lang === value ? "0 0 0 3px rgba(237, 167, 81, 0.28)" : "none",
+                  opacity: lang === value ? 1 : 0.58,
+                  transform: lang === value ? "translateY(-1px)" : "none",
+                }}
+                aria-pressed={lang === value}
+              >
+                {lang === value ? `✓ ${value}` : value}
               </button>
             ))}
           </div>
         </Field>
 
         <div className="flex gap-3 mt-5">
-          <button onClick={onCancel} className="flex-1 rounded-full py-2 font-medium" style={{ border: `1px solid ${C.cardBorder}`, color: C.text }}>
+          <button disabled={submitting} onClick={onCancel} className="flex-1 rounded-full py-2 font-medium" style={{ border: `1px solid ${C.cardBorder}`, color: C.text, opacity: submitting ? 0.55 : 1 }}>
             Cancel
           </button>
           <button
-            disabled={!valid}
-            onClick={() => valid && onSubmit({ title: `Item`, content: text.trim(), category })}
+            disabled={!valid || submitting}
+            onClick={async () => {
+              if (!valid || submitLock.current) return;
+              submitLock.current = true;
+              setSubmitting(true);
+              try {
+                await onSubmit({ content: text.trim(), category, lang });
+              } finally {
+                submitLock.current = false;
+                setSubmitting(false);
+              }
+            }}
             className="flex-1 rounded-full py-2 font-semibold text-white"
-            style={{ background: valid ? "#EDA751" : "#EAD9BE" }}
+            style={{ background: valid && !submitting ? "#EDA751" : "#EAD9BE", cursor: valid && !submitting ? "pointer" : "not-allowed" }}
           >
-            Add item
+            {submitting ? "Adding..." : "Add item"}
           </button>
         </div>
       </div>
@@ -1217,9 +1225,9 @@ function FlashcardChip({ item, onDragStart, onDropItem, onClick }) {
       onClick={() => onClick(item.id)}
       className={`flashcard-chip ${item.category}`}
       style={{ background: meta.pill, color: meta.text }}
-      title="Click to edit • Drag to move"
+      title={`${item.content}\n\nClick to edit • Drag to move`}
     >
-      {item.title}
+      {item.content}
     </div>
   );
 }
@@ -1242,7 +1250,7 @@ function FlashcardDetail({ item, onClose, onSave, onDeleteRequest }) {
         style={{ background: "#fff", border: `1px solid ${C.cardBorder}` }}
       >
         <div className="flex items-center justify-between mb-3">
-          <div className="font-bold" style={{ color: C.text }}>{item.title}</div>
+          <div className="font-bold" style={{ color: C.text }}>Edit flashcard</div>
           <button
             onClick={() => setContent("")}
             className="text-xs px-3 py-1 rounded-full"
@@ -1269,29 +1277,41 @@ function FlashcardDetail({ item, onClose, onSave, onDeleteRequest }) {
           </span>
         </div>
 
-        <div className="flex items-center justify-end gap-3 mt-4">
+        <div className="flex items-center justify-end gap-2 mt-4 flex-wrap">
           <button
-            className="icon-btn flashcard-action-btn"
-            disabled={isOverLimit}
-            onClick={() => {
-              if (isOverLimit) return;
-              onSave(item.id, content);
-              onClose();
-            }}
-            title={isOverLimit ? "Cannot save: exceeds 250 words" : "Save"}
-            aria-label="Save flashcard"
-            style={{ opacity: isOverLimit ? 0.4 : 1, cursor: isOverLimit ? "not-allowed" : "pointer" }}
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-full text-sm font-semibold"
+            style={{ background: "#F4EFE7", border: `1px solid ${C.cardBorder}`, color: C.text }}
           >
-            <CheckCircle2 size={22} color="#4FA96A" />
+            Cancel
           </button>
 
           <button
-            className="icon-btn flashcard-action-btn"
+            type="button"
             onClick={() => onDeleteRequest(item)}
-            title="Delete"
-            aria-label="Delete flashcard"
+            className="px-4 py-2 rounded-full text-sm font-semibold"
+            style={{ background: "#FCE8E6", border: "1px solid #D98279", color: "#A9433A" }}
           >
-            <MinusCircle size={22} color="#C0504D" />
+            Remove
+          </button>
+
+          <button
+            type="button"
+            disabled={isOverLimit || !content.trim()}
+            onClick={() => {
+              if (isOverLimit || !content.trim()) return;
+              onSave(item.id, content.trim());
+              onClose();
+            }}
+            title={isOverLimit ? "Cannot save: exceeds 250 words" : "Save changes"}
+            className="px-5 py-2 rounded-full text-sm font-semibold text-white"
+            style={{
+              background: isOverLimit || !content.trim() ? "#C8C8C8" : "#4FA96A",
+              cursor: isOverLimit || !content.trim() ? "not-allowed" : "pointer",
+            }}
+          >
+            Save
           </button>
         </div>
       </div>
@@ -1380,11 +1400,50 @@ function FlashcardColumn({
   );
 }
 
-function Flashcards() {
-  const [items, setItems] = useState(seedFlashcards);
+function Flashcards({ currentTeacher }) {
+  const [items, setItems] = useState([]);
   const [openId, setOpenId] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [lang, setLang] = useState("ENG");
+  const flashcardUrl = (id = "") => `${API_URL}/api/flashcards${id ? `/${id}` : ""}`;
+  const teacherHeaders = (json = false) => ({
+    "X-Teacher-Id": currentTeacher?.id || "",
+    ...(json ? { "Content-Type": "application/json" } : {}),
+  });
+
+  const loadFlashcards = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch(flashcardUrl(), { headers: teacherHeaders() });
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not load flashcards."));
+      const result = await response.json();
+      setItems(result.map((item) => ({ ...item, id: item._id })));
+    } catch (loadError) {
+      setError(loadError.message || "Could not load flashcards.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!currentTeacher?.id) return undefined;
+    const timer = window.setTimeout(loadFlashcards, 0);
+    return () => window.clearTimeout(timer);
+  }, [currentTeacher?.id]);
+
+  const updateFlashcard = async (id, updates) => {
+    const response = await fetch(flashcardUrl(id), {
+      method: "PUT",
+      headers: teacherHeaders(true),
+      body: JSON.stringify(updates),
+    });
+    if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not update flashcard."));
+    return response.json();
+  };
 
   const onDragStart = (e, id) => {
     e.dataTransfer.effectAllowed = "move";
@@ -1395,9 +1454,10 @@ function Flashcards() {
   const onDropColumn = (e, cat) => {
     e.preventDefault();
 
-    const id = Number(e.dataTransfer.getData("text/plain"));
+    const id = e.dataTransfer.getData("text/plain");
     if (!id) return;
 
+    let nextItems;
     setItems((prev) => {
       const draggedItem = prev.find((item) => item.id === id);
       if (!draggedItem) return prev;
@@ -1418,7 +1478,12 @@ function Flashcards() {
         result.splice(lastIndex + 1, 0, movedItem);
       }
 
+      nextItems = result;
       return result;
+    });
+    if (nextItems) Promise.all(nextItems.filter((item) => item.category === cat).map((item, order) => updateFlashcard(item.id, { category: cat, order }))).catch(async (saveError) => {
+      await showError(saveError.message);
+      loadFlashcards();
     });
   };
 
@@ -1426,10 +1491,11 @@ function Flashcards() {
     e.preventDefault();
     e.stopPropagation();
 
-    const draggedId = Number(e.dataTransfer.getData("text/plain"));
+    const draggedId = e.dataTransfer.getData("text/plain");
 
     if (!draggedId || draggedId === targetId) return;
 
+    let nextItems;
     setItems((prev) => {
       const draggedItem = prev.find((item) => item.id === draggedId);
       if (!draggedItem) return prev;
@@ -1442,49 +1508,60 @@ function Flashcards() {
       );
 
       if (targetIndex === -1) {
-        return [...remaining, movedItem];
+        nextItems = [...remaining, movedItem];
+        return nextItems;
       }
 
       const result = [...remaining];
       result.splice(targetIndex, 0, movedItem);
+      nextItems = result;
       return result;
     });
-  };
-
-  const onSaveContent = (id, content) => {
-    if (countWords(content) > 250) return;
-    setItems((prev) =>
-      prev.map((it) => (it.id === id ? { ...it, content } : it))
-    );
-  };
-
-  const addItem = (data) => {
-    if (countWords(data.content) > 250) return;
-    setItems((prev) => {
-      const countInCat = prev.filter(
-        (p) => p.category === data.category
-      ).length;
-
-      return [
-        ...prev,
-        {
-          id: Math.max(0, ...prev.map((p) => p.id)) + 1,
-          title: `Item ${countInCat + 1}`,
-          content: data.content,
-          category: data.category,
-        },
-      ];
+    if (nextItems) Promise.all(nextItems.filter((item) => item.category === targetCategory).map((item, order) => updateFlashcard(item.id, { category: targetCategory, order }))).catch(async (saveError) => {
+      await showError(saveError.message);
+      loadFlashcards();
     });
-
-    setShowAdd(false);
   };
 
-  const confirmDelete = () => {
-    setItems((prev) =>
-      prev.filter((it) => it.id !== deleteTarget.id)
-    );
-    setDeleteTarget(null);
-    setOpenId(null);
+  const onSaveContent = async (id, content) => {
+    if (countWords(content) > 250) return;
+    try {
+      const saved = await updateFlashcard(id, { content });
+      setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...saved, id: saved._id } : it)));
+    } catch (saveError) {
+      await showError(saveError.message);
+    }
+  };
+
+  const addItem = async (data) => {
+    if (countWords(data.content) > 250) return;
+    try {
+      const response = await fetch(flashcardUrl(), {
+        method: "POST",
+        headers: teacherHeaders(true),
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not add flashcard."));
+      const saved = await response.json();
+      setItems((prev) => [...prev, { ...saved, id: saved._id }]);
+      setShowAdd(false);
+    } catch (saveError) {
+      await showError(saveError.message);
+    }
+  };
+
+  const visibleItems = items.filter((item) => item.lang === lang);
+
+  const confirmDelete = async () => {
+    try {
+      const response = await fetch(flashcardUrl(deleteTarget.id), { method: "DELETE", headers: teacherHeaders() });
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not delete flashcard."));
+      setItems((prev) => prev.filter((it) => it.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      setOpenId(null);
+    } catch (deleteError) {
+      await showError(deleteError.message);
+    }
   };
 
   return (
@@ -1510,25 +1587,38 @@ function Flashcards() {
           </p>
         </div>
 
-        <button
-          onClick={() => setShowAdd(true)}
-          className="px-5 py-2 rounded-full font-semibold whitespace-nowrap"
-          style={{
-            background: "#fff",
-            border: `1px solid ${C.cardBorder}`,
-            color: C.text,
-          }}
-        >
-          + Add flashcard
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="sm-lang-toggle" role="group" aria-label="Language filter">
+            {["ENG", "FIL"].map((value) => (
+              <button
+                type="button"
+                key={value}
+                className={`sm-lang-option ${lang === value ? "is-active" : ""}`}
+                onClick={() => { setLang(value); setOpenId(null); }}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="px-5 py-2 rounded-full font-semibold whitespace-nowrap"
+            style={{ background: "#fff", border: `1px solid ${C.cardBorder}`, color: C.text }}
+          >
+            + Add flashcard
+          </button>
+        </div>
       </div>
 
       <div className="mt-6">
+        {loading && <div className="text-center py-8 text-sm" style={{ color: C.textMuted }}>Loading flashcards...</div>}
+        {error && <div className="text-center py-8 text-sm" style={{ color: "#C0504D" }}>{error}</div>}
+        {!loading && !error && visibleItems.length === 0 && <div className="text-center py-8 text-sm" style={{ color: C.textMuted }}>No {lang} flashcards yet. Add your first one above.</div>}
         {["easy", "medium", "hard"].map((cat) => (
           <FlashcardColumn
             key={cat}
             cat={cat}
-            items={items.filter((i) => i.category === cat)}
+            items={visibleItems.filter((i) => i.category === cat)}
             onDropColumn={onDropColumn}
             onDropItem={onDropItem}
             onDragStart={onDragStart}
@@ -1543,6 +1633,7 @@ function Flashcards() {
 
       {showAdd && (
         <AddFlashcardModal
+          initialLang={lang}
           onCancel={() => setShowAdd(false)}
           onSubmit={addItem}
         />
@@ -1551,7 +1642,7 @@ function Flashcards() {
       {deleteTarget && (
         <DeleteConfirmModal
           title="Remove this item?"
-          subtitle={`${deleteTarget.title} will be removed from your flashcards.`}
+          subtitle={`“${deleteTarget.content.slice(0, 70)}${deleteTarget.content.length > 70 ? "…" : ""}” will be removed from your flashcards.`}
           onCancel={() => setDeleteTarget(null)}
           onConfirm={confirmDelete}
         />
@@ -2491,7 +2582,7 @@ export default function TeacherDashboard() {
           <Dashboard students={sectionStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} teacherName={teacherName} />
         )}
         {page === "students" && <Students students={sectionStudents} setStudents={setStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} loading={learnersLoading} error={learnersError} onRefresh={loadLearners} currentTeacher={currentTeacher} />}
-        {page === "flashcards" && <Flashcards />}
+        {page === "flashcards" && <Flashcards currentTeacher={currentTeacher} />}
         {page === "stories" && <Stories currentTeacher={currentTeacher} />}
       </div>
     </div>

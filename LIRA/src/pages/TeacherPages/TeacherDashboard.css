@@ -407,6 +407,9 @@
   cursor: grab;
   user-select: none;
   white-space: nowrap;
+  max-width: min(100%, 34rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
   border: none;
 }
 .flashcard-chip.easy { background: var(--easy-pill); color: var(--easy-text); }

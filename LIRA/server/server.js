@@ -8,6 +8,7 @@ const learnerRoutes = require("./routes/learner");
 const teacherRoutes = require("./routes/teacher");
 const adminRoutes = require("./routes/admin");
 const storyRoutes = require("./routes/story");
+const flashcardRoutes = require("./routes/flashcard");
 const sectionRoutes = require("./routes/section");
 const authRoutes = require("./routes/auth");
 
@@ -21,6 +22,7 @@ app.use("/api/learners", learnerRoutes);
 app.use("/api/teachers", teacherRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/stories", storyRoutes);
+app.use("/api/flashcards", flashcardRoutes);
 app.use("/api/sections", sectionRoutes);
 app.use("/api/auth", authRoutes);
 

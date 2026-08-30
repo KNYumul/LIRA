@@ -1,85 +1,58 @@
-import React, { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import "./FlashcardSession.css";
+import { getSession } from "../utils/session";
 
+const API_URL = "http://localhost:5000";
 const bgSession = "/UI_Designs/BACKGROUND/backdrop_flashcards.svg";
-
-// Placeholder content per difficulty — swap in real sets whenever they're
-// ready. Each card's `read` portion is the part already highlighted as
-// "spoken" (shown in blue/bold); `rest` is the remaining text.
-const SETS = {
-  easy: [
-    { read: "Pip is a little orange cat. He", rest: "loves to sleep in the warm sun." },
-  ],
-  medium: [
-    { read: "", rest: "The curious fox explored the quiet forest at dawn." },
-  ],
-  hard: [
-    { read: "", rest: "The scientist carefully recorded her observations in a notebook." },
-  ],
-};
-
 const LABELS = { easy: "Easy", medium: "Medium", hard: "Hard" };
 
 export default function FlashcardSession() {
   const { difficulty } = useParams();
   const navigate = useNavigate();
-
-  // Which card in the set is showing. Advancing between cards, scoring,
-  // and actually listening to speech are not implemented yet — this is
-  // just the static shell, ready for that logic to be added later.
-  const [index] = useState(0);
-
-  const set = SETS[difficulty] || SETS.easy;
-  const total = set.length;
-  const current = set[index];
+  const [searchParams] = useSearchParams();
+  const lang = searchParams.get("lang") === "FIL" ? "FIL" : "ENG";
+  const [cards, setCards] = useState([]);
+  const [index, setIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const current = cards[index];
   const label = LABELS[difficulty] || "Easy";
+  const languageLabel = lang === "FIL" ? "Filipino" : "English";
 
-  const handleMicClick = () => {
-    // TODO: wire up real mic / speech-recognition logic here.
-    console.log("Mic tapped — no listening logic wired up yet.");
-  };
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true); setError("");
+      try {
+        const learnerId = getSession()?.user?.id;
+        const response = await fetch(`${API_URL}/api/flashcards?category=${encodeURIComponent(difficulty)}&lang=${lang}`, { headers: { "X-Learner-Id": learnerId || "" } });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || "Could not load flashcards.");
+        if (!cancelled) { setCards(data); setIndex(0); }
+      } catch (loadError) { if (!cancelled) setError(loadError.message || "Could not load flashcards."); }
+      finally { if (!cancelled) setLoading(false); }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [difficulty, lang]);
 
-  return (
-    <div className="fs-page" style={{ backgroundImage: `url(${bgSession})` }}>
-      <header className="fs-header">
-        <button
-          className="fs-back"
-          onClick={() => navigate("/flashcards")}
-          aria-label="Back"
-        >
-          ←
-        </button>
-        <h1 className="fs-title">{label}</h1>
-      </header>
-
-      <main className="fs-main">
-        <div className="fs-card-stack">
-          <div className="fs-card-shadow" aria-hidden="true" />
-          <div className="fs-card">
-            <div className="fs-card__top">
-              <span className="fs-card__number">{index + 1}</span>
-              <span className="fs-card__total">/{total}</span>
-            </div>
-
-            <p className="fs-sentence">
-              {current.read && (
-                <span className="fs-sentence__read">{current.read} </span>
-              )}
-              <span className="fs-sentence__rest">{current.rest}</span>
-            </p>
-
-            <button
-              className="fs-mic"
-              onClick={handleMicClick}
-              aria-label="Start listening"
-            >
-              🎤
-            </button>
-            <span className="fs-mic__status">Listening...</span>
-          </div>
+  return <div className="fs-page" style={{ backgroundImage: `url(${bgSession})` }}>
+    <header className="fs-header"><button className="fs-back" onClick={() => navigate("/flashcards")} aria-label="Back">←</button><h1 className="fs-title">{label} · {languageLabel}</h1></header>
+    <main className="fs-main">
+      {loading && <div className="fs-message">Loading your teacher's flashcards...</div>}
+      {!loading && error && <div className="fs-message fs-message--error">{error}</div>}
+      {!loading && !error && !current && <div className="fs-message">Your teacher has not added any {label.toLowerCase()} {lang} flashcards yet.</div>}
+      {!loading && !error && current && <div className="fs-card-stack">
+        <div className="fs-card-shadow" aria-hidden="true" />
+        <div className="fs-card">
+          <div className="fs-card__top"><span className="fs-card__number">{index + 1}</span><span className="fs-card__total">/{cards.length}</span></div>
+          <p className="fs-sentence"><span className="fs-sentence__rest">{current.content}</span></p>
+          <button className="fs-mic" onClick={() => console.log("Mic tapped — no listening logic wired up yet.")} aria-label="Start listening">🎤</button>
+          <span className="fs-mic__status">Tap the microphone to read aloud</span>
+          <div className="fs-navigation"><button type="button" disabled={index === 0} onClick={() => setIndex((value) => value - 1)}>Previous</button><button type="button" disabled={index === cards.length - 1} onClick={() => setIndex((value) => value + 1)}>Next</button></div>
         </div>
-      </main>
-    </div>
-  );
+      </div>}
+    </main>
+  </div>;
 }
