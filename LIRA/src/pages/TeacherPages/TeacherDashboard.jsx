@@ -404,48 +404,34 @@ function StatCard({ value, dotColor, label }) {
 }
 
 // ---------- Dashboard page ----------
-function SectionSelect({ sections, selectedSection, onChange, className = "" }) {
-  const [open, setOpen] = useState(false);
+function Dashboard({
+  students,
+  sections,
+  sectionName,
+  onSectionChange,
+  currentTeacher,
+}) {
+  const sessionName = [currentTeacher?.firstName, currentTeacher?.lastName].filter(Boolean).join(" ");
+  const sessionTitle = currentTeacher?.title || currentTeacher?.honorific || "Teacher";
 
-  return (
-    <div className="relative inline-block">
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        className={`flex items-center gap-2 font-semibold text-sm transition-colors ${className}`}
-        style={{ background: C.coral, color: "#fff" }}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-      >
-        <span>{selectedSection}</span>
-        <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div
-          className="absolute left-0 top-full z-30 mt-2 min-w-full overflow-hidden rounded-2xl py-1 shadow-lg"
-          style={{ background: "#FFFFFF", border: `1px solid ${C.cardBorder}` }}
-          role="listbox"
-        >
-          {sections.map((section) => (
-            <button
-              key={section}
-              type="button"
-              role="option"
-              aria-selected={section === selectedSection}
-              onClick={() => { onChange(section); setOpen(false); }}
-              className="block w-full whitespace-nowrap px-4 py-2 text-left text-sm font-medium transition-colors hover:bg-[#FBEDEA]"
-              style={{ color: section === selectedSection ? C.coralDark : C.text }}
-            >
-              {section}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+  const [name, setName] = useState(sessionName);
+  const [title, setTitle] = useState(sessionTitle);
+  const teacherEmail = currentTeacher?.email || "";
 
-function Dashboard({ students, sections, sectionName, onSectionChange, teacherName }) {
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
+  useEffect(() => {
+    setName(sessionName);
+    setTitle(sessionTitle);
+  }, [sessionName, sessionTitle]);
+
   const total = students.length;
   const low = students.filter((s) => riskOf(s) === "low").length;
   const mod = students.filter((s) => riskOf(s) === "moderate").length;
@@ -460,41 +446,309 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
       high: 0,
       noData: 0,
     }));
+
     students.forEach((s, i) => {
       const g = groups[i % 10];
       const r = riskOf(s);
       g[r] += 1;
     });
+
     return groups;
   }, [students]);
 
   const heatmapCells = students.slice(0, 28);
 
+  const closePasswordModal = () => {
+    setShowPassword(false);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordMessage("");
+    setPasswordSuccess(false);
+  };
+
+  const handleSaveChanges = async () => {
+    const cleanName = name.trim().replace(/\s+/g, " ");
+
+    if (!cleanName) {
+      await showWarning("Please enter your name.", "Name is required");
+      return;
+    }
+
+    if (!currentTeacher?.id) {
+      await showError("Your teacher session could not be found. Please sign in again.");
+      return;
+    }
+
+    try {
+      setSavingProfile(true);
+
+      const response = await fetch(`${API_URL}/api/teachers/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Teacher-Id": currentTeacher.id,
+        },
+        body: JSON.stringify({
+          name: cleanName,
+          title,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await apiErrorMessage(response, "Could not save teacher information."));
+      }
+
+      setName(cleanName);
+      await liraAlert.fire({
+        icon: "success",
+        title: "Teacher information saved",
+        text: "Your profile changes have been saved successfully.",
+        confirmButtonText: "OK",
+      });
+    } catch (requestError) {
+      await showError(requestError.message);
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    setPasswordMessage("");
+    setPasswordSuccess(false);
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordMessage("Please complete all password fields.");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordMessage("New password must be at least 8 characters.");
+      return;
+    }
+
+    if (!/[A-Z]/.test(newPassword)) {
+      setPasswordMessage("New password must contain at least 1 uppercase letter.");
+      return;
+    }
+
+    if (!/[a-z]/.test(newPassword)) {
+      setPasswordMessage("New password must contain at least 1 lowercase letter.");
+      return;
+    }
+
+    if (!/[0-9]/.test(newPassword)) {
+      setPasswordMessage("New password must contain at least 1 number.");
+      return;
+    }
+
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
+      setPasswordMessage("New password must contain at least 1 special character.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage("New password and confirmation password do not match.");
+      return;
+    }
+
+    if (currentPassword === newPassword) {
+      setPasswordMessage("New password must be different from your current password.");
+      return;
+    }
+
+    if (!currentTeacher?.id) {
+      setPasswordMessage("Your teacher session could not be found. Please sign in again.");
+      return;
+    }
+
+    try {
+      setPasswordLoading(true);
+
+      const response = await fetch(`${API_URL}/api/teachers/change-password`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Teacher-Id": currentTeacher.id,
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          confirmPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        setPasswordMessage(await apiErrorMessage(response, "Could not change password."));
+        return;
+      }
+
+      setPasswordSuccess(true);
+      setPasswordMessage("Password changed successfully.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch {
+      setPasswordMessage("Something went wrong. Please try again.");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   return (
     <div>
+      {/* TOP HEADER */}
       <div className="flex items-center gap-3">
-        <h1 className="text-3xl font-bold" style={{ color: C.text }}>Good day, Teacher {teacherName}!</h1>
+        <h1 className="text-3xl font-bold" style={{ color: C.text }}>
+          Good morning, {title} {name || sessionName}!
+        </h1>
         <img
           src="/UI_Designs/ANIMALS/mascot_owl.svg"
           alt="Owl"
           className="w-13 h-13 object-contain"
         />
       </div>
-      <p className="text-sm mt-1" style={{ color: C.textMuted }}>School Year 2025–2026</p>
+
+      <p className="text-sm mt-1" style={{ color: C.textMuted }}>
+        School Year 2025–2026
+      </p>
+
+      {/* TEACHER INFORMATION */}
+   <div
+  className="w-full rounded-2xl px-6 py-5 mt-5"
+  style={{
+    background: C.cardBg,
+    border: `1px solid ${C.low}`,
+  }}
+>
+  <div className="flex flex-col md:flex-row gap-5 md:items-start">
+
+    {/* Name */}
+    <div className="w-full md:w-72">
+      <label
+        className="block text-xs font-semibold mb-2"
+        style={{ color: C.textMuted }}
+      >
+        Name <span style={{ color: C.coral }}>*</span>
+      </label>
+
+      <input
+        type="text"
+        value={name}
+        maxLength={100}
+        onChange={(e) => setName(e.target.value)}
+        className="w-full h-10 rounded-lg px-3 text-sm outline-none"
+        style={{
+          color: C.text,
+          background: "#FFFFFF",
+          border: `1px solid ${C.low}`,
+        }}
+      />
 
       <div
-        className="w-full rounded-2xl px-6 py-4 mt-6"
+        className="mt-2 flex items-center gap-2 text-xs"
+        style={{ color: C.textMuted }}
+      >
+        <span>✉</span>
+        <span className="truncate">
+          {teacherEmail || "No email available"}
+        </span>
+      </div>
+    </div>
+
+    {/* Address me as */}
+    <div className="w-full md:w-72">
+      <label
+        className="block text-xs font-semibold mb-2"
+        style={{ color: C.textMuted }}
+      >
+        Address me as: <span style={{ color: C.coral }}>*</span>
+      </label>
+
+      <select
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="w-full h-10 rounded-lg px-3 text-sm outline-none"
+        style={{
+          color: C.text,
+          background: "#FFFFFF",
+          border: `1px solid ${C.low}`,
+        }}
+      >
+        <option value="Teacher">Teacher</option>
+        <option value="Ms.">Ms.</option>
+        <option value="Mrs.">Mrs.</option>
+        <option value="Mr.">Mr.</option>
+      </select>
+
+      <button
+        type="button"
+        onClick={() => {
+          setPasswordMessage("");
+          setPasswordSuccess(false);
+          setShowPassword(true);
+        }}
+        className="mt-2 w-full h-9 rounded-lg px-3 text-xs font-semibold transition"
+        style={{
+          background: "#FFFFFF",
+          color: C.coralDark,
+          border: `1px solid ${C.coral}`,
+        }}
+      >
+        🔒 Change Password
+      </button>
+    </div>
+
+    {/* Save Changes */}
+    <div className="w-full md:w-72">
+      {/* Invisible label keeps button aligned with input/select */}
+      <label
+        className="block text-xs font-semibold mb-2 invisible"
+        aria-hidden="true"
+      >
+        Action
+      </label>
+
+      <button
+        type="button"
+        onClick={handleSaveChanges}
+        disabled={savingProfile}
+className="mt-2 h-12 rounded-lg px-3 text-xs font-semibold text-white disabled:opacity-60 disabled:cursor-not-allowed"style={{
+          background: C.coral,
+        }}
+      >
+        {savingProfile ? "Saving..." : "Save Changes"}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+      {/* SECTION SUMMARY - EXISTING CODE */}
+      <div
+        className="w-full rounded-2xl px-6 py-4 mt-4"
         style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-lg font-semibold" style={{ color: C.text }}>
-            {sections.length} <Heart size={18} fill="#7FAE6C" color="#7FAE6C" />
+            {sections.length}
+            <Heart size={18} fill="#7FAE6C" color="#7FAE6C" />
           </div>
-          {sections.length > 0 && <SectionSelect sections={sections} selectedSection={sectionName} onChange={onSectionChange} className="rounded-full px-4 py-2" />}
+          {sections.length > 0 && (
+            <SectionSelect
+              sections={sections}
+              selectedSection={sectionName}
+              onChange={onSectionChange}
+              className="rounded-full px-4 py-2"
+            />
+          )}
         </div>
-        <div className="text-sm" style={{ color: C.textMuted }}>Total sections — choose one to view its learners.</div>
+        <div className="text-sm" style={{ color: C.textMuted }}>
+          Total sections — choose one to view its learners.
+        </div>
       </div>
 
+      {/* EXISTING STAT CARDS */}
       <div className="flex gap-4 mt-4 flex-wrap">
         <StatCard value={total} dotColor={C.blueDot} label="Total learners" />
         <StatCard value={low} dotColor={C.low} label="Low Risk" />
@@ -503,8 +757,12 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
         <StatCard value={noData} dotColor={C.noData} label="No Data" />
       </div>
 
+      {/* EXISTING CHARTS */}
       <div className="flex gap-4 mt-4 flex-col lg:flex-row">
-        <div className="flex-1 rounded-2xl p-5" style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}>
+        <div
+          className="flex-1 rounded-2xl p-5"
+          style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}
+        >
           <div className="flex items-center gap-4 text-xs mb-2" style={{ color: C.textMuted }}>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: C.low }} /> Low Risk</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: C.moderate }} /> Moderate Risk</span>
@@ -524,8 +782,14 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
           </ResponsiveContainer>
         </div>
 
-        <div className="flex-1 rounded-2xl p-5" style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}>
-          <div className="text-center font-semibold mb-4" style={{ color: C.text }}>Reading Heatmaps - WPM Growth</div>
+        {/* EXISTING HEATMAP */}
+        <div
+          className="flex-1 rounded-2xl p-5"
+          style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}
+        >
+          <div className="text-center font-semibold mb-4" style={{ color: C.text }}>
+            Reading Heatmaps - WPM Growth
+          </div>
           <div className="grid grid-cols-7 gap-2">
             {heatmapCells.map((s) => (
               <div
@@ -538,6 +802,104 @@ function Dashboard({ students, sections, sectionName, onSectionChange, teacherNa
           </div>
         </div>
       </div>
+
+      {/* CHANGE PASSWORD MODAL */}
+      {showPassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+          <div className="w-full max-w-md rounded-2xl p-6 shadow-xl" style={{ background: "#FFFFFF" }}>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold" style={{ color: C.text }}>Change Password</h2>
+              <button
+                type="button"
+                onClick={closePasswordModal}
+                disabled={passwordLoading}
+                className="text-xl disabled:opacity-50"
+                style={{ color: C.textMuted }}
+                aria-label="Close password dialog"
+              >
+                ×
+              </button>
+            </div>
+
+            <label className="block text-sm mb-1" style={{ color: C.text }}>Current Password</label>
+            <input
+              type="password"
+              value={currentPassword}
+              autoComplete="current-password"
+              onChange={(e) => {
+                setCurrentPassword(e.target.value);
+                setPasswordMessage("");
+                setPasswordSuccess(false);
+              }}
+              className="w-full rounded-lg px-3 py-2 mb-4 outline-none"
+              style={{ border: `1px solid ${C.cardBorder}` }}
+            />
+
+            <label className="block text-sm mb-1" style={{ color: C.text }}>New Password</label>
+            <input
+              type="password"
+              value={newPassword}
+              autoComplete="new-password"
+              onChange={(e) => {
+                setNewPassword(e.target.value);
+                setPasswordMessage("");
+                setPasswordSuccess(false);
+              }}
+              className="w-full rounded-lg px-3 py-2 mb-2 outline-none"
+              style={{ border: `1px solid ${C.cardBorder}` }}
+            />
+
+            <p className="text-xs mb-4" style={{ color: C.textMuted }}>
+              Password must be at least 8 characters and include 1 uppercase letter,
+              1 lowercase letter, 1 number, and 1 special character.
+            </p>
+
+            <label className="block text-sm mb-1" style={{ color: C.text }}>Confirm New Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              autoComplete="new-password"
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                setPasswordMessage("");
+                setPasswordSuccess(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !passwordLoading) handlePasswordChange();
+              }}
+              className="w-full rounded-lg px-3 py-2 outline-none"
+              style={{ border: `1px solid ${C.cardBorder}` }}
+            />
+
+            {passwordMessage && (
+              <p className="text-xs mt-3" style={{ color: passwordSuccess ? "#5F9652" : C.high }}>
+                {passwordMessage}
+              </p>
+            )}
+
+            <div className="flex justify-end gap-3 mt-5">
+              <button
+                type="button"
+                onClick={closePasswordModal}
+                disabled={passwordLoading}
+                className="rounded-full px-5 py-2 text-sm disabled:opacity-50"
+                style={{ color: C.textMuted, border: `1px solid ${C.cardBorder}` }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handlePasswordChange}
+                disabled={passwordLoading}
+                className="rounded-full px-5 py-2 text-sm font-semibold text-white disabled:opacity-60 disabled:cursor-not-allowed"
+                style={{ background: C.coral }}
+              >
+                {passwordLoading ? "Saving..." : "Save Password"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2553,8 +2915,6 @@ export default function TeacherDashboard() {
   const sectionStudents = sectionName
     ? students.filter((student) => student.section === sectionName)
     : [];
-  const teacher = getSession()?.user;
-  const teacherName = [teacher?.firstName, teacher?.lastName].filter(Boolean).join(" ") || "";
 
   const loadLearners = async () => {
     setLearnersLoading(true);
@@ -2594,7 +2954,7 @@ export default function TeacherDashboard() {
       <Sidebar page={page} setPage={setPage} onLogout={handleLogout} />
       <div className="flex-1 p-8 overflow-auto">
         {page === "dashboard" && (
-          <Dashboard students={sectionStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} teacherName={teacherName} />
+          <Dashboard students={sectionStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} currentTeacher={currentTeacher} />
         )}
         {page === "students" && <Students students={sectionStudents} setStudents={setStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} loading={learnersLoading} error={learnersError} onRefresh={loadLearners} currentTeacher={currentTeacher} />}
         {page === "flashcards" && <Flashcards currentTeacher={currentTeacher} />}
