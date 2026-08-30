@@ -90,7 +90,7 @@ function parseMultipleChoiceQuestions(text) {
 
 function splitPdfStoryAndQuestions(pageTexts) {
   const cleanedPages = removeRepeatedPdfHeader(pageTexts);
-  const markerPattern = /\bQUESTIONS?\b/i;
+  const markerPattern = /\b(?:MGA\s+TANONG|QUESTIONS?)\b/i;
   const questionStartPage = cleanedPages.findIndex((text) => markerPattern.test(text));
 
   if (questionStartPage < 0) {
