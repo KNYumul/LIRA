@@ -273,6 +273,11 @@ function csvHeaderKey(value) {
   return String(value || "").replace(/^\uFEFF/, "").toLowerCase().replace(/[^a-z]/g, "");
 }
 
+function formatStudentName(value) {
+  const name = String(value || "").trim().toLocaleLowerCase();
+  return name ? `${name.charAt(0).toLocaleUpperCase()}${name.slice(1)}` : "";
+}
+
 function learnerToStudent(learner) {
   const [birthYear = "", birthMonth = "", birthDay = ""] = (learner.birthdate || "").split("-");
   return {
@@ -1303,7 +1308,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       const csvLearners = new Set();
       for (let i = startIdx; i < lines.length; i++) {
         const row = parseCsvLine(lines[i]);
-        const lastName = String(row[columns.lastName] || "").trim();
+        const lastName = formatStudentName(row[columns.lastName]);
         const birthdate = String(row[columns.birthdate] || "").trim();
         const section = String(row[columns.section] || "").trim();
         const usesSpaceSeparatedDate = /^\d{1,2}\s+\d{1,2}\s+\d{4}$/.test(birthdate);
