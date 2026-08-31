@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Heart, Pencil, MinusCircle, ChevronDown, ChevronUp, Upload, Search, X, Plus, CheckCircle2, Sparkles, FileText, ScanLine, Loader2, ArrowLeft, Lock } from "lucide-react";
+import { Heart, Pencil, MinusCircle, ChevronDown, ChevronUp, Upload, Search, X, Plus, CheckCircle2, Sparkles, FileText, ScanLine, Loader2, ArrowLeft, Lock, Eye, EyeOff } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
@@ -468,6 +468,7 @@ function Dashboard({
 
   const [savingProfile, setSavingProfile] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [visiblePasswords, setVisiblePasswords] = useState({ current: false, next: false, confirm: false });
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -508,6 +509,7 @@ function Dashboard({
 
   const closePasswordModal = () => {
     setShowPassword(false);
+    setVisiblePasswords({ current: false, next: false, confirm: false });
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
@@ -634,11 +636,19 @@ function Dashboard({
         return;
       }
 
-      setPasswordSuccess(true);
-      setPasswordMessage("Password changed successfully.");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+      setPasswordMessage("");
+      setPasswordSuccess(false);
+      setVisiblePasswords({ current: false, next: false, confirm: false });
+      setShowPassword(false);
+      await liraAlert.fire({
+        icon: "success",
+        title: "Password changed successfully",
+        text: "You can now use your new password the next time you sign in.",
+        confirmButtonText: "OK",
+      });
     } catch {
       setPasswordMessage("Something went wrong. Please try again.");
     } finally {
@@ -873,32 +883,42 @@ className="mt-2 h-12 rounded-lg px-3 text-xs font-semibold text-white disabled:o
             </div>
 
             <label className="block text-sm mb-1" style={{ color: C.text }}>Current Password</label>
-            <input
-              type="password"
-              value={currentPassword}
-              autoComplete="current-password"
-              onChange={(e) => {
-                setCurrentPassword(e.target.value);
-                setPasswordMessage("");
-                setPasswordSuccess(false);
-              }}
-              className="w-full rounded-lg px-3 py-2 mb-4 outline-none"
-              style={{ border: `1px solid ${C.cardBorder}` }}
-            />
+            <div className="relative mb-4">
+              <input
+                type={visiblePasswords.current ? "text" : "password"}
+                value={currentPassword}
+                autoComplete="current-password"
+                onChange={(e) => {
+                  setCurrentPassword(e.target.value);
+                  setPasswordMessage("");
+                  setPasswordSuccess(false);
+                }}
+                className="w-full rounded-lg pl-3 pr-11 py-2 outline-none"
+                style={{ border: `1px solid ${C.cardBorder}` }}
+              />
+              <button type="button" onClick={() => setVisiblePasswords((visible) => ({ ...visible, current: !visible.current }))} className="absolute inset-y-0 right-0 px-3 flex items-center" style={{ color: C.textMuted }} aria-label={visiblePasswords.current ? "Hide current password" : "Show current password"}>
+                {visiblePasswords.current ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
 
             <label className="block text-sm mb-1" style={{ color: C.text }}>New Password</label>
-            <input
-              type="password"
-              value={newPassword}
-              autoComplete="new-password"
-              onChange={(e) => {
-                setNewPassword(e.target.value);
-                setPasswordMessage("");
-                setPasswordSuccess(false);
-              }}
-              className="w-full rounded-lg px-3 py-2 mb-2 outline-none"
-              style={{ border: `1px solid ${C.cardBorder}` }}
-            />
+            <div className="relative mb-2">
+              <input
+                type={visiblePasswords.next ? "text" : "password"}
+                value={newPassword}
+                autoComplete="new-password"
+                onChange={(e) => {
+                  setNewPassword(e.target.value);
+                  setPasswordMessage("");
+                  setPasswordSuccess(false);
+                }}
+                className="w-full rounded-lg pl-3 pr-11 py-2 outline-none"
+                style={{ border: `1px solid ${C.cardBorder}` }}
+              />
+              <button type="button" onClick={() => setVisiblePasswords((visible) => ({ ...visible, next: !visible.next }))} className="absolute inset-y-0 right-0 px-3 flex items-center" style={{ color: C.textMuted }} aria-label={visiblePasswords.next ? "Hide new password" : "Show new password"}>
+                {visiblePasswords.next ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
 
             <p className="text-xs mb-4" style={{ color: C.textMuted }}>
               Password must be at least 8 characters and include 1 uppercase letter,
@@ -906,21 +926,26 @@ className="mt-2 h-12 rounded-lg px-3 text-xs font-semibold text-white disabled:o
             </p>
 
             <label className="block text-sm mb-1" style={{ color: C.text }}>Confirm New Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              autoComplete="new-password"
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                setPasswordMessage("");
-                setPasswordSuccess(false);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !passwordLoading) handlePasswordChange();
-              }}
-              className="w-full rounded-lg px-3 py-2 outline-none"
-              style={{ border: `1px solid ${C.cardBorder}` }}
-            />
+            <div className="relative">
+              <input
+                type={visiblePasswords.confirm ? "text" : "password"}
+                value={confirmPassword}
+                autoComplete="new-password"
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setPasswordMessage("");
+                  setPasswordSuccess(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !passwordLoading) handlePasswordChange();
+                }}
+                className="w-full rounded-lg pl-3 pr-11 py-2 outline-none"
+                style={{ border: `1px solid ${C.cardBorder}` }}
+              />
+              <button type="button" onClick={() => setVisiblePasswords((visible) => ({ ...visible, confirm: !visible.confirm }))} className="absolute inset-y-0 right-0 px-3 flex items-center" style={{ color: C.textMuted }} aria-label={visiblePasswords.confirm ? "Hide confirmation password" : "Show confirmation password"}>
+                {visiblePasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
 
             {passwordMessage && (
               <p className="text-xs mt-3" style={{ color: passwordSuccess ? "#5F9652" : C.high }}>
