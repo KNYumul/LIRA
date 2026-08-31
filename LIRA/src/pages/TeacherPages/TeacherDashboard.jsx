@@ -369,22 +369,50 @@ function NavItem({ label, active, onClick }) {
 }
 
 function SectionSelect({ sections, selectedSection, onChange, className = "" }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectRef = useRef(null);
+
+  useEffect(() => {
+    const closeOnOutsideClick = (event) => {
+      if (!selectRef.current?.contains(event.target)) setIsOpen(false);
+    };
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+  }, []);
+
   return (
-    <select
-      value={selectedSection}
-      onChange={(event) => onChange(event.target.value)}
-      className={`${className} text-sm font-medium outline-none cursor-pointer`}
-      style={{
-        color: C.text,
-        background: C.cardBg,
-        border: `1px solid ${C.cardBorder}`,
-      }}
-      aria-label="Select section"
-    >
-      {sections.map((section) => (
-        <option key={section} value={section}>{section}</option>
-      ))}
-    </select>
+    <div ref={selectRef} className="section-select">
+      <button
+        type="button"
+        className={`${className} section-select-trigger text-sm font-medium`}
+        onClick={() => setIsOpen((open) => !open)}
+        aria-label="Select section"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+      >
+        <span>{selectedSection}</span>
+        <ChevronDown size={16} className={isOpen ? "section-select-chevron is-open" : "section-select-chevron"} />
+      </button>
+      {isOpen && (
+        <div className="section-select-menu" role="listbox" aria-label="Sections">
+          {sections.map((section) => (
+            <button
+              type="button"
+              key={section}
+              role="option"
+              aria-selected={section === selectedSection}
+              className={section === selectedSection ? "section-select-option is-selected" : "section-select-option"}
+              onClick={() => {
+                onChange(section);
+                setIsOpen(false);
+              }}
+            >
+              {section}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1282,6 +1310,30 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           section,
         });
       }
+
+      const existingSectionNames = new Set(sections.map((section) => section.trim().toLowerCase()));
+      const newSectionsByName = new Map();
+      newRows.forEach(({ section }) => {
+        const normalizedSection = section.toLowerCase();
+        if (!existingSectionNames.has(normalizedSection) && !newSectionsByName.has(normalizedSection)) {
+          newSectionsByName.set(normalizedSection, section);
+        }
+      });
+
+      const newSections = [...newSectionsByName.values()];
+      if (newSections.length > 0) {
+        const sectionList = newSections.map((section) => `Section ${section}`).join(", ");
+        const confirmation = await liraAlert.fire({
+          icon: "info",
+          title: `New section${newSections.length === 1 ? "" : "s"} detected`,
+          text: `${sectionList} ${newSections.length === 1 ? "is" : "are"} not in your current sections. Continue importing and add ${newSections.length === 1 ? "this section" : "these sections"}?`,
+          showCancelButton: true,
+          confirmButtonText: "Continue import",
+          cancelButtonText: "Cancel"
+        });
+        if (!confirmation.isConfirmed) return;
+      }
+
       const results = await Promise.allSettled(
         newRows.map(({ lastName, birthMonth, birthDay, birthYear, section }) =>
           saveLearner({ lastName, birthMonth, birthDay, birthYear, section }))
