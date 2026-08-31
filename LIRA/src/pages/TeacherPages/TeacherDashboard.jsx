@@ -2043,7 +2043,7 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
   const updateOption = (id, idx, value) =>
     setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, options: q.options.map((o, i) => (i === idx ? value : o)) } : q)));
   const addQuestion = () =>
-    setQuestions((prev) => [...prev, { id: Math.max(0, ...prev.map((p) => p.id)) + 1, question: "", options: ["", "", "", ""], correct: 0 }]);
+    setQuestions((prev) => [...prev, { id: Math.max(0, ...prev.map((p) => p.id)) + 1, question: "", options: ["", "", "", ""], correct: null }]);
   const requestDeleteQuestion = async (question) => {
     const result = await liraAlert.fire({
       icon: "warning",
@@ -2082,6 +2082,26 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
     } finally {
       setRegenerating(false);
     }
+  };
+
+  const save = async () => {
+    const missingAnswerKeys = questions
+      .map((question, index) => ({ question, number: question.id ?? index + 1 }))
+      .filter(({ question }) => question.question?.trim() && !Number.isInteger(question.correct))
+      .map(({ number }) => number);
+
+    if (missingAnswerKeys.length > 0) {
+      setActiveTab("questions");
+      await liraAlert.fire({
+        icon: "warning",
+        title: "Complete the answer key first",
+        text: `Select the correct answer for question${missingAnswerKeys.length === 1 ? "" : "s"} ${missingAnswerKeys.join(", ")} before uploading this story.`,
+        confirmButtonText: "Review questions"
+      });
+      return;
+    }
+
+    await onSave({ ...story, title: title.trim(), coverImage, pages, questions });
   };
 
   return (
@@ -2297,7 +2317,7 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
           </button>
           <button
             disabled={processingCover || regenerating || !title.trim()}
-            onClick={() => onSave({ ...story, title: title.trim(), coverImage, pages, questions })}
+            onClick={save}
             className="flex-1 rounded-full py-2 font-semibold text-white"
             style={{ background: processingCover || regenerating || !title.trim() ? "#EAD9BE" : "#EDA751" }}
           >
@@ -2400,35 +2420,24 @@ function Stories({ currentTeacher }) {
         questions: generated.questions,
       };
     }
-    try {
-      const response = await fetch(storyUrl(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...teacherHeaders() },
-        body: JSON.stringify(newStory),
-      });
-      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not save story."));
-      const savedStory = await response.json();
-      const story = { ...savedStory, id: savedStory._id };
-      setStories((prev) => [story, ...prev]);
-      setShowAddStory(false);
-      setEditTarget({ ...story, isNewStory: true });
-    } catch (requestError) {
-      setError(requestError.message);
-    }
+    setShowAddStory(false);
+    setEditTarget({ ...newStory, isNewStory: true });
   };
 
   const saveStory = async (updated) => {
     try {
       const { isNewStory, ...storyPayload } = updated;
-      const response = await fetch(storyUrl(updated.id), {
-        method: "PUT",
+      const response = await fetch(storyUrl(isNewStory ? "" : updated.id), {
+        method: isNewStory ? "POST" : "PUT",
         headers: { "Content-Type": "application/json", ...teacherHeaders() },
         body: JSON.stringify(storyPayload),
       });
       if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not update story."));
       const savedStory = await response.json();
       const story = { ...savedStory, id: savedStory._id };
-      setStories((prev) => prev.map((existing) => (existing.id === story.id ? story : existing)));
+      setStories((prev) => isNewStory
+        ? [story, ...prev]
+        : prev.map((existing) => (existing.id === story.id ? story : existing)));
       setEditTarget(null);
       await liraAlert.fire({
         icon: "success",

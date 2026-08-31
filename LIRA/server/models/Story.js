@@ -13,7 +13,7 @@ const questionSchema = new mongoose.Schema(
     id: { type: Number, required: true },
     question: { type: String, default: "" },
     options: { type: [String], default: [] },
-    correct: { type: Number, default: 0 }
+    correct: { type: Number, default: null }
   },
   { _id: false }
 );

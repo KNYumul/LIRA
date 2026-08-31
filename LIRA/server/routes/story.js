@@ -337,10 +337,33 @@ router.get("/", async (req, res) => {
   }
 });
 
+function missingAnswerKeyNumbers(questions) {
+  if (!Array.isArray(questions)) return [];
+  return questions
+    .map((question, index) => ({ question, number: question?.id ?? index + 1 }))
+    .filter(({ question }) =>
+      typeof question?.question === "string"
+      && question.question.trim()
+      && !Number.isInteger(question.correct)
+    )
+    .map(({ number }) => number);
+}
+
+function rejectMissingAnswerKeys(req, res) {
+  const missing = missingAnswerKeyNumbers(req.body.questions);
+  if (missing.length === 0) return false;
+  res.status(400).json({
+    message: `Select the correct answer for question${missing.length === 1 ? "" : "s"} ${missing.join(", ")} before uploading this story.`,
+    missingAnswerKeys: missing
+  });
+  return true;
+}
+
 router.post("/", async (req, res) => {
   try {
     const teacher = await currentTeacher(req, res);
     if (!teacher) return;
+    if (rejectMissingAnswerKeys(req, res)) return;
     const story = await Story.create({
       ...req.body,
       teacherId: teacher._id,
@@ -357,6 +380,7 @@ router.put("/:id", async (req, res) => {
   try {
     const existingStory = await ownedStory(req, res);
     if (!existingStory) return;
+    if (Object.hasOwn(req.body, "questions") && rejectMissingAnswerKeys(req, res)) return;
     const updates = {};
     ["title", "lang", "badge", "cover", "coverText", "coverImage", "description", "contentUnit", "pages", "questions"].forEach((field) => {
       if (Object.hasOwn(req.body, field)) updates[field] = req.body[field];
