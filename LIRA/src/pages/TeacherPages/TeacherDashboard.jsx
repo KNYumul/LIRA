@@ -1754,7 +1754,7 @@ function FlashcardDetail({ item, onClose, onSave, onDeleteRequest }) {
             disabled={isOverLimit || !content.trim()}
             onClick={() => {
               if (isOverLimit || !content.trim()) return;
-              onSave(item.id, content.trim());
+              onSave(item.id, content.trim(), item.category);
               onClose();
             }}
             title={isOverLimit ? "Cannot save: exceeds 250 words" : "Save changes"}
@@ -1910,31 +1910,20 @@ function Flashcards({ currentTeacher }) {
     const id = e.dataTransfer.getData("text/plain");
     if (!id) return;
 
-    let nextItems;
-    setItems((prev) => {
-      const draggedItem = prev.find((item) => item.id === id);
-      if (!draggedItem) return prev;
+    const draggedItem = items.find((item) => item.id === id);
+    if (!draggedItem) return;
 
-      const remaining = prev.filter((item) => item.id !== id);
-      const movedItem = { ...draggedItem, category: cat };
-
-      let lastIndex = -1;
-      remaining.forEach((item, index) => {
-        if (item.category === cat) lastIndex = index;
-      });
-
-      const result = [...remaining];
-
-      if (lastIndex === -1) {
-        result.push(movedItem);
-      } else {
-        result.splice(lastIndex + 1, 0, movedItem);
-      }
-
-      nextItems = result;
-      return result;
+    const remaining = items.filter((item) => item.id !== id);
+    const movedItem = { ...draggedItem, category: cat };
+    let lastIndex = -1;
+    remaining.forEach((item, index) => {
+      if (item.category === cat) lastIndex = index;
     });
-    if (nextItems) Promise.all(nextItems.filter((item) => item.category === cat && !item.isLibrary).map((item, order) => updateFlashcard(item.id, { category: cat, order }))).catch(async (saveError) => {
+    const nextItems = [...remaining];
+    nextItems.splice(lastIndex + 1, 0, movedItem);
+    setItems(nextItems);
+
+    Promise.all(nextItems.filter((item) => item.category === cat && !item.isLibrary).map((item, order) => updateFlashcard(item.id, { category: cat, order }))).catch(async (saveError) => {
       await showError(saveError.message);
       loadFlashcards();
     });
@@ -1948,38 +1937,26 @@ function Flashcards({ currentTeacher }) {
 
     if (!draggedId || draggedId === targetId) return;
 
-    let nextItems;
-    setItems((prev) => {
-      const draggedItem = prev.find((item) => item.id === draggedId);
-      if (!draggedItem) return prev;
+    const draggedItem = items.find((item) => item.id === draggedId);
+    if (!draggedItem) return;
 
-      const remaining = prev.filter((item) => item.id !== draggedId);
-      const movedItem = { ...draggedItem, category: targetCategory };
+    const remaining = items.filter((item) => item.id !== draggedId);
+    const movedItem = { ...draggedItem, category: targetCategory };
+    const targetIndex = remaining.findIndex((item) => item.id === targetId);
+    const nextItems = [...remaining];
+    nextItems.splice(targetIndex === -1 ? nextItems.length : targetIndex, 0, movedItem);
+    setItems(nextItems);
 
-      const targetIndex = remaining.findIndex(
-        (item) => item.id === targetId
-      );
-
-      if (targetIndex === -1) {
-        nextItems = [...remaining, movedItem];
-        return nextItems;
-      }
-
-      const result = [...remaining];
-      result.splice(targetIndex, 0, movedItem);
-      nextItems = result;
-      return result;
-    });
-    if (nextItems) Promise.all(nextItems.filter((item) => item.category === targetCategory && !item.isLibrary).map((item, order) => updateFlashcard(item.id, { category: targetCategory, order }))).catch(async (saveError) => {
+    Promise.all(nextItems.filter((item) => item.category === targetCategory && !item.isLibrary).map((item, order) => updateFlashcard(item.id, { category: targetCategory, order }))).catch(async (saveError) => {
       await showError(saveError.message);
       loadFlashcards();
     });
   };
 
-  const onSaveContent = async (id, content) => {
+  const onSaveContent = async (id, content, category) => {
     if (countWords(content) > 250) return;
     try {
-      const saved = await updateFlashcard(id, { content });
+      const saved = await updateFlashcard(id, { content, category });
       setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...saved, id: saved._id } : it)));
       await liraAlert.fire({
         icon: "success",
