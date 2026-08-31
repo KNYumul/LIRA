@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import "./Category.css";
 import { clearSession } from "../utils/session";
@@ -11,7 +11,13 @@ const bgDashboard = "/UI_Designs/BACKGROUND/backdrop_coral_peach_sunrise.svg";
 
 export default function Category() {
   const navigate = useNavigate();
-  const [lang, setLang] = useState("ENG");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [lang, setLang] = useState(() => searchParams.get("lang") === "FIL" ? "FIL" : "ENG");
+
+  const selectLanguage = (language) => {
+    setLang(language);
+    setSearchParams({ lang: language }, { replace: true });
+  };
 
   function handleLogout() {
     clearSession();
@@ -36,7 +42,7 @@ export default function Category() {
             className={`lang-toggle__option ${
               lang === "ENG" ? "lang-toggle__option--active" : ""
             }`}
-            onClick={() => setLang("ENG")}
+            onClick={() => selectLanguage("ENG")}
           >
             ENG
           </button>
@@ -44,7 +50,7 @@ export default function Category() {
             className={`lang-toggle__option ${
               lang === "FIL" ? "lang-toggle__option--active" : ""
             }`}
-            onClick={() => setLang("FIL")}
+            onClick={() => selectLanguage("FIL")}
           >
             FIL
           </button>
@@ -53,7 +59,7 @@ export default function Category() {
         <div className="dash-cards">
           <button
             className="dash-card"
-            onClick={() => navigate("/flashcards")}
+            onClick={() => navigate(`/flashcards?lang=${lang}`)}
           >
             <img src={penguinIcon} alt="Flashcards" className="dash-card__icon" />
             <h2>Flashcards</h2>
@@ -62,7 +68,7 @@ export default function Category() {
 
           <button
             className="dash-card"
-            onClick={() => navigate("/story-mode")}
+            onClick={() => navigate(`/story-mode?lang=${lang}`)}
           >
             <img src={catIcon} alt="Story Mode" className="dash-card__icon" />
             <h2>Story Mode</h2>

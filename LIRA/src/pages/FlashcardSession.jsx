@@ -38,7 +38,7 @@ export default function FlashcardSession() {
   }, [difficulty, lang]);
 
   return <div className="fs-page" style={{ backgroundImage: `url(${bgSession})` }}>
-    <header className="fs-header"><button className="fs-back" onClick={() => navigate("/flashcards")} aria-label="Back">←</button><h1 className="fs-title">{label} · {languageLabel}</h1></header>
+    <header className="fs-header"><button className="fs-back" onClick={() => navigate(`/flashcards?lang=${lang}`)} aria-label="Back">←</button><h1 className="fs-title">{label} · {languageLabel}</h1></header>
     <main className="fs-main">
       {loading && <div className="fs-message">Loading your teacher's flashcards...</div>}
       {!loading && error && <div className="fs-message fs-message--error">{error}</div>}

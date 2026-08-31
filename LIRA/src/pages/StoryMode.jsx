@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import './StoryMode.css';
 import { getSession } from '../utils/session';
 
@@ -574,11 +574,12 @@ function KoalaMascot() {
 
 function StoryMode({ onExit }) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [stories, setStories] = useState([]);
   const [storiesLoading, setStoriesLoading] = useState(true);
   const [storiesError, setStoriesError] = useState('');
   const [view, setView] = useState('selection'); // 'selection' | 'reading' | 'quiz'
-  const [language, setLanguage] = useState('ENG'); // 'ENG' | 'FIL'
+  const [language, setLanguage] = useState(() => searchParams.get('lang') === 'FIL' ? 'FIL' : 'ENG'); // 'ENG' | 'FIL'
   const [activeStory, setActiveStory] = useState(null);
   const [pageIndex, setPageIndex] = useState(0);
   const [isFlipping, setIsFlipping] = useState(false);
@@ -594,6 +595,12 @@ function StoryMode({ onExit }) {
   const listenTimer = useRef(null);
 
   const filteredStories = stories.filter((story) => story.languageType === language);
+
+  const selectLanguage = (nextLanguage) => {
+    setLanguage(nextLanguage);
+    setSearchParams({ lang: nextLanguage }, { replace: true });
+    setCarouselOffset(0);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -698,7 +705,7 @@ function StoryMode({ onExit }) {
       <section className="story-mode sm-selection-bg">
         <div className="sm-header">
           <div className="sm-header-left">
-            <BackButton onClick={onExit || (() => navigate('/category'))} />
+            <BackButton onClick={onExit || (() => navigate(`/category?lang=${language}`))} />
             <h1 className="sm-title">Story Mode</h1>
           </div>
 
@@ -707,14 +714,14 @@ function StoryMode({ onExit }) {
               <button
                 type="button"
                 className={`sm-lang-option ${language === 'ENG' ? 'is-active' : ''}`}
-                onClick={() => { setLanguage('ENG'); setCarouselOffset(0); }}
+                onClick={() => selectLanguage('ENG')}
               >
                 ENG
               </button>
               <button
                 type="button"
                 className={`sm-lang-option ${language === 'FIL' ? 'is-active' : ''}`}
-                onClick={() => { setLanguage('FIL'); setCarouselOffset(0); }}
+                onClick={() => selectLanguage('FIL')}
               >
                 FIL
               </button>

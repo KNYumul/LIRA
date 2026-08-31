@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import "./FlashcardDifficulty.css";
 import { getSession } from "../utils/session";
 
@@ -13,7 +13,12 @@ const DIFFICULTIES = [
 
 export default function FlashcardDifficulty() {
   const navigate = useNavigate();
-  const [lang, setLang] = useState("ENG");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [lang, setLang] = useState(() => searchParams.get("lang") === "FIL" ? "FIL" : "ENG");
+  const selectLanguage = (language) => {
+    setLang(language);
+    setSearchParams({ lang: language }, { replace: true });
+  };
   const [counts, setCounts] = useState({ easy: 0, medium: 0, hard: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -37,10 +42,10 @@ export default function FlashcardDifficulty() {
 
   return <div className="fc-page" style={{ backgroundImage: `url(${bgFlashcards})` }}>
     <header className="fc-header">
-      <button className="fc-back" onClick={() => navigate("/category")} aria-label="Back">←</button>
+      <button className="fc-back" onClick={() => navigate(`/category?lang=${lang}`)} aria-label="Back">←</button>
       <h1 className="fc-title">Flashcards</h1>
       <div className="lang-toggle" role="group" aria-label="Language">{["ENG", "FIL"].map((value) =>
-        <button key={value} className={`lang-toggle__option ${lang === value ? "lang-toggle__option--active" : ""}`} onClick={() => setLang(value)}>{value}</button>
+        <button key={value} className={`lang-toggle__option ${lang === value ? "lang-toggle__option--active" : ""}`} onClick={() => selectLanguage(value)}>{value}</button>
       )}</div>
     </header>
     <main className="fc-main">
