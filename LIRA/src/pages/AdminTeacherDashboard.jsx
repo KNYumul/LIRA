@@ -94,6 +94,13 @@ export default function AdminTeacherDashboard() {
       if (!response.ok) throw new Error(data.message || 'Could not update teacher account.')
       const updatedTeacher = toDashboardTeacher(data.teacher)
       setTeachers(prev => prev.map(teacher => teacher.id === id ? updatedTeacher : teacher))
+      await liraAlert.fire({
+        icon: 'success',
+        title: 'Teacher information updated',
+        text: 'The teacher account changes were saved successfully.',
+        timer: 1800,
+        showConfirmButton: false
+      })
       return true
     } catch (error) {
       await showError(error.message)
