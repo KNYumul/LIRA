@@ -882,6 +882,41 @@ div:has(> input[placeholder="Search learners..."]):focus-within {
   z-index: 2;
 }
 
+.flashcard-chip.library {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid #DDD8CE;
+  opacity: 0.82;
+  cursor: default;
+}
+
+.flashcard-chip.library:hover,
+.flashcard-chip.library:active {
+  filter: none;
+  transform: none;
+  box-shadow: none;
+}
+
+.flashcard-library-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+  padding: 0.18rem 0.45rem;
+  border-radius: 9999px;
+  background: #E5DFD2;
+  color: #6F685E;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.flashcard-chip-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .flashcard-chip:active {
   cursor: grabbing;
 }

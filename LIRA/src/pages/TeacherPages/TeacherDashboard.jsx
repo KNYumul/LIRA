@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Heart, Pencil, MinusCircle, ChevronDown, ChevronUp, Upload, Search, X, Plus, CheckCircle2, Sparkles, FileText, ScanLine, Loader2, ArrowLeft } from "lucide-react";
+import { Heart, Pencil, MinusCircle, ChevronDown, ChevronUp, Upload, Search, X, Plus, CheckCircle2, Sparkles, FileText, ScanLine, Loader2, ArrowLeft, Lock } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
@@ -718,7 +718,7 @@ function Dashboard({
           border: `1px solid ${C.coral}`,
         }}
       >
-        🔒 Change Password
+        Change Password
       </button>
     </div>
 
@@ -1613,13 +1613,22 @@ function FlashcardChip({ item, onDragStart, onDropItem, onClick }) {
         onDropItem(e, item.id, item.category);
       }}
       onClick={() => canManage && onClick(item.id)}
-      className={`flashcard-chip ${item.category}`}
-      style={{ background: meta.pill, color: meta.text, cursor: canManage ? "grab" : "default" }}
+      className={`flashcard-chip ${item.category}${item.isLibrary ? " library" : ""}`}
+      style={{
+        background: item.isLibrary ? "#F1EEE7" : meta.pill,
+        color: item.isLibrary ? "#777169" : meta.text,
+        cursor: canManage ? "grab" : "default",
+      }}
       title={canManage
         ? `${item.content}\n\nClick to edit • Drag to move`
         : `${item.content}\n\nLIRA Library flashcard • Read only`}
     >
-      {item.content}
+      {item.isLibrary && (
+        <span className="flashcard-library-badge">
+          <Lock size={10} aria-hidden="true" /> LIRA Library
+        </span>
+      )}
+      <span className="flashcard-chip-content">{item.content}</span>
     </div>
   );
 }
