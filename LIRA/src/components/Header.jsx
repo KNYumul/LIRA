@@ -37,7 +37,6 @@ function Header({ logoSrc, links, actionLabel, onAction }) {
               <>
                 <Link to="/#about">About</Link>
                 <Link to="/#how-it-works">How It Works</Link>
-                <Link to="/#features">Features</Link>
               </>
             )}
           </nav>
