@@ -4,6 +4,7 @@ const teacherSchema = new mongoose.Schema(
   {
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
+    title: { type: String, enum: ["Teacher", "Ms.", "Mrs.", "Mr."], default: "Teacher" },
     email: { type: String, required: true, unique: true, trim: true, lowercase: true },
     passwordHash: { type: String, required: true, select: false },
     school: { type: String, trim: true },

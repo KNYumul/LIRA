@@ -12,6 +12,7 @@ function publicTeacher(teacher, sections = []) {
     id: teacher._id,
     firstName: teacher.firstName,
     lastName: teacher.lastName,
+    title: teacher.title || "Teacher",
     email: teacher.email,
     school: teacher.school,
     gradeLevel: teacher.gradeLevel,
@@ -39,6 +40,100 @@ router.get("/", async (_req, res) => {
   } catch (error) {
     console.error("Could not load teachers:", error);
     res.status(500).json({ message: "Could not load teacher accounts." });
+  }
+});
+
+// Allow a signed-in teacher to update their own dashboard profile.
+// This route must stay above /:id so "profile" is not treated as an id.
+router.put("/profile", async (req, res) => {
+  try {
+    const teacherId = req.get("X-Teacher-Id");
+    const cleanName = String(req.body.name || "").trim().replace(/\s+/g, " ");
+    const title = String(req.body.title || "").trim();
+    const allowedTitles = ["Teacher", "Ms.", "Mrs.", "Mr."];
+
+    if (!teacherId) {
+      return res.status(401).json({ message: "Please sign in again to update your profile." });
+    }
+    if (!cleanName) {
+      return res.status(400).json({ message: "Name is required." });
+    }
+    if (!allowedTitles.includes(title)) {
+      return res.status(400).json({ message: "Please select a valid title." });
+    }
+
+    const nameParts = cleanName.split(" ");
+    const firstName = nameParts.shift();
+    const lastName = nameParts.join(" ") || firstName;
+    const teacher = await Teacher.findOneAndUpdate(
+      { _id: teacherId, active: true },
+      { firstName, lastName, title },
+      { new: true, runValidators: true }
+    );
+
+    if (!teacher) {
+      return res.status(401).json({ message: "Your teacher account could not be verified." });
+    }
+
+    const sections = await Section.find({ teacherId: teacher._id }).sort({ name: 1 }).select("name");
+    return res.json({
+      message: "Teacher information saved.",
+      teacher: publicTeacher(teacher, sections.map((section) => section.name))
+    });
+  } catch (error) {
+    console.error("Teacher profile update failed:", error);
+    return res.status(500).json({ message: "Could not save teacher information." });
+  }
+});
+
+// Allow a signed-in teacher to replace their own password.
+// This route must stay above /:id so Express does not interpret
+// "change-password" as a teacher id.
+router.put("/change-password", async (req, res) => {
+  try {
+    const teacherId = req.get("X-Teacher-Id");
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!teacherId) {
+      return res.status(401).json({ message: "Please sign in again to change your password." });
+    }
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: "Please complete all password fields." });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "New password and confirmation password do not match." });
+    }
+    if (newPassword === currentPassword) {
+      return res.status(400).json({ message: "New password must be different from your current password." });
+    }
+    if (
+      newPassword.length < 8
+      || newPassword.length > 50
+      || !/[A-Z]/.test(newPassword)
+      || !/[a-z]/.test(newPassword)
+      || !/[0-9]/.test(newPassword)
+      || !/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)
+    ) {
+      return res.status(400).json({
+        message: "New password must be 8-50 characters and include uppercase, lowercase, number, and special characters."
+      });
+    }
+
+    const teacher = await Teacher.findById(teacherId).select("+passwordHash");
+    if (!teacher || !teacher.active) {
+      return res.status(401).json({ message: "Your teacher account could not be verified." });
+    }
+    if (!(await verifyPassword(currentPassword, teacher.passwordHash))) {
+      return res.status(401).json({ message: "Current password is incorrect." });
+    }
+
+    teacher.passwordHash = await hashPassword(newPassword);
+    await teacher.save();
+
+    return res.json({ message: "Password changed successfully." });
+  } catch (error) {
+    console.error("Teacher password change failed:", error);
+    return res.status(500).json({ message: "Could not change password." });
   }
 });
 

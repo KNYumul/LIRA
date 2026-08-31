@@ -6,7 +6,7 @@ import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { createWorker } from "tesseract.js";
 import { useNavigate } from "react-router-dom";
 import './TeacherDashboard.css';
-import { clearSession, getSession } from "../../utils/session";
+import { clearSession, getSession, saveSession } from "../../utils/session";
 import { clearSavedPortalPage, getSavedPortalPage, savePortalPage } from "../../utils/portalPage";
 import { liraAlert, showError, showWarning } from "../../utils/alerts";
 
@@ -368,6 +368,26 @@ function NavItem({ label, active, onClick }) {
   );
 }
 
+function SectionSelect({ sections, selectedSection, onChange, className = "" }) {
+  return (
+    <select
+      value={selectedSection}
+      onChange={(event) => onChange(event.target.value)}
+      className={`${className} text-sm font-medium outline-none cursor-pointer`}
+      style={{
+        color: C.text,
+        background: C.cardBg,
+        border: `1px solid ${C.cardBorder}`,
+      }}
+      aria-label="Select section"
+    >
+      {sections.map((section) => (
+        <option key={section} value={section}>{section}</option>
+      ))}
+    </select>
+  );
+}
+
 function Sidebar({ page, setPage, onLogout }) {
   return (
     <div
@@ -499,7 +519,10 @@ function Dashboard({
         throw new Error(await apiErrorMessage(response, "Could not save teacher information."));
       }
 
-      setName(cleanName);
+      const data = await response.json();
+      setName([data.teacher?.firstName, data.teacher?.lastName].filter(Boolean).join(" ") || cleanName);
+      setTitle(data.teacher?.title || title);
+      if (data.teacher) saveSession({ role: "teacher", user: data.teacher });
       await liraAlert.fire({
         icon: "success",
         title: "Teacher information saved",
