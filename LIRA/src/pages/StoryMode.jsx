@@ -847,7 +847,7 @@ function StoryMode({ onExit }) {
             type="button"
             className="sm-next-page-btn"
             onClick={goNextPage}
-            aria-label="Next page"
+            aria-label={pageIndex < storyPages.length - 1 ? 'Next page' : 'Take the quiz'}
           >
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
               <path d="M9 5l7 7-7 7" stroke="#3F3F3F" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -855,7 +855,7 @@ function StoryMode({ onExit }) {
           </button>
         </div>
         <span className="sm-next-page-label">
-          {pageIndex < storyPages.length - 1 ? 'Next page' : 'Take the quiz'}
+          {pageIndex + 1}/{storyPages.length}
         </span>
       </section>
     );
