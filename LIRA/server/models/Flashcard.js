@@ -2,7 +2,8 @@ const mongoose = require("mongoose");
 
 const flashcardSchema = new mongoose.Schema(
   {
-    teacherId: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher", required: true, index: true },
+    teacherId: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher", index: true },
+    isLibrary: { type: Boolean, default: false, index: true },
     uploadedBy: { type: String, default: "Unknown teacher", trim: true },
     content: { type: String, required: true, trim: true },
     category: { type: String, enum: ["easy", "medium", "hard"], required: true, index: true },

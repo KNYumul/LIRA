@@ -1584,11 +1584,16 @@ function AddFlashcardModal({ initialLang = "ENG", onCancel, onSubmit }) {
 // ---------- Flashcard item chip + expanded detail card ----------
 function FlashcardChip({ item, onDragStart, onDropItem, onClick }) {
   const meta = CAT_META[item.category];
+  const canManage = !item.isLibrary;
 
   return (
     <div
-      draggable
+      draggable={canManage}
       onDragStart={(e) => {
+        if (!canManage) {
+          e.preventDefault();
+          return;
+        }
         e.stopPropagation();
         e.dataTransfer.effectAllowed = "move";
         e.dataTransfer.setData("text/plain", String(item.id));
@@ -1607,10 +1612,12 @@ function FlashcardChip({ item, onDragStart, onDropItem, onClick }) {
         e.stopPropagation();
         onDropItem(e, item.id, item.category);
       }}
-      onClick={() => onClick(item.id)}
+      onClick={() => canManage && onClick(item.id)}
       className={`flashcard-chip ${item.category}`}
-      style={{ background: meta.pill, color: meta.text }}
-      title={`${item.content}\n\nClick to edit • Drag to move`}
+      style={{ background: meta.pill, color: meta.text, cursor: canManage ? "grab" : "default" }}
+      title={canManage
+        ? `${item.content}\n\nClick to edit • Drag to move`
+        : `${item.content}\n\nLIRA Library flashcard • Read only`}
     >
       {item.content}
     </div>
@@ -1866,7 +1873,7 @@ function Flashcards({ currentTeacher }) {
       nextItems = result;
       return result;
     });
-    if (nextItems) Promise.all(nextItems.filter((item) => item.category === cat).map((item, order) => updateFlashcard(item.id, { category: cat, order }))).catch(async (saveError) => {
+    if (nextItems) Promise.all(nextItems.filter((item) => item.category === cat && !item.isLibrary).map((item, order) => updateFlashcard(item.id, { category: cat, order }))).catch(async (saveError) => {
       await showError(saveError.message);
       loadFlashcards();
     });
@@ -1902,7 +1909,7 @@ function Flashcards({ currentTeacher }) {
       nextItems = result;
       return result;
     });
-    if (nextItems) Promise.all(nextItems.filter((item) => item.category === targetCategory).map((item, order) => updateFlashcard(item.id, { category: targetCategory, order }))).catch(async (saveError) => {
+    if (nextItems) Promise.all(nextItems.filter((item) => item.category === targetCategory && !item.isLibrary).map((item, order) => updateFlashcard(item.id, { category: targetCategory, order }))).catch(async (saveError) => {
       await showError(saveError.message);
       loadFlashcards();
     });

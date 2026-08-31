@@ -51,7 +51,7 @@ async function ownedFlashcard(req, res) {
     res.status(404).json({ message: "Flashcard not found." });
     return null;
   }
-  if (!flashcard.teacherId.equals(teacher._id)) {
+  if (flashcard.isLibrary || !flashcard.teacherId || !flashcard.teacherId.equals(teacher._id)) {
     res.status(403).json({ message: "Only the teacher who uploaded this flashcard can change or delete it." });
     return null;
   }
@@ -78,7 +78,12 @@ router.get("/", async (req, res) => {
   try {
     const teacherId = await ownerTeacherId(req, res);
     if (!teacherId) return;
-    const query = { teacherId };
+    const query = {
+      $or: [
+        { isLibrary: true },
+        { teacherId }
+      ]
+    };
     if (["easy", "medium", "hard"].includes(req.query.category)) query.category = req.query.category;
     if (["ENG", "FIL"].includes(req.query.lang)) query.lang = req.query.lang;
     res.json(await Flashcard.find(query).sort({ category: 1, order: 1, createdAt: 1 }));
