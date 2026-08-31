@@ -78,7 +78,7 @@ router.post("/", async (req, res) => {
         ? [ownedSection.teacherId.firstName, ownedSection.teacherId.lastName].filter(Boolean).join(" ")
         : "another teacher";
       return res.status(403).json({
-        message: `${lastName || "This learner"} belongs to Section ${ownedSection?.name || requestedSection}, which is managed by ${ownerName}.`,
+        message: `${lastName || "This learner"} belongs to Section${ownedSection?.name || requestedSection}, which is managed by ${ownerName}.`,
         code: "SECTION_OWNED_BY_ANOTHER_TEACHER"
       });
     }
