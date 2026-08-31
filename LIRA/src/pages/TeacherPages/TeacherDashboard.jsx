@@ -2493,9 +2493,14 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
 
   const updatePage = (id, text) => setPages((prev) => prev.map((p) => (p.id === id ? { ...p, text } : p)));
   const addPage = () => setPages((prev) => [...prev, { id: Math.max(0, ...prev.map((p) => p.id)) + 1, text: "" }]);
-  const confirmDeletePage = () => {
+  const confirmDeletePage = async () => {
     setPages((prev) => prev.filter((p) => p.id !== deletePageTarget.id));
     setDeletePageTarget(null);
+    await liraAlert.fire({
+      icon: "success",
+      title: `The ${usesParagraphs ? "paragraph" : "page"} has been successfully removed`,
+      confirmButtonText: "OK"
+    });
   };
 
   const updateQuestion = (id, field, value) =>
