@@ -132,18 +132,23 @@ router.delete("/:id", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   try {
-    const { lastName, birthdate } = req.body;
-    if (!lastName || !birthdate) return res.status(400).json({ message: "Last name and birthdate are required." });
+    const lastName = String(req.body.lastName || "").trim();
+    const birthdate = String(req.body.birthdate || "").trim();
+    const section = String(req.body.section || "").trim();
+    if (!lastName || !birthdate || !section) {
+      return res.status(400).json({ message: "Last name, birthdate, and section are required." });
+    }
 
     const key = loginKey(req, "learner");
     const status = cooldownStatus(key);
     if (status.locked) return sendCooldown(res, status.retryAfterSeconds);
 
-    const learner = await Learner.findOne({ lastName, birthdate });
+    const learner = await Learner.findOne({ lastName, birthdate, section })
+      .collation({ locale: "en", strength: 2 });
     if (!learner) {
       const failure = failedLogin(key);
       if (failure.locked) return sendCooldown(res, failure.retryAfterSeconds);
-      return res.status(401).json({ message: `Invalid last name or birthdate. ${failure.remainingAttempts} attempt${failure.remainingAttempts === 1 ? "" : "s"} remaining.` });
+      return res.status(401).json({ message: `Invalid last name, birthdate, or section. ${failure.remainingAttempts} attempt${failure.remainingAttempts === 1 ? "" : "s"} remaining.` });
     }
     clearFailedLogins(key);
     res.json({

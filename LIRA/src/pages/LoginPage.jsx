@@ -30,6 +30,8 @@ function LoginPage() {
   // Student state
   const [studentLastName, setStudentLastName] = useState("");
   const [birthdate, setBirthdate] = useState("");
+  const [studentSection, setStudentSection] = useState("");
+  const [sectionOptions, setSectionOptions] = useState([]);
 
   // Teacher state
   const [firstName, setFirstName] = useState("");
@@ -41,6 +43,16 @@ function LoginPage() {
 
   const isStudent = portal === "student";
   const isSignUp = teacherMode === "signup";
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/sections/login-options`)
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Could not load sections.");
+        setSectionOptions(data);
+      })
+      .catch((sectionError) => console.error("Could not load student sections:", sectionError));
+  }, []);
 
   useEffect(() => {
     if (!error) return;
@@ -141,7 +153,7 @@ function LoginPage() {
     if (isStudent) {
       const trimmedLastName = studentLastName.trim();
 
-      if (!trimmedLastName || !birthdate) {
+      if (!trimmedLastName || !birthdate || !studentSection) {
         const warning = {
           status: 400,
           type: "VALIDATION_WARNING",
@@ -149,6 +161,7 @@ function LoginPage() {
           fields: {
             lastName: !trimmedLastName ? "Missing" : "Provided",
             birthdate: !birthdate ? "Missing" : "Provided",
+            section: !studentSection ? "Missing" : "Provided",
           },
         };
         console.warn("JSON Warning (Student Login):", JSON.stringify(warning, null, 2));
@@ -180,7 +193,7 @@ function LoginPage() {
       }
 
       try {
-        const response = await fetch("http://localhost:5000/api/learners/login", {
+        const response = await fetch(`${API_URL}/api/learners/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -188,6 +201,7 @@ function LoginPage() {
           body: JSON.stringify({
             lastName: trimmedLastName,
             birthdate,
+            section: studentSection,
           }),
         });
 
@@ -413,7 +427,7 @@ function LoginPage() {
                 <i />
                 <i />
               </div>
-              <div className="portal-fields portal-fields--two">
+              <div className="portal-fields portal-fields--student">
                 <label>
                   <span className="field-label">
                     Type your Last Name <em style={{ color: "#d9534f" }}>*</em>
@@ -444,6 +458,22 @@ function LoginPage() {
                     }}
                     required
                   />
+                </label>
+                <label>
+                  <span className="field-label">
+                    Select your Section <em style={{ color: "#d9534f" }}>*</em>
+                  </span>
+                  <select
+                    name="section"
+                    value={studentSection}
+                    onChange={(event) => setStudentSection(event.target.value)}
+                    required
+                  >
+                    <option value="">Choose a section</option>
+                    {sectionOptions.map((section) => (
+                      <option key={section} value={section}>{section}</option>
+                    ))}
+                  </select>
                 </label>
               </div>
               <button className="portal-submit" type="submit">

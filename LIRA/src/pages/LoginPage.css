@@ -155,6 +155,10 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.portal-fields--student {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .portal-fields label {
   display: flex;
   flex-direction: column;
@@ -174,7 +178,8 @@
   font-style: normal;
 }
 
-.portal-fields input {
+.portal-fields input,
+.portal-fields select {
   width: 100%;
   height: 34px;
   padding: 0 10px;
@@ -188,12 +193,14 @@
   font-size: 0.75rem;
 }
 
-.portal-card--student .portal-fields input {
+.portal-card--student .portal-fields input,
+.portal-card--student .portal-fields select {
   border-color: #b7c9bc;
   background: #eef7f1;
 }
 
-.portal-fields input:focus {
+.portal-fields input:focus,
+.portal-fields select:focus {
   border-color: #78977e;
   box-shadow: 0 0 0 2px rgba(120, 151, 126, 0.18);
 }
@@ -322,6 +329,7 @@
   }
 
   .portal-fields--two,
+  .portal-fields--student,
   .portal-fields--teacher {
     grid-template-columns: 1fr;
   }

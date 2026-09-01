@@ -4,6 +4,16 @@ const Section = require("../models/Section");
 
 const router = express.Router();
 
+// Student login only needs section names; teacher and ownership details stay private.
+router.get("/login-options", async (_req, res) => {
+  try {
+    const sections = await Section.find().select("name -_id").sort({ name: 1 });
+    res.json(sections.map((section) => section.name));
+  } catch (error) {
+    res.status(500).json({ message: "Could not load the section list." });
+  }
+});
+
 async function currentTeacher(req, res) {
   const teacherId = req.get("X-Teacher-Id");
   if (!teacherId) {
