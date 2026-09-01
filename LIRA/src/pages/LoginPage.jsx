@@ -58,7 +58,7 @@ function LoginPage() {
     if (!error) return;
     const message = error;
     setError("");
-    showError(message, isSignUp ? "Sign-up unsuccessful" : "Login unsuccessful");
+    showError(message, isSignUp ? "Sign up unsuccessful" : "Login unsuccessful");
   }, [error, isSignUp]);
 
   useEffect(() => {
@@ -69,8 +69,11 @@ function LoginPage() {
     if (!authCode && !authError) return;
 
     googleCallbackHandled.current = true;
+    const googleAuthMode = sessionStorage.getItem("google_teacher_auth_mode");
+    sessionStorage.removeItem("google_teacher_auth_mode");
     window.history.replaceState({}, document.title, window.location.pathname);
     setPortal("teacher");
+    setTeacherMode(googleAuthMode === "signup" ? "signup" : "login");
 
     if (authError) {
       setError(authError);
@@ -657,7 +660,10 @@ function LoginPage() {
               <button
                 className="google-button"
                 type="button"
-                onClick={() => window.location.assign(`${API_URL}/api/auth/google?role=teacher`)}
+                onClick={() => {
+                  sessionStorage.setItem("google_teacher_auth_mode", teacherMode);
+                  window.location.assign(`${API_URL}/api/auth/google?role=teacher`);
+                }}
               >
                 <b aria-hidden="true">●</b> Connect through Gmail / Google Workspace
               </button>
