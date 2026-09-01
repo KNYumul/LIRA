@@ -446,12 +446,24 @@ function Sidebar({ page, setPage, onLogout }) {
 
 function StatCard({ value, dotColor, label }) {
   return (
-    <div className="rounded-2xl px-5 py-4 flex-1" style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}>
-      <div className="flex items-center gap-2">
+    <div
+      className="rounded-2xl px-5 py-4 flex-1 dashboard-risk-stat"
+      style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}
+    >
+      <div className="dashboard-risk-stat-number flex items-center gap-2">
         <span className="text-2xl font-bold" style={{ color: C.text }}>{value}</span>
-        <span className="w-3 h-3 rounded-full inline-block" style={{ background: dotColor }} />
+        <span
+          className="w-3 h-3 rounded-full inline-block"
+          style={{ background: dotColor }}
+        />
       </div>
-      <div className="text-sm mt-1" style={{ color: C.textMuted }}>{label}</div>
+
+      <div
+        className="dashboard-risk-stat-label text-sm mt-1"
+        style={{ color: C.textMuted }}
+      >
+        {label}
+      </div>
     </div>
   );
 }
@@ -464,57 +476,124 @@ function Dashboard({
   onSectionChange,
   currentTeacher,
 }) {
-  const sessionName = [currentTeacher?.firstName, currentTeacher?.lastName].filter(Boolean).join(" ");
-  const sessionTitle = currentTeacher?.title || currentTeacher?.honorific || "Teacher";
+  const sessionName = [
+    currentTeacher?.firstName,
+    currentTeacher?.lastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const sessionTitle =
+    currentTeacher?.title ||
+    currentTeacher?.honorific ||
+    "Teacher";
 
   const [name, setName] = useState(sessionName);
   const [title, setTitle] = useState(sessionTitle);
+
   const teacherEmail = currentTeacher?.email || "";
 
   const [savingProfile, setSavingProfile] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false);
-  const [visiblePasswords, setVisiblePasswords] = useState({ current: false, next: false, confirm: false });
+
+  const [visiblePasswords, setVisiblePasswords] = useState({
+    current: false,
+    next: false,
+    confirm: false,
+  });
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
   const [passwordMessage, setPasswordMessage] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
+
+
+  // ---------------------------------------------------------
+  // Keep profile information synced with the current teacher
+  // ---------------------------------------------------------
 
   useEffect(() => {
     setName(sessionName);
     setTitle(sessionTitle);
   }, [sessionName, sessionTitle]);
 
+
+  // ---------------------------------------------------------
+  // Dashboard statistics
+  // ---------------------------------------------------------
+
   const total = students.length;
-  const low = students.filter((s) => riskOf(s) === "low").length;
-  const mod = students.filter((s) => riskOf(s) === "moderate").length;
-  const high = students.filter((s) => riskOf(s) === "high").length;
-  const noData = students.filter((s) => riskOf(s) === "noData").length;
+
+  const low = students.filter(
+    (student) => riskOf(student) === "low"
+  ).length;
+
+  const mod = students.filter(
+    (student) => riskOf(student) === "moderate"
+  ).length;
+
+  const high = students.filter(
+    (student) => riskOf(student) === "high"
+  ).length;
+
+  const noData = students.filter(
+    (student) => riskOf(student) === "noData"
+  ).length;
+
+
+  // ---------------------------------------------------------
+  // Risk breakdown chart data
+  // ---------------------------------------------------------
 
   const chartData = useMemo(() => {
-    const groups = Array.from({ length: 10 }, (_, i) => ({
-      name: `Surname ${i + 1}`,
-      low: 0,
-      moderate: 0,
-      high: 0,
-      noData: 0,
-    }));
+    const groups = Array.from(
+      { length: 10 },
+      (_, index) => ({
+        name: `Surname ${index + 1}`,
+        low: 0,
+        moderate: 0,
+        high: 0,
+        noData: 0,
+      })
+    );
 
-    students.forEach((s, i) => {
-      const g = groups[i % 10];
-      const r = riskOf(s);
-      g[r] += 1;
+    students.forEach((student, index) => {
+      const group = groups[index % groups.length];
+      const risk = riskOf(student);
+
+      group[risk] += 1;
     });
 
     return groups;
   }, [students]);
 
+
+  // ---------------------------------------------------------
+  // WPM heatmap
+  // ---------------------------------------------------------
+
   const heatmapCells = students.slice(0, 28);
+
+  const hasChartData = students.length > 0;
+
+
+  // ---------------------------------------------------------
+  // Close password modal
+  // ---------------------------------------------------------
 
   const closePasswordModal = () => {
     setShowPassword(false);
-    setVisiblePasswords({ current: false, next: false, confirm: false });
+
+    setVisiblePasswords({
+      current: false,
+      next: false,
+      confirm: false,
+    });
+
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
@@ -522,42 +601,80 @@ function Dashboard({
     setPasswordSuccess(false);
   };
 
+
+  // ---------------------------------------------------------
+  // Save teacher profile
+  // ---------------------------------------------------------
+
   const handleSaveChanges = async () => {
-    const cleanName = name.trim().replace(/\s+/g, " ");
+    const cleanName = name
+      .trim()
+      .replace(/\s+/g, " ");
 
     if (!cleanName) {
-      await showWarning("Please enter your name.", "Name is required");
+      await showWarning(
+        "Please enter your name.",
+        "Name is required"
+      );
       return;
     }
 
     if (!currentTeacher?.id) {
-      await showError("Your teacher session could not be found. Please sign in again.");
+      await showError(
+        "Your teacher session could not be found. Please sign in again."
+      );
       return;
     }
 
     try {
       setSavingProfile(true);
 
-      const response = await fetch(`${API_URL}/api/teachers/profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Teacher-Id": currentTeacher.id,
-        },
-        body: JSON.stringify({
-          name: cleanName,
-          title,
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/api/teachers/profile`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Teacher-Id": currentTeacher.id,
+          },
+          body: JSON.stringify({
+            name: cleanName,
+            title,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error(await apiErrorMessage(response, "Could not save teacher information."));
+        throw new Error(
+          await apiErrorMessage(
+            response,
+            "Could not save teacher information."
+          )
+        );
       }
 
       const data = await response.json();
-      setName([data.teacher?.firstName, data.teacher?.lastName].filter(Boolean).join(" ") || cleanName);
-      setTitle(data.teacher?.title || title);
-      if (data.teacher) saveSession({ role: "teacher", user: data.teacher });
+
+      setName(
+        [
+          data.teacher?.firstName,
+          data.teacher?.lastName,
+        ]
+          .filter(Boolean)
+          .join(" ") || cleanName
+      );
+
+      setTitle(
+        data.teacher?.title || title
+      );
+
+      if (data.teacher) {
+        saveSession({
+          role: "teacher",
+          user: data.teacher,
+        });
+      }
+
       await liraAlert.fire({
         icon: "success",
         title: "Teacher information saved",
@@ -571,83 +688,130 @@ function Dashboard({
     }
   };
 
+
+  // ---------------------------------------------------------
+  // Change password
+  // ---------------------------------------------------------
+
   const handlePasswordChange = async () => {
     setPasswordMessage("");
     setPasswordSuccess(false);
 
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordMessage("Please complete all password fields.");
+    if (
+      !currentPassword ||
+      !newPassword ||
+      !confirmPassword
+    ) {
+      setPasswordMessage(
+        "Please complete all password fields."
+      );
       return;
     }
 
     if (newPassword.length < 8) {
-      setPasswordMessage("New password must be at least 8 characters.");
+      setPasswordMessage(
+        "New password must be at least 8 characters."
+      );
       return;
     }
 
     if (!/[A-Z]/.test(newPassword)) {
-      setPasswordMessage("New password must contain at least 1 uppercase letter.");
+      setPasswordMessage(
+        "New password must contain at least 1 uppercase letter."
+      );
       return;
     }
 
     if (!/[a-z]/.test(newPassword)) {
-      setPasswordMessage("New password must contain at least 1 lowercase letter.");
+      setPasswordMessage(
+        "New password must contain at least 1 lowercase letter."
+      );
       return;
     }
 
     if (!/[0-9]/.test(newPassword)) {
-      setPasswordMessage("New password must contain at least 1 number.");
+      setPasswordMessage(
+        "New password must contain at least 1 number."
+      );
       return;
     }
 
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
-      setPasswordMessage("New password must contain at least 1 special character.");
+    if (
+      !/[!@#$%^&*(),.?":{}|<>]/.test(
+        newPassword
+      )
+    ) {
+      setPasswordMessage(
+        "New password must contain at least 1 special character."
+      );
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordMessage("New password and confirmation password do not match.");
+      setPasswordMessage(
+        "New password and confirmation password do not match."
+      );
       return;
     }
 
     if (currentPassword === newPassword) {
-      setPasswordMessage("New password must be different from your current password.");
+      setPasswordMessage(
+        "New password must be different from your current password."
+      );
       return;
     }
 
     if (!currentTeacher?.id) {
-      setPasswordMessage("Your teacher session could not be found. Please sign in again.");
+      setPasswordMessage(
+        "Your teacher session could not be found. Please sign in again."
+      );
       return;
     }
 
     try {
       setPasswordLoading(true);
 
-      const response = await fetch(`${API_URL}/api/teachers/change-password`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Teacher-Id": currentTeacher.id,
-        },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-          confirmPassword,
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/api/teachers/change-password`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Teacher-Id": currentTeacher.id,
+          },
+          body: JSON.stringify({
+            currentPassword,
+            newPassword,
+            confirmPassword,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        setPasswordMessage(await apiErrorMessage(response, "Could not change password."));
+        setPasswordMessage(
+          await apiErrorMessage(
+            response,
+            "Could not change password."
+          )
+        );
         return;
       }
 
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+
       setPasswordMessage("");
       setPasswordSuccess(false);
-      setVisiblePasswords({ current: false, next: false, confirm: false });
+
+      setVisiblePasswords({
+        current: false,
+        next: false,
+        confirm: false,
+      });
+
       setShowPassword(false);
+
       await liraAlert.fire({
         icon: "success",
         title: "Password changed successfully",
@@ -655,332 +819,714 @@ function Dashboard({
         confirmButtonText: "OK",
       });
     } catch {
-      setPasswordMessage("Something went wrong. Please try again.");
+      setPasswordMessage(
+        "Something went wrong. Please try again."
+      );
     } finally {
       setPasswordLoading(false);
     }
   };
 
+
+  // ---------------------------------------------------------
+  // Dashboard
+  // ---------------------------------------------------------
+
   return (
-    <div>
-      {/* TOP HEADER */}
-      <div className="flex items-center gap-3">
-        <h1 className="text-3xl font-bold" style={{ color: C.text }}>
-          Good morning, {title} {name || sessionName}!
-        </h1>
-        <img
-          src="/UI_Designs/ANIMALS/mascot_owl.svg"
-          alt="Owl"
-          className="w-13 h-13 object-contain"
-        />
-      </div>
+    <div className="dashboard-clean">
 
-      <p className="text-sm mt-1" style={{ color: C.textMuted }}>
-        School Year 2025–2026
-      </p>
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
-      {/* TEACHER INFORMATION */}
-   <div
-  className="w-full rounded-2xl px-6 py-5 mt-5"
-  style={{
-    background: C.cardBg,
-    border: `1px solid ${C.low}`,
-  }}
->
-  <div className="flex flex-col md:flex-row gap-5 md:items-start">
+      <div className="dashboard-header">
 
-    {/* Name */}
-    <div className="w-full md:w-72">
-      <label
-        className="block text-xs font-semibold mb-2"
-        style={{ color: C.textMuted }}
-      >
-        Name <span style={{ color: C.coral }}>*</span>
-      </label>
+        <div className="dashboard-greeting-block">
+          <div className="dashboard-greeting-line">
+            <h1
+              className="text-3xl font-bold"
+              style={{ color: C.text }}
+            >
+              Good morning, {title} {name || sessionName}!
+            </h1>
 
-      <input
-        type="text"
-        value={name}
-        maxLength={100}
-        onChange={(e) => setName(e.target.value)}
-        className="w-full h-10 rounded-lg px-3 text-sm outline-none"
-        style={{
-          color: C.text,
-          background: "#FFFFFF",
-          border: `1px solid ${C.low}`,
-        }}
-      />
-
-      <div
-        className="mt-2 flex items-center gap-2 text-xs"
-        style={{ color: C.textMuted }}
-      >
-        <span>✉</span>
-        <span className="truncate">
-          {teacherEmail || "No email available"}
-        </span>
-      </div>
-    </div>
-
-    {/* Address me as */}
-    <div className="w-full md:w-72">
-      <label
-        className="block text-xs font-semibold mb-2"
-        style={{ color: C.textMuted }}
-      >
-        Address me as: <span style={{ color: C.coral }}>*</span>
-      </label>
-
-      <select
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="w-full h-10 rounded-lg px-3 text-sm outline-none"
-        style={{
-          color: C.text,
-          background: "#FFFFFF",
-          border: `1px solid ${C.low}`,
-        }}
-      >
-        <option value="Teacher">Teacher</option>
-        <option value="Ms.">Ms.</option>
-        <option value="Mrs.">Mrs.</option>
-        <option value="Mr.">Mr.</option>
-      </select>
-
-      <button
-        type="button"
-        onClick={() => {
-          setPasswordMessage("");
-          setPasswordSuccess(false);
-          setShowPassword(true);
-        }}
-        className="mt-2 w-full h-9 rounded-lg px-3 text-xs font-semibold transition"
-        style={{
-          background: "#FFFFFF",
-          color: C.coralDark,
-          border: `1px solid ${C.coral}`,
-        }}
-      >
-        Change Password
-      </button>
-    </div>
-
-    {/* Save Changes */}
-    <div className="w-full md:w-72">
-      {/* Invisible label keeps button aligned with input/select */}
-      <label
-        className="block text-xs font-semibold mb-2 invisible"
-        aria-hidden="true"
-      >
-        Action
-      </label>
-
-      <button
-        type="button"
-        onClick={handleSaveChanges}
-        disabled={savingProfile}
-className="mt-2 h-12 rounded-lg px-3 text-xs font-semibold text-white disabled:opacity-60 disabled:cursor-not-allowed"style={{
-          background: C.coral,
-        }}
-      >
-        {savingProfile ? "Saving..." : "Save Changes"}
-      </button>
-    </div>
-
-  </div>
-</div>
-
-      {/* SECTION SUMMARY - EXISTING CODE */}
-      <div
-        className="w-full rounded-2xl px-6 py-4 mt-4"
-        style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-lg font-semibold" style={{ color: C.text }}>
-            {sections.length}
-            <Heart size={18} fill="#7FAE6C" color="#7FAE6C" />
-          </div>
-          {sections.length > 0 && (
-            <SectionSelect
-              sections={sections}
-              selectedSection={sectionName}
-              onChange={onSectionChange}
-              className="rounded-full px-4 py-2"
+            <img
+              src="/UI_Designs/ANIMALS/mascot_owl.svg"
+              alt="Owl"
+              className="dashboard-owl"
             />
-          )}
+          </div>
+
+          <p
+            className="text-sm mt-1"
+            style={{ color: C.textMuted }}
+          >
+            School Year 2025–2026
+          </p>
         </div>
-        <div className="text-sm" style={{ color: C.textMuted }}>
-          Total sections — choose one to view its learners.
-        </div>
+
       </div>
 
-      {/* EXISTING STAT CARDS */}
-      <div className="flex gap-4 mt-4 flex-wrap">
-        <StatCard value={total} dotColor={C.blueDot} label="Total learners" />
-        <StatCard value={low} dotColor={C.low} label="Low Risk" />
-        <StatCard value={mod} dotColor={C.moderate} label="Moderate Risk" />
-        <StatCard value={high} dotColor={C.high} label="High Risk" />
-        <StatCard value={noData} dotColor={C.noData} label="No Data" />
-      </div>
 
-      {/* EXISTING CHARTS */}
-      <div className="flex gap-4 mt-4 flex-col lg:flex-row">
-        <div
-          className="flex-1 rounded-2xl p-5"
-          style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}
-        >
-          <div className="flex items-center gap-4 text-xs mb-2" style={{ color: C.textMuted }}>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: C.low }} /> Low Risk</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: C.moderate }} /> Moderate Risk</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: C.high }} /> High Risk</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: C.noData }} /> No Data</span>
-          </div>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={chartData} margin={{ left: -20 }}>
-              <CartesianGrid vertical={false} stroke="#F0E6DB" />
-              <XAxis dataKey="name" tick={{ fontSize: 10, fill: C.textMuted }} angle={-25} textAnchor="end" height={50} />
-              <YAxis tick={{ fontSize: 11, fill: C.textMuted }} />
-              <Bar dataKey="low" stackId="a" fill={C.low} radius={[0, 0, 0, 0]} />
-              <Bar dataKey="moderate" stackId="a" fill={C.moderate} />
-              <Bar dataKey="high" stackId="a" fill={C.high} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="noData" stackId="a" fill={C.noData} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+      {/* =====================================================
+          MAIN DASHBOARD
+      ===================================================== */}
 
-        {/* EXISTING HEATMAP */}
-        <div
-          className="flex-1 rounded-2xl p-5"
-          style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}
-        >
-          <div className="text-center font-semibold mb-4" style={{ color: C.text }}>
-            Reading Heatmaps - WPM Growth
+      <div className="dashboard-main-grid">
+
+        {/* =====================================================
+            TOP OVERVIEW ROW
+        ===================================================== */}
+
+        <div className="dashboard-overview-row">
+
+        {/* ===================================================
+            PROFILE
+        =================================================== */}
+
+        <section className="dashboard-profile">
+
+          <div className="dashboard-profile-field">
+
+            <label>
+              Name <span>*</span>
+            </label>
+
+            <input
+              type="text"
+              value={name}
+              maxLength={100}
+              onChange={(event) =>
+                setName(event.target.value)
+              }
+            />
+
+            <div className="dashboard-email">
+
+              <span>✉</span>
+
+              <span title={teacherEmail}>
+                {teacherEmail ||
+                  "No email available"}
+              </span>
+
+            </div>
+
           </div>
-          <div className="grid grid-cols-7 gap-2">
-            {heatmapCells.map((s) => (
-              <div
-                key={s.id}
-                title={`${s.lastName}: ${s.wpm == null ? "No Data" : `${s.wpm} wpm`}`}
-                className="aspect-square rounded-lg"
-                style={{ background: riskColor[riskOf(s)] }}
+
+
+          <div className="dashboard-profile-field">
+
+            <label>
+              Address me as: <span>*</span>
+            </label>
+
+            <select
+              value={title}
+              onChange={(event) =>
+                setTitle(event.target.value)
+              }
+            >
+              <option value="Teacher">
+                Teacher
+              </option>
+
+              <option value="Ms.">
+                Ms.
+              </option>
+
+              <option value="Mrs.">
+                Mrs.
+              </option>
+
+              <option value="Mr.">
+                Mr.
+              </option>
+            </select>
+
+
+            <button
+              type="button"
+              className="dashboard-change-password"
+              onClick={() => {
+                setPasswordMessage("");
+                setPasswordSuccess(false);
+                setShowPassword(true);
+              }}
+            >
+              Change Password
+            </button>
+
+          </div>
+
+
+          <div className="dashboard-save-wrapper">
+
+            <button
+              type="button"
+              className="dashboard-save"
+              onClick={handleSaveChanges}
+              disabled={savingProfile}
+            >
+              {savingProfile
+                ? "Saving..."
+                : "Save Changes"}
+            </button>
+
+          </div>
+
+        </section>
+
+          {/* =================================================
+              OVERVIEW METRICS — 3 COLUMNS x 2 ROWS
+          ================================================= */}
+
+          <section className="dashboard-metrics-card" aria-label="Dashboard overview metrics">
+
+            <div className="dashboard-metrics-grid">
+
+              <div className="dashboard-stat">
+                <div className="dashboard-stat-number">
+                  <span>{sections.length}</span>
+                  <Heart
+                    size={18}
+                    fill="#7FAE6C"
+                    color="#7FAE6C"
+                  />
+                </div>
+                <div className="dashboard-stat-label">
+                  Total sections
+                </div>
+              </div>
+
+              <div className="dashboard-stat">
+                <div className="dashboard-stat-number">
+                  <span>{total}</span>
+                  <span
+                    className="dashboard-stat-dot"
+                    style={{ background: C.blueDot }}
+                  />
+                </div>
+                <div className="dashboard-stat-label">
+                  Total learners
+                </div>
+              </div>
+
+              <StatCard
+                value={low}
+                dotColor={C.low}
+                label="Low Risk"
               />
-            ))}
-          </div>
-        </div>
-      </div>
 
-      {/* CHANGE PASSWORD MODAL */}
+              <StatCard
+                value={mod}
+                dotColor={C.moderate}
+                label="Moderate Risk"
+              />
+
+              <StatCard
+                value={high}
+                dotColor={C.high}
+                label="High Risk"
+              />
+
+              <StatCard
+                value={noData}
+                dotColor={C.noData}
+                label="No Data"
+              />
+
+            </div>
+
+          </section>
+
+        </div>
+
+
+        {/* =====================================================
+            LARGE BOTTOM HEATMAP / CHART ROW
+        ===================================================== */}
+
+<div className="dashboard-bottom">
+
+
+            {/* =================================================
+                RISK BREAKDOWN
+            ================================================= */}
+
+            <section className="dashboard-bottom-card dashboard-risk-breakdown">
+
+              {/* Legend INSIDE the chart card */}
+
+              <div className="dashboard-risk-legend">
+
+                <span>
+                  <i
+                    style={{
+                      background: C.low,
+                    }}
+                  />
+                  Low Risk
+                </span>
+
+                <span>
+                  <i
+                    style={{
+                      background: C.moderate,
+                    }}
+                  />
+                  Moderate Risk
+                </span>
+
+                <span>
+                  <i
+                    style={{
+                      background: C.high,
+                    }}
+                  />
+                  High Risk
+                </span>
+
+                <span>
+                  <i
+                    style={{
+                      background: C.noData,
+                    }}
+                  />
+                  No Data
+                </span>
+
+              </div>
+
+
+              {hasChartData ? (
+
+                <div className="dashboard-chart-wrapper">
+
+                  <ResponsiveContainer
+                    width="100%"
+                    height="100%"
+                  >
+
+                    <BarChart
+                      data={chartData}
+                      margin={{
+                        top: 10,
+                        right: 10,
+                        left: -20,
+                        bottom: 20,
+                      }}
+                    >
+
+                      <CartesianGrid
+                        vertical={false}
+                        stroke="#F0E6DB"
+                      />
+
+                      <XAxis
+                        dataKey="name"
+                        tick={{
+                          fontSize: 9,
+                          fill: C.textMuted,
+                        }}
+                        angle={-25}
+                        textAnchor="end"
+                        height={50}
+                      />
+
+                      <YAxis
+                        allowDecimals={false}
+                        tick={{
+                          fontSize: 10,
+                          fill: C.textMuted,
+                        }}
+                      />
+
+                      <Bar
+                        dataKey="low"
+                        stackId="risk"
+                        fill={C.low}
+                      />
+
+                      <Bar
+                        dataKey="moderate"
+                        stackId="risk"
+                        fill={C.moderate}
+                      />
+
+                      <Bar
+                        dataKey="high"
+                        stackId="risk"
+                        fill={C.high}
+                      />
+
+                      <Bar
+                        dataKey="noData"
+                        stackId="risk"
+                        fill={C.noData}
+                        radius={[
+                          5,
+                          5,
+                          0,
+                          0,
+                        ]}
+                      />
+
+                    </BarChart>
+
+                  </ResponsiveContainer>
+
+                </div>
+
+              ) : (
+
+                <div className="dashboard-empty">
+
+                  <div
+                    className="dashboard-empty-title"
+                    style={{
+                      color: C.text,
+                    }}
+                  >
+                    No learners in this section yet
+                  </div>
+
+                  <div
+                    style={{
+                      color: C.textMuted,
+                    }}
+                  >
+                    Risk breakdown will appear here once learners are added.
+                  </div>
+
+                </div>
+
+              )}
+
+            </section>
+
+
+            {/* =================================================
+                WPM HEATMAP
+            ================================================= */}
+
+            <section className="dashboard-bottom-card dashboard-heatmap-card">
+
+              <div className="dashboard-heatmap-title">
+                Reading Heatmaps - WPM Growth
+              </div>
+
+
+              {heatmapCells.length > 0 ? (
+
+                <div className="dashboard-heatmap">
+
+                  {heatmapCells.map((student) => {
+
+                    const risk = riskOf(student);
+
+                    return (
+                      <div
+                        key={student.id}
+                        className="dashboard-heatmap-cell"
+                        title={`${student.lastName}: ${
+                          student.wpm == null
+                            ? "No Data"
+                            : `${student.wpm} WPM`
+                        }`}
+                        style={{
+                          background:
+                            riskColor[risk],
+                        }}
+                      >
+
+                        <span>
+                          {student.wpm == null
+                            ? "—"
+                            : student.wpm}
+                        </span>
+
+                      </div>
+                    );
+
+                  })}
+
+                </div>
+
+              ) : (
+
+                <div className="dashboard-empty dashboard-empty-heatmap">
+
+                  <div
+                    className="dashboard-empty-title"
+                    style={{
+                      color: C.text,
+                    }}
+                  >
+                    No reading data yet
+                  </div>
+
+                  <div
+                    style={{
+                      color: C.textMuted,
+                    }}
+                  >
+                    Each learner's tile will light up here as WPM data comes in.
+                  </div>
+
+                </div>
+
+              )}
+
+            </section>
+
+          </div>
+
+      </div>
+      {/* =====================================================
+          CHANGE PASSWORD MODAL
+      ===================================================== */}
+
       {showPassword && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
-          <div className="w-full max-w-md rounded-2xl p-6 shadow-xl" style={{ background: "#FFFFFF" }}>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold" style={{ color: C.text }}>Change Password</h2>
+
+        <div className="dashboard-password-overlay">
+
+          <div className="dashboard-password-modal">
+
+
+            <div className="dashboard-password-header">
+
+              <div>
+
+                <h2>
+                  Change Password
+                </h2>
+
+              </div>
+
               <button
                 type="button"
                 onClick={closePasswordModal}
                 disabled={passwordLoading}
-                className="text-xl disabled:opacity-50"
-                style={{ color: C.textMuted }}
+                className="dashboard-password-close"
                 aria-label="Close password dialog"
               >
-                ×
+                <X size={18} />
               </button>
+
             </div>
 
-            <label className="block text-sm mb-1" style={{ color: C.text }}>Current Password</label>
-            <div className="relative mb-4">
+
+            {/* Current password */}
+
+            <label>
+              Current Password
+            </label>
+
+            <div className="dashboard-password-input">
+
               <input
-                type={visiblePasswords.current ? "text" : "password"}
+                type={
+                  visiblePasswords.current
+                    ? "text"
+                    : "password"
+                }
                 value={currentPassword}
                 autoComplete="current-password"
-                onChange={(e) => {
-                  setCurrentPassword(e.target.value);
+                onChange={(event) => {
+                  setCurrentPassword(
+                    event.target.value
+                  );
                   setPasswordMessage("");
                   setPasswordSuccess(false);
                 }}
-                className="w-full rounded-lg pl-3 pr-11 py-2 outline-none"
-                style={{ border: `1px solid ${C.cardBorder}` }}
               />
-              <button type="button" onClick={() => setVisiblePasswords((visible) => ({ ...visible, current: !visible.current }))} className="absolute inset-y-0 right-0 px-3 flex items-center" style={{ color: C.textMuted }} aria-label={visiblePasswords.current ? "Hide current password" : "Show current password"}>
-                {visiblePasswords.current ? <EyeOff size={18} /> : <Eye size={18} />}
+
+              <button
+                type="button"
+                onClick={() =>
+                  setVisiblePasswords(
+                    (visible) => ({
+                      ...visible,
+                      current:
+                        !visible.current,
+                    })
+                  )
+                }
+                aria-label={
+                  visiblePasswords.current
+                    ? "Hide current password"
+                    : "Show current password"
+                }
+              >
+                {visiblePasswords.current
+                  ? <EyeOff size={18} />
+                  : <Eye size={18} />}
               </button>
+
             </div>
 
-            <label className="block text-sm mb-1" style={{ color: C.text }}>New Password</label>
-            <div className="relative mb-2">
+
+            {/* New password */}
+
+            <label>
+              New Password
+            </label>
+
+            <div className="dashboard-password-input">
+
               <input
-                type={visiblePasswords.next ? "text" : "password"}
+                type={
+                  visiblePasswords.next
+                    ? "text"
+                    : "password"
+                }
                 value={newPassword}
                 autoComplete="new-password"
-                onChange={(e) => {
-                  setNewPassword(e.target.value);
+                onChange={(event) => {
+                  setNewPassword(
+                    event.target.value
+                  );
                   setPasswordMessage("");
                   setPasswordSuccess(false);
                 }}
-                className="w-full rounded-lg pl-3 pr-11 py-2 outline-none"
-                style={{ border: `1px solid ${C.cardBorder}` }}
               />
-              <button type="button" onClick={() => setVisiblePasswords((visible) => ({ ...visible, next: !visible.next }))} className="absolute inset-y-0 right-0 px-3 flex items-center" style={{ color: C.textMuted }} aria-label={visiblePasswords.next ? "Hide new password" : "Show new password"}>
-                {visiblePasswords.next ? <EyeOff size={18} /> : <Eye size={18} />}
+
+              <button
+                type="button"
+                onClick={() =>
+                  setVisiblePasswords(
+                    (visible) => ({
+                      ...visible,
+                      next:
+                        !visible.next,
+                    })
+                  )
+                }
+                aria-label={
+                  visiblePasswords.next
+                    ? "Hide new password"
+                    : "Show new password"
+                }
+              >
+                {visiblePasswords.next
+                  ? <EyeOff size={18} />
+                  : <Eye size={18} />}
               </button>
+
             </div>
 
-            <p className="text-xs mb-4" style={{ color: C.textMuted }}>
-              Password must be at least 8 characters and include 1 uppercase letter,
-              1 lowercase letter, 1 number, and 1 special character.
+
+            <p className="dashboard-password-help">
+              Password must be at least 8 characters and
+              include 1 uppercase letter, 1 lowercase
+              letter, 1 number, and 1 special character.
             </p>
 
-            <label className="block text-sm mb-1" style={{ color: C.text }}>Confirm New Password</label>
-            <div className="relative">
+
+            {/* Confirm password */}
+
+            <label>
+              Confirm New Password
+            </label>
+
+            <div className="dashboard-password-input">
+
               <input
-                type={visiblePasswords.confirm ? "text" : "password"}
+                type={
+                  visiblePasswords.confirm
+                    ? "text"
+                    : "password"
+                }
                 value={confirmPassword}
                 autoComplete="new-password"
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
+                onChange={(event) => {
+                  setConfirmPassword(
+                    event.target.value
+                  );
                   setPasswordMessage("");
                   setPasswordSuccess(false);
                 }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !passwordLoading) handlePasswordChange();
+                onKeyDown={(event) => {
+                  if (
+                    event.key === "Enter" &&
+                    !passwordLoading
+                  ) {
+                    handlePasswordChange();
+                  }
                 }}
-                className="w-full rounded-lg pl-3 pr-11 py-2 outline-none"
-                style={{ border: `1px solid ${C.cardBorder}` }}
               />
-              <button type="button" onClick={() => setVisiblePasswords((visible) => ({ ...visible, confirm: !visible.confirm }))} className="absolute inset-y-0 right-0 px-3 flex items-center" style={{ color: C.textMuted }} aria-label={visiblePasswords.confirm ? "Hide confirmation password" : "Show confirmation password"}>
-                {visiblePasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+
+              <button
+                type="button"
+                onClick={() =>
+                  setVisiblePasswords(
+                    (visible) => ({
+                      ...visible,
+                      confirm:
+                        !visible.confirm,
+                    })
+                  )
+                }
+                aria-label={
+                  visiblePasswords.confirm
+                    ? "Hide confirmation password"
+                    : "Show confirmation password"
+                }
+              >
+                {visiblePasswords.confirm
+                  ? <EyeOff size={18} />
+                  : <Eye size={18} />}
               </button>
+
             </div>
 
+
             {passwordMessage && (
-              <p className="text-xs mt-3" style={{ color: passwordSuccess ? "#5F9652" : C.high }}>
+
+              <p
+                className={`dashboard-password-message ${
+                  passwordSuccess
+                    ? "success"
+                    : "error"
+                }`}
+              >
                 {passwordMessage}
               </p>
+
             )}
 
-            <div className="flex justify-end gap-3 mt-5">
+
+            <div className="dashboard-password-actions">
+
               <button
                 type="button"
                 onClick={closePasswordModal}
                 disabled={passwordLoading}
-                className="rounded-full px-5 py-2 text-sm disabled:opacity-50"
-                style={{ color: C.textMuted, border: `1px solid ${C.cardBorder}` }}
+                className="dashboard-password-cancel"
               >
                 Cancel
               </button>
+
               <button
                 type="button"
                 onClick={handlePasswordChange}
                 disabled={passwordLoading}
-                className="rounded-full px-5 py-2 text-sm font-semibold text-white disabled:opacity-60 disabled:cursor-not-allowed"
-                style={{ background: C.coral }}
+                className="dashboard-password-save"
               >
-                {passwordLoading ? "Saving..." : "Save Password"}
+                {passwordLoading
+                  ? "Saving..."
+                  : "Save Password"}
               </button>
+
             </div>
+
           </div>
+
         </div>
+
       )}
+
     </div>
   );
 }

@@ -1179,3 +1179,2025 @@ button:focus-visible,
   background: #e8f3e7;
   font-weight: 700;
 }
+
+/* ============================================================
+   TEACHER DASHBOARD
+   Clean Equal-Grid Layout
+   ============================================================ */
+
+
+/* ============================================================
+   DASHBOARD CONTAINER
+   ============================================================ */
+
+.dashboard-clean {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.dashboard-header {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-bottom: 22px;
+}
+
+.dashboard-header > div {
+  min-width: 0;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+
+  color: var(--text);
+
+  font-family: 'Poppins', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.dashboard-header p {
+  margin: 5px 0 0;
+
+  color: var(--text-muted);
+
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 300;
+}
+
+
+/* OWL
+   Important: prevents the mascot from becoming huge
+*/
+
+.dashboard-owl {
+  width: 44px !important;
+  height: 44px !important;
+
+  max-width: 44px !important;
+  max-height: 44px !important;
+
+  min-width: 44px;
+  min-height: 44px;
+
+  object-fit: contain !important;
+
+  display: block;
+
+  position: static !important;
+
+  flex: 0 0 44px;
+}
+
+
+/* ============================================================
+   MAIN DASHBOARD GRID
+   ============================================================ */
+
+.dashboard-main-grid {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(270px, 0.75fr)
+    minmax(0, 2fr);
+
+  gap: 20px;
+
+  align-items: stretch;
+}
+
+
+/* ============================================================
+   LEFT PROFILE CARD
+   ============================================================ */
+
+.dashboard-profile {
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  box-sizing: border-box;
+
+  padding: 22px;
+
+  background: var(--card-bg);
+
+  border: 1px solid var(--low);
+  border-radius: 18px;
+
+  box-shadow: var(--shadow-card);
+}
+
+
+/* PROFILE FIELDS */
+
+.dashboard-profile-field {
+  width: 100%;
+  min-width: 0;
+
+  margin-bottom: 17px;
+}
+
+.dashboard-profile-field label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: var(--text-muted);
+
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.dashboard-profile-field label span {
+  color: var(--coral);
+}
+
+
+/* INPUT + SELECT */
+
+.dashboard-profile-field input,
+.dashboard-profile-field select {
+  width: 100%;
+  height: 44px;
+
+  padding: 0 12px;
+
+  box-sizing: border-box;
+
+  background: #FFFFFF;
+  color: var(--text);
+
+  border: 1px solid var(--low);
+  border-radius: 9px;
+
+  outline: none;
+
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 300;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.dashboard-profile-field input:focus,
+.dashboard-profile-field select:focus {
+  border-color: var(--coral);
+
+  box-shadow:
+    0 0 0 2px rgba(226, 147, 140, 0.12);
+}
+
+
+/* ============================================================
+   EMAIL
+   ============================================================ */
+
+.dashboard-email {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  margin-top: 8px;
+
+  color: var(--text-muted);
+
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 300;
+}
+
+.dashboard-email span:first-child {
+  flex: 0 0 auto;
+}
+
+.dashboard-email span:last-child {
+  min-width: 0;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================
+   CHANGE PASSWORD BUTTON
+   ============================================================ */
+
+.dashboard-change-password {
+  width: 100%;
+  height: 40px;
+
+  margin-top: 9px;
+
+  border: 1px solid var(--coral);
+  border-radius: 9px;
+
+  background: #FFFFFF;
+  color: var(--coral-dark);
+
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.dashboard-change-password:hover {
+  background: #FFF7F4;
+
+  border-color: var(--coral-dark);
+}
+
+
+/* ============================================================
+   SAVE BUTTON
+   ============================================================ */
+
+.dashboard-save-wrapper {
+  width: 100%;
+
+  margin-top: auto;
+}
+
+.dashboard-save {
+  width: 100%;
+  height: 42px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: var(--coral);
+  color: #FFFFFF;
+
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.dashboard-save:hover:not(:disabled) {
+  background: var(--coral-dark);
+}
+
+.dashboard-save:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+}
+
+
+/* ============================================================
+   RIGHT SIDE
+   ============================================================ */
+
+.dashboard-right {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 20px;
+}
+
+
+/* ============================================================
+   TOP ROW
+   ============================================================ */
+
+.dashboard-top-row {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1.15fr);
+
+  gap: 20px;
+
+  align-items: stretch;
+}
+
+
+/* ============================================================
+   TOP — GENERAL STATS CARD
+   ============================================================ */
+
+.dashboard-section-card {
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  padding: 16px;
+
+  background: var(--card-bg);
+
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+
+  box-shadow: var(--shadow-card);
+}
+
+
+/* TWO STATS INSIDE */
+
+.dashboard-card-content {
+  width: 100%;
+  height: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 12px;
+
+  align-items: stretch;
+}
+
+
+/* ============================================================
+   STAT CARD
+   ============================================================ */
+
+.dashboard-stat {
+  min-width: 0;
+
+  min-height: 88px;
+
+  padding: 13px;
+
+  box-sizing: border-box;
+
+  background: #FFFFFF;
+
+  border: 1px solid #E4DDD5;
+
+  border-radius: 12px;
+
+  box-shadow:
+    0 2px 6px rgba(74, 64, 55, 0.05);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+
+/* NUMBER */
+
+.dashboard-stat-number {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  color: var(--text);
+
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+
+  line-height: 1;
+}
+
+
+/* HEART / DOT */
+
+.dashboard-stat-number svg {
+  flex: 0 0 auto;
+}
+
+.dashboard-stat-dot {
+  width: 11px;
+  height: 11px;
+
+  display: inline-block;
+
+  border-radius: 50%;
+
+  flex: 0 0 11px;
+}
+
+
+/* LABEL */
+
+.dashboard-stat-label {
+  margin-top: 7px;
+
+  color: var(--text-muted);
+
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 300;
+}
+
+
+/* ============================================================
+   TOP — RISK METRICS
+   ============================================================ */
+
+.dashboard-risk-card {
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  padding: 14px;
+
+  background: var(--card-bg);
+
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+
+  box-shadow: var(--shadow-card);
+}
+
+
+/* RISK GRID */
+
+.dashboard-risk-grid {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 9px;
+}
+
+
+/* StatCard rendered inside risk card */
+
+.dashboard-risk-grid > .rounded-2xl {
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  padding: 11px 13px !important;
+
+  border-radius: 11px !important;
+
+  background: #FFFFFF !important;
+
+  border: 1px solid #E4DDD5 !important;
+
+  box-shadow:
+    0 2px 6px rgba(74, 64, 55, 0.04);
+}
+
+
+/* Risk numbers */
+
+.dashboard-risk-grid > .rounded-2xl .text-2xl {
+  font-family: 'Poppins', sans-serif;
+
+  font-size: 1.25rem;
+
+  line-height: 1;
+}
+
+
+/* Risk labels */
+
+.dashboard-risk-grid > .rounded-2xl .text-sm {
+  margin-top: 5px !important;
+
+  font-family: 'Poppins', sans-serif;
+
+  font-size: 0.61rem !important;
+}
+
+
+/* Risk dots */
+
+.dashboard-risk-grid > .rounded-2xl .w-3 {
+  width: 9px;
+  height: 9px;
+}
+
+
+/* ============================================================
+   BOTTOM ROW
+   ============================================================ */
+
+.dashboard-bottom {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 20px;
+
+  align-items: stretch;
+}
+
+
+/* ============================================================
+   BOTTOM CHART CARDS
+   ============================================================ */
+
+.dashboard-bottom-card {
+  width: 100%;
+  min-width: 0;
+
+  height: 320px;
+
+  box-sizing: border-box;
+
+  padding: 16px;
+
+  background: var(--card-bg);
+
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+
+  box-shadow: var(--shadow-card);
+
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* ============================================================
+   RISK BREAKDOWN CARD
+   ============================================================ */
+
+.dashboard-risk-breakdown {
+  min-width: 0;
+}
+
+
+/* ============================================================
+   RISK LEGEND
+   Inside the Risk Breakdown card
+   ============================================================ */
+
+.dashboard-risk-breakdown .dashboard-risk-legend {
+  width: 100%;
+
+  flex: 0 0 auto;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-start;
+
+  flex-wrap: wrap;
+
+  gap: 15px;
+
+  margin: 0 0 8px;
+
+  padding: 0;
+
+  color: var(--text-muted);
+
+  font-family: 'Poppins', sans-serif;
+
+  font-size: 0.65rem;
+
+  font-weight: 300;
+}
+
+.dashboard-risk-breakdown .dashboard-risk-legend span {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 5px;
+
+  white-space: nowrap;
+}
+
+.dashboard-risk-breakdown .dashboard-risk-legend i {
+  width: 8px;
+  height: 8px;
+
+  display: inline-block;
+
+  flex: 0 0 8px;
+
+  border-radius: 50%;
+}
+
+
+/* ============================================================
+   CHART WRAPPER
+   ============================================================ */
+
+.dashboard-chart-wrapper {
+  width: 100%;
+
+  flex: 1;
+
+  min-height: 0;
+
+  display: flex;
+
+  align-items: stretch;
+}
+
+.dashboard-chart-wrapper > div {
+  width: 100% !important;
+}
+
+
+/* ============================================================
+   RECHARTS
+   ============================================================ */
+
+.dashboard-chart-wrapper
+.recharts-wrapper {
+  max-width: 100%;
+}
+
+.dashboard-chart-wrapper
+.recharts-surface {
+  overflow: visible;
+}
+
+.dashboard-chart-wrapper
+.recharts-cartesian-axis-tick-value {
+  font-family: 'Poppins', sans-serif;
+
+  font-size: 9px;
+}
+
+.dashboard-chart-wrapper
+.recharts-cartesian-grid-horizontal line {
+  stroke: #F0E6DB;
+}
+
+.dashboard-chart-wrapper
+.recharts-cartesian-grid-vertical line {
+  stroke: #F0E6DB;
+}
+
+
+/* ============================================================
+   EMPTY STATES
+   ============================================================ */
+
+.dashboard-empty {
+  width: 100%;
+
+  flex: 1;
+
+  min-height: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  font-family: 'Poppins', sans-serif;
+}
+
+
+/* EMPTY STATE TITLE */
+
+.dashboard-empty-title {
+  margin-bottom: 7px;
+
+  font-size: 0.82rem;
+
+  font-weight: 500;
+
+  line-height: 1.3;
+}
+
+
+/* EMPTY STATE DESCRIPTION */
+
+.dashboard-empty > div:not(.dashboard-empty-title) {
+  font-size: 0.72rem;
+
+  font-weight: 300;
+
+  line-height: 1.5;
+}
+
+
+/* ============================================================
+   WPM HEATMAP CARD
+   ============================================================ */
+
+.dashboard-heatmap-card {
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction: column;
+}
+
+
+/* TITLE */
+
+.dashboard-heatmap-title {
+  width: 100%;
+
+  flex: 0 0 auto;
+
+  margin: 0 0 8px;
+
+  text-align: center;
+
+  color: var(--text);
+
+  font-family: 'Poppins', sans-serif;
+
+  font-size: 0.9rem;
+
+  font-weight: 600;
+
+  line-height: 1.3;
+}
+
+
+/* ============================================================
+   HEATMAP
+   ============================================================ */
+
+.dashboard-heatmap {
+  width: 100%;
+
+  flex: 1;
+
+  min-height: 0;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(7, minmax(0, 1fr));
+
+  grid-auto-rows: minmax(30px, 1fr);
+
+  gap: 5px;
+
+  padding: 4px 2px;
+
+  box-sizing: border-box;
+}
+
+
+/* HEATMAP CELL */
+
+.dashboard-heatmap-cell {
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 6px;
+
+  font-family: 'Poppins', sans-serif;
+
+  font-size: 0.6rem;
+
+  font-weight: 500;
+
+  color: var(--text);
+
+  border: 1px solid rgba(255, 255, 255, 0.7);
+
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.dashboard-heatmap-cell:hover {
+  transform: scale(1.04);
+
+  box-shadow:
+    0 3px 8px rgba(74, 64, 55, 0.12);
+
+  position: relative;
+
+  z-index: 2;
+}
+
+
+/* ============================================================
+   WPM EMPTY STATE
+   ============================================================ */
+
+.dashboard-empty-heatmap {
+  flex: 1;
+
+  min-height: 0;
+}
+
+
+/* ============================================================
+   PASSWORD MODAL OVERLAY
+   ============================================================ */
+
+.dashboard-password-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 1000;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  background: var(--overlay);
+
+  backdrop-filter: blur(2px);
+}
+
+
+/* ============================================================
+   PASSWORD MODAL
+   ============================================================ */
+
+.dashboard-password-modal {
+  width: 100%;
+
+  max-width: 430px;
+
+  max-height: calc(100vh - 40px);
+
+  overflow-y: auto;
+
+  box-sizing: border-box;
+
+  padding: 24px;
+
+  background: #FFFFFF;
+
+  border-radius: 18px;
+
+  box-shadow: var(--shadow-modal);
+
+  font-family: 'Poppins', sans-serif;
+}
+
+
+/* ============================================================
+   PASSWORD MODAL HEADER
+   ============================================================ */
+
+.dashboard-password-header {
+  width: 100%;
+
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  gap: 15px;
+
+  margin-bottom: 20px;
+}
+
+.dashboard-password-header h2 {
+  margin: 0;
+
+  color: var(--text);
+
+  font-family: 'Poppins', sans-serif;
+
+  font-size: 1.1rem;
+
+  font-weight: 600;
+}
+
+
+/* CLOSE */
+
+.dashboard-password-close {
+  width: 32px;
+  height: 32px;
+
+  flex: 0 0 32px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+
+  border-radius: 50%;
+
+  background: transparent;
+
+  color: var(--text-muted);
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.dashboard-password-close:hover {
+  background: #F7F0EA;
+
+  color: var(--text);
+}
+
+
+/* ============================================================
+   PASSWORD MODAL LABELS
+   ============================================================ */
+
+.dashboard-password-modal > label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: var(--text);
+
+  font-family: 'Poppins', sans-serif;
+
+  font-size: 0.72rem;
+
+  font-weight: 500;
+}
+
+
+/* ============================================================
+   PASSWORD INPUT
+   ============================================================ */
+
+.dashboard-password-input {
+  width: 100%;
+
+  height: 42px;
+
+  position: relative;
+
+  margin-bottom: 14px;
+}
+
+.dashboard-password-input input {
+  width: 100%;
+  height: 42px;
+
+  box-sizing: border-box;
+
+  padding:
+    0 42px
+    0 12px;
+
+  background: #FFFFFF;
+
+  color: var(--text);
+
+  border: 1px solid var(--card-border);
+
+  border-radius: 9px;
+
+  outline: none;
+
+  font-family: 'Poppins', sans-serif;
+
+  font-size: 0.75rem;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.dashboard-password-input input:focus {
+  border-color: var(--coral);
+
+  box-shadow:
+    0 0 0 2px rgba(226, 147, 140, 0.12);
+}
+
+
+/* SHOW/HIDE BUTTON */
+
+.dashboard-password-input button {
+  position: absolute;
+
+  top: 0;
+  right: 0;
+
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+
+  background: transparent;
+
+  color: var(--text-muted);
+
+  cursor: pointer;
+}
+
+
+/* ============================================================
+   PASSWORD HELP TEXT
+   ============================================================ */
+
+.dashboard-password-help {
+  margin: 0 0 15px;
+
+  color: var(--text-muted);
+
+  font-family: 'Poppins', sans-serif;
+
+  font-size: 0.62rem;
+
+  font-weight: 300;
+
+  line-height: 1.5;
+}
+
+
+/* ============================================================
+   PASSWORD MESSAGE
+   ============================================================ */
+
+.dashboard-password-message {
+  margin: 5px 0 0;
+
+  font-family: 'Poppins', sans-serif;
+
+  font-size: 0.65rem;
+
+  line-height: 1.4;
+}
+
+.dashboard-password-message.error {
+  color: var(--high);
+}
+
+.dashboard-password-message.success {
+  color: var(--success);
+}
+
+
+/* ============================================================
+   PASSWORD ACTION BUTTONS
+   ============================================================ */
+
+.dashboard-password-actions {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 20px;
+}
+
+.dashboard-password-cancel,
+.dashboard-password-save {
+  height: 38px;
+
+  padding: 0 17px;
+
+  border-radius: 20px;
+
+  font-family: 'Poppins', sans-serif;
+
+  font-size: 0.68rem;
+
+  cursor: pointer;
+}
+
+.dashboard-password-cancel {
+  background: #FFFFFF;
+
+  color: var(--text-muted);
+
+  border: 1px solid var(--card-border);
+}
+
+.dashboard-password-cancel:hover {
+  background: #FAF7F3;
+}
+
+.dashboard-password-save {
+  border: none;
+
+  background: var(--coral);
+
+  color: #FFFFFF;
+
+  font-weight: 600;
+}
+
+.dashboard-password-save:hover:not(:disabled) {
+  background: var(--coral-dark);
+}
+
+.dashboard-password-save:disabled,
+.dashboard-password-cancel:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+}
+
+
+/* ============================================================
+   RESPONSIVE — TABLET
+   ============================================================ */
+
+@media (max-width: 1100px) {
+
+  .dashboard-main-grid {
+    grid-template-columns:
+      minmax(240px, 0.7fr)
+      minmax(0, 1.8fr);
+
+    gap: 16px;
+  }
+
+  .dashboard-top-row {
+    gap: 16px;
+  }
+
+  .dashboard-bottom {
+    gap: 16px;
+  }
+
+  .dashboard-bottom-card {
+    height: 300px;
+  }
+
+}
+
+
+/* ============================================================
+   RESPONSIVE — SMALL TABLET
+   ============================================================ */
+
+@media (max-width: 900px) {
+
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-profile {
+    height: auto;
+  }
+
+  .dashboard-save-wrapper {
+    margin-top: 5px;
+  }
+
+  .dashboard-top-row {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+
+/* ============================================================
+   RESPONSIVE — MOBILE
+   ============================================================ */
+
+@media (max-width: 650px) {
+
+  .dashboard-clean {
+    padding: 0;
+  }
+
+  .dashboard-header {
+    align-items: flex-start;
+
+    margin-bottom: 18px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 1.35rem;
+  }
+
+  .dashboard-owl {
+    width: 36px !important;
+    height: 36px !important;
+
+    min-width: 36px;
+    min-height: 36px;
+
+    max-width: 36px !important;
+    max-height: 36px !important;
+
+    flex-basis: 36px;
+  }
+
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+
+    gap: 14px;
+  }
+
+  .dashboard-top-row {
+    grid-template-columns: 1fr;
+
+    gap: 14px;
+  }
+
+  .dashboard-card-content {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-bottom {
+    grid-template-columns: 1fr;
+
+    gap: 14px;
+  }
+
+  .dashboard-bottom-card {
+    height: 300px;
+  }
+
+}
+
+
+/* ============================================================
+   VERY SMALL MOBILE
+   ============================================================ */
+
+@media (max-width: 420px) {
+
+  .dashboard-card-content {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-risk-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dashboard-risk-breakdown .dashboard-risk-legend {
+    gap: 9px;
+
+    font-size: 0.58rem;
+  }
+
+  .dashboard-password-modal {
+    padding: 18px;
+  }
+
+}
+
+/* ============================================================
+   DASHBOARD LAYOUT — COMPACT TOP + LARGE HEATMAPS
+   ============================================================ */
+
+.dashboard-main-grid {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+
+/* Top row: Profile | Total Stats | Risk Metrics */
+.dashboard-overview-row {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns:
+    minmax(270px, 0.85fr)
+    minmax(300px, 1fr)
+    minmax(400px, 1.35fr);
+  gap: 20px;
+  align-items: start;
+}
+
+/* Compact profile/settings card */
+.dashboard-overview-row .dashboard-profile {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Do not push Save Changes to the bottom of a tall card */
+.dashboard-overview-row .dashboard-save-wrapper {
+  margin-top: 2px;
+}
+
+/* The two total-stat tiles — compact like the reference layout */
+.dashboard-overview-row .dashboard-section-card {
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 12px;
+  align-self: start;
+}
+
+.dashboard-overview-row .dashboard-card-content {
+  width: 100%;
+  height: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: stretch;
+}
+
+.dashboard-overview-row .dashboard-stat {
+  min-height: 112px;
+  height: 112px;
+  padding: 12px;
+}
+
+/* Risk metrics — compact 2 x 2 block */
+.dashboard-overview-row .dashboard-risk-card {
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 12px;
+  align-self: start;
+}
+
+.dashboard-overview-row .dashboard-risk-grid {
+  width: 100%;
+  height: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.dashboard-overview-row .dashboard-risk-grid > .rounded-2xl {
+  min-height: 61px;
+  height: 61px;
+  padding: 9px 12px !important;
+}
+
+/* Large lower area */
+.dashboard-bottom {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
+}
+
+.dashboard-bottom-card {
+  width: 100%;
+  min-width: 0;
+  height: 480px;
+  min-height: 480px;
+  box-sizing: border-box;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chart must fill the available lower card height */
+.dashboard-chart-wrapper {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+.dashboard-chart-wrapper > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Heatmap must fill the available lower card height */
+.dashboard-heatmap {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ============================================================
+   DASHBOARD RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1200px) {
+  .dashboard-overview-row {
+    grid-template-columns:
+      minmax(240px, 0.8fr)
+      minmax(280px, 1fr)
+      minmax(340px, 1.2fr);
+    gap: 16px;
+  }
+
+  .dashboard-bottom {
+    gap: 16px;
+  }
+
+  .dashboard-bottom-card {
+    height: 320px;
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 950px) {
+  .dashboard-overview-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .dashboard-overview-row .dashboard-profile {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-bottom {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .dashboard-bottom-card {
+    height: 320px;
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 650px) {
+  .dashboard-main-grid {
+    gap: 14px;
+  }
+
+  .dashboard-overview-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .dashboard-overview-row .dashboard-profile {
+    grid-column: auto;
+  }
+
+  .dashboard-overview-row .dashboard-card-content {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-overview-row .dashboard-risk-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-bottom {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .dashboard-bottom-card {
+    height: 360px;
+    min-height: 360px;
+  }
+}
+
+@media (max-width: 420px) {
+  .dashboard-overview-row .dashboard-card-content {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-overview-row .dashboard-risk-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dashboard-bottom-card {
+    height: 340px;
+    min-height: 340px;
+  }
+}
+
+
+/* ============================================================
+   DASHBOARD REFERENCE LAYOUT — UPPER PORTION
+   Matches the supplied reference: profile on the left and
+   compact metric tiles in a 3 x 2 grid on the right.
+   ============================================================ */
+
+.dashboard-header {
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.dashboard-header > div {
+  flex: 0 1 auto;
+}
+
+.dashboard-owl {
+  align-self: flex-start;
+  margin-top: 5px;
+  margin-left: 2px;
+}
+
+.dashboard-overview-row {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(300px, 0.92fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.dashboard-overview-row .dashboard-profile {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 18px;
+}
+
+.dashboard-metrics-card {
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+.dashboard-metrics-grid {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dashboard-metrics-grid .dashboard-stat,
+.dashboard-metrics-grid > .rounded-2xl {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  box-sizing: border-box;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.dashboard-metrics-grid .dashboard-stat {
+  justify-content: center;
+  background: #FFFFFF;
+  border: 1px solid var(--low);
+  box-shadow: 0 2px 6px rgba(74, 64, 55, 0.05);
+}
+
+.dashboard-metrics-grid > .rounded-2xl {
+  background: #FFFFFF !important;
+  border: 1px solid var(--low) !important;
+  box-shadow: 0 2px 6px rgba(74, 64, 55, 0.05);
+}
+
+.dashboard-metrics-grid > .rounded-2xl .text-2xl {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.dashboard-metrics-grid > .rounded-2xl .text-sm {
+  margin-top: 5px !important;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.65rem !important;
+}
+
+.dashboard-metrics-grid > .rounded-2xl .w-3 {
+  width: 9px;
+  height: 9px;
+}
+
+@media (max-width: 950px) {
+  .dashboard-overview-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .dashboard-overview-row .dashboard-profile {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .dashboard-metrics-card {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .dashboard-metrics-grid {
+    gap: 9px;
+  }
+}
+
+@media (max-width: 650px) {
+  .dashboard-header {
+    align-items: flex-start;
+  }
+
+  .dashboard-owl {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px;
+    min-height: 36px;
+    max-width: 36px !important;
+    max-height: 36px !important;
+    flex-basis: 36px;
+    margin-top: 2px;
+  }
+
+  .dashboard-overview-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .dashboard-overview-row .dashboard-profile,
+  .dashboard-metrics-card {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .dashboard-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 420px) {
+  .dashboard-metrics-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(6, minmax(72px, auto));
+  }
+}
+
+/* ============================================================
+   DASHBOARD METRIC ALIGNMENT — AUTHORITATIVE OVERRIDE
+   ============================================================ */
+
+/* Header: owl sits on the same top line as the greeting. */
+.dashboard-header {
+  display: block !important;
+  width: 100% !important;
+  margin-bottom: 22px !important;
+}
+
+.dashboard-greeting {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.dashboard-greeting-line {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.dashboard-greeting-line h1 {
+  margin: 0 !important;
+}
+
+.dashboard-greeting-line .dashboard-owl {
+  position: static !important;
+  display: block !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  max-width: 44px !important;
+  max-height: 44px !important;
+  flex: 0 0 44px !important;
+  align-self: flex-start !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+/* The overview row has Profile on the left and ONE metric area on the right. */
+.dashboard-overview-row {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(270px, 0.85fr) minmax(0, 1.35fr) !important;
+  gap: 20px !important;
+  align-items: stretch !important;
+}
+
+.dashboard-overview-row .dashboard-profile {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* SIX CARDS: fixed 3 x 2 grid, equal columns and equal rows. */
+.dashboard-overview-row .dashboard-metrics-card {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+}
+
+.dashboard-overview-row .dashboard-metrics-grid {
+  display: grid !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+  grid-auto-rows: unset !important;
+  gap: 16px !important;
+  align-items: stretch !important;
+  justify-items: stretch !important;
+}
+
+/* Every card occupies exactly one grid cell and has identical geometry. */
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-stat,
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-risk-stat {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  border-radius: 12px !important;
+  padding: 14px !important;
+  align-self: stretch !important;
+  justify-self: stretch !important;
+  overflow: hidden !important;
+}
+
+/* TOTAL SECTIONS + TOTAL LEARNERS: upper-left. */
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-stat {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  background: #FFFFFF !important;
+  border: 1px solid var(--low) !important;
+  box-shadow: 0 2px 6px rgba(74, 64, 55, 0.05) !important;
+}
+
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-stat .dashboard-stat-number {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: auto !important;
+  margin: 0 !important;
+  gap: 8px !important;
+}
+
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-stat .dashboard-stat-label {
+  width: auto !important;
+  margin-top: 7px !important;
+  text-align: left !important;
+}
+
+/* RISK CARDS: upper-center. Number + dot together, label below. */
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-risk-stat {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: center !important;
+  background: #FFFFFF !important;
+  border: 1px solid var(--low) !important;
+  box-shadow: 0 2px 6px rgba(74, 64, 55, 0.05) !important;
+}
+
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-risk-stat .dashboard-risk-stat-number {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 0 !important;
+  gap: 8px !important;
+  text-align: center !important;
+}
+
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-risk-stat .dashboard-risk-stat-number .text-2xl {
+  margin: 0 !important;
+  line-height: 1 !important;
+}
+
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-risk-stat .dashboard-risk-stat-number .w-3 {
+  width: 9px !important;
+  height: 9px !important;
+  min-width: 9px !important;
+  min-height: 9px !important;
+  flex: 0 0 9px !important;
+}
+
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-risk-stat > .text-sm {
+  display: block !important;
+  width: 100% !important;
+  margin-top: 7px !important;
+  text-align: center !important;
+}
+
+/* Keep the six cards equal even if a parent has intrinsic content height. */
+.dashboard-overview-row .dashboard-metrics-grid > * {
+  align-self: stretch !important;
+}
+
+@media (max-width: 900px) {
+  .dashboard-overview-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-overview-row .dashboard-profile,
+  .dashboard-overview-row .dashboard-metrics-card {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+
+  .dashboard-overview-row .dashboard-metrics-grid {
+    height: auto !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, 120px) !important;
+  }
+}
+
+@media (max-width: 650px) {
+  .dashboard-greeting-line .dashboard-owl {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    max-width: 36px !important;
+    max-height: 36px !important;
+    flex-basis: 36px !important;
+  }
+
+  .dashboard-overview-row .dashboard-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(3, 110px) !important;
+  }
+}
+
+/* ============================================================
+   FINAL CORRECTION — METRICS + CHART RISK LEGEND
+   ============================================================ */
+
+/* ALL SIX metric cards: identical dimensions and aligned grid cells. */
+.dashboard-overview-row .dashboard-metrics-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  justify-items: stretch !important;
+}
+
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-stat,
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-risk-stat {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  align-self: stretch !important;
+  justify-self: stretch !important;
+}
+
+/* LOW RISK / MODERATE RISK / HIGH RISK / NO DATA:
+   the metric-card text itself is upper-left, exactly like
+   Total Sections and Total Learners. */
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-risk-stat {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  padding: 14px !important;
+}
+
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-risk-stat .dashboard-risk-stat-number {
+  width: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  margin: 0 !important;
+}
+
+.dashboard-overview-row .dashboard-metrics-grid > .dashboard-risk-stat > .text-sm {
+  width: auto !important;
+  display: block !important;
+  margin-top: 7px !important;
+  text-align: left !important;
+}
+
+/* The RISK LEVELS ON THE CHART are a separate element:
+   center the complete legend across the top of the chart. */
+.dashboard-risk-breakdown .dashboard-risk-legend {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  flex-wrap: wrap !important;
+  gap: 15px !important;
+  margin: 0 0 8px !important;
+  padding: 0 !important;
+}
+
+.dashboard-risk-breakdown .dashboard-risk-legend span {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Keep the chart legend centered on smaller screens too. */
+@media (max-width: 650px) {
+  .dashboard-overview-row .dashboard-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(3, minmax(110px, 1fr)) !important;
+  }
+
+  .dashboard-risk-breakdown .dashboard-risk-legend {
+    justify-content: center !important;
+  }
+}
