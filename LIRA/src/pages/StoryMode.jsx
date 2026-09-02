@@ -528,7 +528,7 @@ function databaseStory(story) {
     pages: { [language]: (story.pages || []).map((page) => learnerPage(page.text)).filter((page) => page.highlight || page.rest) },
     quiz: {
       [language]: (story.questions || [])
-        .filter((question) => question.question && Array.isArray(question.options) && question.options.length > 1)
+        .filter((question) => question.question && Array.isArray(question.options) && question.options.length > 1 && Number.isInteger(question.correct))
         .map((question) => ({
           question: question.question,
           options: question.options,
@@ -578,6 +578,7 @@ function StoryMode({ onExit }) {
   const [stories, setStories] = useState([]);
   const [storiesLoading, setStoriesLoading] = useState(true);
   const [storiesError, setStoriesError] = useState('');
+  const [completedStoryIds, setCompletedStoryIds] = useState(() => new Set());
   const [view, setView] = useState('selection'); // 'selection' | 'reading' | 'quiz'
   const [language, setLanguage] = useState(() => searchParams.get('lang') === 'FIL' ? 'FIL' : 'ENG'); // 'ENG' | 'FIL'
   const [activeStory, setActiveStory] = useState(null);
@@ -589,6 +590,10 @@ function StoryMode({ onExit }) {
   const [quizIndex, setQuizIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [quizDone, setQuizDone] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState([]);
+  const [quizResult, setQuizResult] = useState(null);
+  const [scoreError, setScoreError] = useState('');
+  const [savingScore, setSavingScore] = useState(false);
   const [cardTransition, setCardTransition] = useState('flashcard-active');
 
   const [carouselOffset, setCarouselOffset] = useState(0);
@@ -609,13 +614,17 @@ function StoryMode({ onExit }) {
       setStoriesError('');
       try {
         const learnerId = getSession()?.user?.id;
-        const response = await fetch(`${API_URL}/api/stories`, {
-          headers: { 'X-Learner-Id': learnerId || '' }
-        });
+        const headers = { 'X-Learner-Id': learnerId || '' };
+        const [response, completedResponse] = await Promise.all([
+          fetch(`${API_URL}/api/stories`, { headers }),
+          fetch(`${API_URL}/api/story-results`, { headers })
+        ]);
         if (!response.ok) throw new Error('Could not load stories from the library.');
-        const result = await response.json();
+        if (!completedResponse.ok) throw new Error('Could not load your completed stories.');
+        const [result, completed] = await Promise.all([response.json(), completedResponse.json()]);
         if (!cancelled) {
           setStories(result.map(databaseStory).filter((story) => story.pages[story.languageType]?.length));
+          setCompletedStoryIds(new Set((completed.storyIds || []).map(String)));
         }
       } catch (error) {
         if (!cancelled) setStoriesError(error.message || 'Could not load stories from the library.');
@@ -659,6 +668,9 @@ function StoryMode({ onExit }) {
         setQuizIndex(0);
         setSelectedOption(null);
         setQuizDone(false);
+        setQuizAnswers([]);
+        setQuizResult(null);
+        setScoreError('');
         setView('quiz');
         setCardTransition('flashcard-active');
       }
@@ -670,9 +682,33 @@ function StoryMode({ onExit }) {
     setSelectedOption(optIndex);
   };
 
+  const saveQuizResult = async (answers) => {
+    setSavingScore(true);
+    setScoreError('');
+    try {
+      const learnerId = getSession()?.user?.id;
+      const response = await fetch(`${API_URL}/api/story-results`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Learner-Id': learnerId || '' },
+        body: JSON.stringify({ storyId: activeStory.id, language, answers })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Could not save your score.');
+      setQuizResult(result);
+      setCompletedStoryIds((previous) => new Set(previous).add(String(activeStory.id)));
+    } catch (error) {
+      setScoreError(error.message || 'Could not save your score.');
+    } finally {
+      setSavingScore(false);
+      setQuizDone(true);
+    }
+  };
+
   const goNextQuestion = () => {
     if (!activeStory) return;
     const storyQuiz = activeStory.quiz[language] || activeStory.quiz['ENG'];
+    const answers = [...quizAnswers, selectedOption];
+    setQuizAnswers(answers);
     
     setCardTransition('flashcard-enter');
     setTimeout(() => {
@@ -680,7 +716,7 @@ function StoryMode({ onExit }) {
         setQuizIndex((i) => i + 1);
         setSelectedOption(null);
       } else {
-        setQuizDone(true);
+        saveQuizResult(answers);
       }
       setCardTransition('flashcard-active');
     }, 300);
@@ -764,9 +800,12 @@ function StoryMode({ onExit }) {
                   <button
                     type="button"
                     key={story.id}
-                    className="sm-book-card"
+                    className={`sm-book-card ${completedStoryIds.has(String(story.id)) ? 'is-completed' : ''}`}
                     onClick={() => openStory(story)}
+                    disabled={completedStoryIds.has(String(story.id))}
+                    aria-label={completedStoryIds.has(String(story.id)) ? `${language === 'FIL' ? story.titleFil : story.title}, completed` : language === 'FIL' ? story.titleFil : story.title}
                   >
+                    {completedStoryIds.has(String(story.id)) && <span className="sm-completed-check" aria-hidden="true">✓</span>}
                     {story.starred && (
                       <span className="sm-star" aria-hidden="true">★</span>
                     )}
@@ -901,7 +940,8 @@ function StoryMode({ onExit }) {
           <div className="sm-quiz-done">
             <KoalaMascot />
             <h2>Great job!</h2>
-            <p>You finished all {total} questions.</p>
+            <p>{quizResult ? 'Your story test has been completed and sent to your teacher.' : `You finished all ${total} questions.`}</p>
+            {scoreError && <p style={{ color: '#B94B47' }}>{scoreError} Your teacher will not see this attempt yet.</p>}
             <button type="button" className="sm-quiz-done-btn" onClick={backToSelection}>
               Back to Stories
             </button>
@@ -954,9 +994,9 @@ function StoryMode({ onExit }) {
               type="button"
               className="sm-quiz-next-btn"
               onClick={goNextQuestion}
-              disabled={selectedOption === null}
+              disabled={selectedOption === null || savingScore || cardTransition !== 'flashcard-active'}
             >
-              {quizIndex < total - 1 ? 'Next question' : 'Finish'}
+              {savingScore ? 'Saving score...' : quizIndex < total - 1 ? 'Next question' : 'Finish'}
             </button>
           </div>
         </div>

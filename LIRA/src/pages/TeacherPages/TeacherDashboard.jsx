@@ -215,6 +215,13 @@ const C = {
   activePill: "#F6E6DE",
   low: "#EDDB98",
   lowText: "#8A6E1F",
+  gradeReady: "#8FCB91",
+  gradeReadyText: "#245C2B",
+  lightRefresher: "#EDDB98",
+  lightRefresherText: "#6F5919",
+  moderateRefresher: "#F3B86B",
+  moderateRefresherText: "#75400F",
+  fullRefresher: "#C54034",
   moderate: "#F3B86B",
   moderateText: "#8A4E17",
   high: "#C54034",
@@ -280,6 +287,18 @@ function formatStudentName(value) {
 
 function learnerToStudent(learner) {
   const [birthYear = "", birthMonth = "", birthDay = ""] = (learner.birthdate || "").split("-");
+  const result = learner.latestStoryResult;
+  const storyResults = (learner.storyResults || []).map((storyResult) => ({
+    id: storyResult._id,
+    storyTitle: storyResult.storyTitle,
+    score: storyResult.score,
+    total: storyResult.total,
+    percentage: storyResult.total ? Math.round((storyResult.score / storyResult.total) * 100) : 0,
+    completedAt: storyResult.createdAt,
+  }));
+  const pointsEarned = storyResults.reduce((sum, storyResult) => sum + storyResult.score, 0);
+  const pointsPossible = storyResults.reduce((sum, storyResult) => sum + storyResult.total, 0);
+  const accuracy = pointsPossible ? Math.round((pointsEarned / pointsPossible) * 100) : null;
   return {
     id: learner._id,
     lastName: learner.lastName,
@@ -288,22 +307,42 @@ function learnerToStudent(learner) {
     birthDay,
     birthYear,
     wpm: null,
-    accuracy: null,
-    historyDate: "--",
-    hasReadingData: false,
+    accuracy,
+    historyDate: result?.createdAt ? new Date(result.createdAt).toLocaleDateString() : "--",
+    storyResults,
+    hasReadingData: storyResults.length > 0,
     expanded: false,
   };
 }
 
 function riskOf(student) {
   if (student.hasReadingData === false || student.accuracy == null) return "noData";
-  if (student.accuracy >= 90) return "low";
-  if (student.accuracy >= 70) return "moderate";
-  return "high";
+  if (student.accuracy >= 80) return "gradeReady";
+  if (student.accuracy >= 70) return "lightRefresher";
+  if (student.accuracy >= 60) return "moderateRefresher";
+  return "fullRefresher";
 }
-const riskLabel = { low: "Low Risk", moderate: "Moderate Risk", high: "High Risk", noData: "No Data" };
-const riskColor = { low: C.low, moderate: C.moderate, high: C.high, noData: C.noData };
-const riskText = { low: C.lowText, moderate: C.moderateText, high: "#FFFFFF", noData: C.noDataText };
+const riskLabel = {
+  gradeReady: "Grade Ready (GR)",
+  lightRefresher: "Light Refresher (LR)",
+  moderateRefresher: "Moderate Refresher (MR)",
+  fullRefresher: "Full Refresher (FR)",
+  noData: "No Data",
+};
+const riskColor = {
+  gradeReady: C.gradeReady,
+  lightRefresher: C.lightRefresher,
+  moderateRefresher: C.moderateRefresher,
+  fullRefresher: C.fullRefresher,
+  noData: C.noData,
+};
+const riskText = {
+  gradeReady: C.gradeReadyText,
+  lightRefresher: C.lightRefresherText,
+  moderateRefresher: C.moderateRefresherText,
+  fullRefresher: "#FFFFFF",
+  noData: C.noDataText,
+};
 
 const CAT_META = {
   easy: { label: "Easy", border: C.easyBorder, pill: C.easyPill, text: C.easyText, heart: C.easyBorder },
@@ -528,16 +567,20 @@ function Dashboard({
 
   const total = students.length;
 
-  const low = students.filter(
-    (student) => riskOf(student) === "low"
+  const gradeReady = students.filter(
+    (student) => riskOf(student) === "gradeReady"
   ).length;
 
-  const mod = students.filter(
-    (student) => riskOf(student) === "moderate"
+  const lightRefresher = students.filter(
+    (student) => riskOf(student) === "lightRefresher"
   ).length;
 
-  const high = students.filter(
-    (student) => riskOf(student) === "high"
+  const moderateRefresher = students.filter(
+    (student) => riskOf(student) === "moderateRefresher"
+  ).length;
+
+  const fullRefresher = students.filter(
+    (student) => riskOf(student) === "fullRefresher"
   ).length;
 
   const noData = students.filter(
@@ -554,9 +597,10 @@ function Dashboard({
       { length: 10 },
       (_, index) => ({
         name: `Surname ${index + 1}`,
-        low: 0,
-        moderate: 0,
-        high: 0,
+        gradeReady: 0,
+        lightRefresher: 0,
+        moderateRefresher: 0,
+        fullRefresher: 0,
         noData: 0,
       })
     );
@@ -1013,21 +1057,27 @@ function Dashboard({
               </div>
 
               <StatCard
-                value={low}
-                dotColor={C.low}
-                label="Low Risk"
+                value={gradeReady}
+                dotColor={C.gradeReady}
+                label="Grade Ready"
               />
 
               <StatCard
-                value={mod}
-                dotColor={C.moderate}
-                label="Moderate Risk"
+                value={lightRefresher}
+                dotColor={C.lightRefresher}
+                label="Light Refresher"
               />
 
               <StatCard
-                value={high}
-                dotColor={C.high}
-                label="High Risk"
+                value={moderateRefresher}
+                dotColor={C.moderateRefresher}
+                label="Moderate Refresher"
+              />
+
+              <StatCard
+                value={fullRefresher}
+                dotColor={C.fullRefresher}
+                label="Full Refresher"
               />
 
               <StatCard
@@ -1063,28 +1113,37 @@ function Dashboard({
                 <span>
                   <i
                     style={{
-                      background: C.low,
+                      background: C.gradeReady,
                     }}
                   />
-                  Low Risk
+                  Grade Ready
                 </span>
 
                 <span>
                   <i
                     style={{
-                      background: C.moderate,
+                      background: C.lightRefresher,
                     }}
                   />
-                  Moderate Risk
+                  Light Refresher
                 </span>
 
                 <span>
                   <i
                     style={{
-                      background: C.high,
+                      background: C.moderateRefresher,
                     }}
                   />
-                  High Risk
+                  Moderate Refresher
+                </span>
+
+                <span>
+                  <i
+                    style={{
+                      background: C.fullRefresher,
+                    }}
+                  />
+                  Full Refresher
                 </span>
 
                 <span>
@@ -1143,21 +1202,27 @@ function Dashboard({
                       />
 
                       <Bar
-                        dataKey="low"
+                        dataKey="gradeReady"
                         stackId="risk"
-                        fill={C.low}
+                        fill={C.gradeReady}
                       />
 
                       <Bar
-                        dataKey="moderate"
+                        dataKey="lightRefresher"
                         stackId="risk"
-                        fill={C.moderate}
+                        fill={C.lightRefresher}
                       />
 
                       <Bar
-                        dataKey="high"
+                        dataKey="moderateRefresher"
                         stackId="risk"
-                        fill={C.high}
+                        fill={C.moderateRefresher}
+                      />
+
+                      <Bar
+                        dataKey="fullRefresher"
+                        stackId="risk"
+                        fill={C.fullRefresher}
                       />
 
                       <Bar
@@ -1667,15 +1732,15 @@ function DeleteConfirmModal({ title = "Remove this learner?", subtitle, onCancel
 // ---------- Students page ----------
 function StudentRow({ s, onEdit, onDelete, onToggle }) {
   const risk = riskOf(s);
-  const isHigh = risk === "high";
+  const isFullRefresher = risk === "fullRefresher";
   return (
     <div className="mb-2 rounded-2xl overflow-hidden" style={{ border: `1px solid ${C.cardBorder}` }}>
       <div
         className="grid items-center px-5 py-4 cursor-pointer"
         style={{
           gridTemplateColumns: "1.4fr 0.8fr 0.8fr 1fr 1fr 0.8fr",
-          background: isHigh ? C.highRowBg : C.cardBg,
-          color: isHigh ? "#FFFFFF" : C.text,
+          background: isFullRefresher ? C.highRowBg : C.cardBg,
+          color: isFullRefresher ? "#FFFFFF" : C.text,
         }}
         onClick={() => onToggle(s.id)}
       >
@@ -1692,20 +1757,37 @@ function StudentRow({ s, onEdit, onDelete, onToggle }) {
           </span>
         </div>
         <div className="flex items-center gap-3 justify-end" onClick={(e) => e.stopPropagation()}>
-          <button onClick={() => onEdit(s)}><Pencil size={16} color={isHigh ? "#fff" : "#666"} /></button>
+          <button onClick={() => onEdit(s)}><Pencil size={16} color={isFullRefresher ? "#fff" : "#666"} /></button>
           <button onClick={() => onDelete(s)}><MinusCircle size={18} color="#C0504D" /></button>
           <button onClick={() => onToggle(s.id)}>
-            {s.expanded ? <ChevronUp size={16} color={isHigh ? "#fff" : "#666"} /> : <ChevronDown size={16} color={isHigh ? "#fff" : "#666"} />}
+            {s.expanded ? <ChevronUp size={16} color={isFullRefresher ? "#fff" : "#666"} /> : <ChevronDown size={16} color={isFullRefresher ? "#fff" : "#666"} />}
           </button>
         </div>
       </div>
       {s.expanded && (
-        <div className="px-5 py-4 text-sm" style={{ background: isHigh ? C.warningBg : "#F7F3EA", color: isHigh ? "#fff" : C.text }}>
-          {risk === "noData"
-            ? `No reading data has been recorded for ${s.lastName} yet.`
-            : isHigh
-            ? `Warning! ${s.lastName} is at a high risk for low reading comprehension, currently demonstrating a reading fluency of ${s.wpm} WPM at ${s.accuracy}% accuracy; immediate intervention should focus on targeted phonics review and guided oral reading practice to rebuild foundational decoding skills.`
-            : `${s.lastName} is reading at ${s.wpm} WPM with ${s.accuracy}% accuracy, which is within the expected range for this section.`}
+        <div className="px-5 py-4 text-sm" style={{ background: isFullRefresher ? C.warningBg : "#F7F3EA", color: isFullRefresher ? "#fff" : C.text }}>
+          {risk === "noData" ? (
+            `No story test score has been recorded for ${s.lastName} yet.`
+          ) : (
+            <>
+              <div className="font-semibold mb-3">
+                Overall story-test average: {s.accuracy}% across {s.storyResults.length} completed {s.storyResults.length === 1 ? "story" : "stories"}.
+              </div>
+              <div style={{ display: "grid", gap: "8px" }}>
+                {s.storyResults.map((storyResult) => (
+                  <div
+                    key={storyResult.id}
+                    style={{ display: "grid", gridTemplateColumns: "minmax(160px, 1fr) auto auto", gap: "18px", alignItems: "center" }}
+                  >
+                    <span>{storyResult.storyTitle}</span>
+                    <strong>{storyResult.score}/{storyResult.total} ({storyResult.percentage}%)</strong>
+                    <span>{new Date(storyResult.completedAt).toLocaleDateString()}</span>
+                  </div>
+                ))}
+              </div>
+              {isFullRefresher && <div className="mt-3">This learner needs a full refresher. Consider reviewing the stories together and revisiting the missed comprehension skills.</div>}
+            </>
+          )}
         </div>
       )}
     </div>
@@ -1994,7 +2076,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       </div>
 
       <div className="grid px-5 py-2 mt-5 text-xs font-semibold" style={{ gridTemplateColumns: "1.4fr 0.8fr 0.8fr 1fr 1fr 0.8fr", color: C.textMuted }}>
-        <div>Learner</div><div>WPM</div><div>Accuracy</div><div>History</div><div>Risk Level</div><div className="text-right">Actions</div>
+        <div>Learner</div><div>WPM</div><div>Avg. Score</div><div>Latest Test</div><div>Risk Level</div><div className="text-right">Actions</div>
       </div>
 
       {loading && <div className="text-center py-10 text-sm" style={{ color: C.textMuted }}>Loading learners...</div>}
@@ -2029,7 +2111,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
               <th>No.</th>
               <th>Learner</th>
               <th>WPM</th>
-              <th>Accuracy</th>
+              <th>Average Score</th>
               <th>History</th>
               <th>Risk Level</th>
               <th>Action</th>
@@ -2038,12 +2120,14 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           <tbody>
             {students.map((student, index) => {
               const risk = riskOf(student);
-              const action = risk === "high"
-                ? "Immediate reading intervention"
-                : risk === "moderate"
-                  ? "Monitor and provide guided practice"
-                  : risk === "low"
-                    ? "Continue regular reading practice"
+              const action = risk === "fullRefresher"
+                ? "Provide a full comprehension refresher"
+                : risk === "moderateRefresher"
+                  ? "Provide targeted guided practice"
+                  : risk === "lightRefresher"
+                    ? "Provide a light comprehension review"
+                    : risk === "gradeReady"
+                      ? "Continue regular reading practice"
                     : "Record a reading assessment";
               return (
                 <tr key={`print-${student.id}`}>

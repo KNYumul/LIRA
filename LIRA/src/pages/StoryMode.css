@@ -254,6 +254,35 @@
   transform: translateY(-8px);
 }
 
+.sm-book-card.is-completed,
+.sm-book-card.is-completed:hover {
+  cursor: not-allowed;
+  transform: none;
+}
+
+.sm-book-card.is-completed .sm-book-cover {
+  filter: brightness(0.72);
+}
+
+.sm-completed-check {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: #4f9d69;
+  border: 4px solid #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  font-size: 34px;
+  font-weight: 800;
+}
+
 .sm-book-cover {
   width: 100%;
   aspect-ratio: 3 / 4.2;

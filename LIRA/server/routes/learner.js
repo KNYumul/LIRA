@@ -2,6 +2,7 @@ const express = require("express");
 const Learner = require("../models/Learner");
 const Section = require("../models/Section");
 const Teacher = require("../models/Teacher");
+const StoryResult = require("../models/StoryResult");
 const { loginKey, cooldownStatus, failedLogin, clearFailedLogins, sendCooldown } = require("../utils/loginCooldown");
 
 const router = express.Router();
@@ -56,8 +57,25 @@ router.get("/", async (req, res) => {
     const learners = await Learner.find({ sectionId: { $in: sectionIds } })
       .select("lastName birthdate section sectionId")
       .sort({ lastName: 1 });
-    res.json(learners);
-  } catch (error) {
+    const learnerIds = learners.map((learner) => learner._id);
+    const results = await StoryResult.find({ learnerId: { $in: learnerIds } })
+      .sort({ createdAt: -1 })
+      .select("learnerId storyTitle score total createdAt");
+    const resultsByLearner = new Map();
+    results.forEach((result) => {
+      const key = result.learnerId.toString();
+      if (!resultsByLearner.has(key)) resultsByLearner.set(key, []);
+      resultsByLearner.get(key).push(result);
+    });
+    res.json(learners.map((learner) => {
+      const storyResults = resultsByLearner.get(learner._id.toString()) || [];
+      return {
+        ...learner.toObject(),
+        latestStoryResult: storyResults[0] || null,
+        storyResults
+      };
+    }));
+  } catch {
     res.status(500).json({ message: "Could not load your learners." });
   }
 });
