@@ -6,6 +6,8 @@ import { showError } from "../utils/alerts";
 // Importing directly fixes broken image paths across bundlers
 import mascot from "../assets/icons/Squirrel.png"; 
 
+const API_URL = import.meta.env.VITE_API_URL || "";
+
 function AdminLoginPage() {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -105,7 +107,7 @@ function AdminLoginPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/admin/login", {
+      const response = await fetch(`${API_URL}/api/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -141,7 +143,7 @@ function AdminLoginPage() {
 
   // Google OAuth Login Action
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:5000/api/auth/google?role=admin";
+    window.location.href = `${API_URL}/api/auth/google?role=admin`;
   };
 
   return (
@@ -239,7 +241,7 @@ function AdminLoginPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
                   <circle cx="12" cy="12" r="3" />
                 </svg>
               )}

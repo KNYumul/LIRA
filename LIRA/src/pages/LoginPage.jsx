@@ -6,7 +6,9 @@ import { showError } from "../utils/alerts";
 
 const fox = "/UI_Designs/ANIMALS/mascot_fox.svg";
 const owl = "/UI_Designs/ANIMALS/mascot_owl.svg";
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+// In development, relative API requests are forwarded by Vite's /api proxy.
+// Deployments can still provide a full backend URL through VITE_API_URL.
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 async function readApiResponse(response) {
   const responseText = await response.text();
@@ -325,7 +327,7 @@ function LoginPage() {
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/teachers${endpoint}`, {
+        const response = await fetch(`${API_URL}/api/teachers${endpoint}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -627,7 +629,7 @@ function LoginPage() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         >
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
                           <circle cx="12" cy="12" r="3" />
                         </svg>
                       )}
