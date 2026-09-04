@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import "./FlashcardDifficulty.css";
 import { getSession } from "../utils/session";
 
-const API_URL = "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "";
 const bgFlashcards = "/UI_Designs/BACKGROUND/backdrop_flashcards.svg";
 const DIFFICULTIES = [
   { key: "easy", label: "Easy", icon: "/UI_Designs/ANIMALS/B_Koala.png", accent: "blue", description: "Short, familiar words and sentences to build reading confidence." },

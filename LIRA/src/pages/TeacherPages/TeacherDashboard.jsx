@@ -243,7 +243,7 @@ const C = {
   hardText: "#2E5A38",
 };
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 async function apiErrorMessage(response, fallbackMessage) {
   const responseText = await response.text();

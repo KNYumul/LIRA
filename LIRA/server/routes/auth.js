@@ -14,7 +14,7 @@ function configured() {
 }
 
 function callbackUrl() {
-  return process.env.GOOGLE_REDIRECT_URI || "http://localhost:5000/api/auth/google/callback";
+  return process.env.GOOGLE_REDIRECT_URI || "http://localhost:5001/api/auth/google/callback";
 }
 
 function clientUrl() {

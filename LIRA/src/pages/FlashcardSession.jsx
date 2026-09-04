@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import "./FlashcardSession.css";
 import { getSession } from "../utils/session";
 
-const API_URL = "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "";
 const bgSession = "/UI_Designs/BACKGROUND/backdrop_flashcards.svg";
 const LABELS = { easy: "Easy", medium: "Medium", hard: "Hard" };
 

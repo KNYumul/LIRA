@@ -34,8 +34,9 @@ mongoose
     console.log("MongoDB connected!");
     // console.log("Database:", mongoose.connection.name);
 
-    app.listen(process.env.PORT || 5000, () => {
-      console.log(`Server running on port ${process.env.PORT}`);
+    const port = process.env.PORT || 5001;
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
     });
   })
   .catch((error) => {
