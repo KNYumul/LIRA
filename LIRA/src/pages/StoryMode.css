@@ -533,7 +533,7 @@
   color: var(--text-dark);
 }
 
-.sm-quiz-total {
+/* .sm-quiz-total {
   position: absolute;
   top: 26px;
   right: 28px;
@@ -541,7 +541,7 @@
   font-size: 14px;
   color: #b7b7b7;
   font-weight: 600;
-}
+} */
 
 .sm-quiz-mascot {
   display: flex;

@@ -969,7 +969,7 @@ function StoryMode({ onExit }) {
           <div className="sm-quiz-card-shadow" aria-hidden="true" />
           <div className={`sm-quiz-card ${cardTransition}`}>
             <span className="sm-quiz-number">{quizIndex + 1}</span>
-            <span className="sm-quiz-total">/{total}</span>
+            {/* <span className="sm-quiz-total">/{total}</span> */}
 
             <div className="sm-quiz-mascot">
               <KoalaMascot />
