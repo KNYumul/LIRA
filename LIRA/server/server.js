@@ -12,6 +12,7 @@ const flashcardRoutes = require("./routes/flashcard");
 const sectionRoutes = require("./routes/section");
 const authRoutes = require("./routes/auth");
 const storyResultRoutes = require("./routes/storyResult");
+const speechRoutes = require("./routes/speech");
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/api/flashcards", flashcardRoutes);
 app.use("/api/sections", sectionRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/story-results", storyResultRoutes);
+app.use("/api/speech", speechRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI, {dbname: "LIRA"} )
