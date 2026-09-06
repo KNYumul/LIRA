@@ -290,14 +290,17 @@ function learnerToStudent(learner) {
   const result = learner.latestStoryResult;
   const storyResults = (learner.storyResults || []).map((storyResult) => ({
     id: storyResult._id,
+    storyId: storyResult.storyId,
     storyTitle: storyResult.storyTitle,
     score: storyResult.score,
     total: storyResult.total,
     percentage: storyResult.total ? Math.round((storyResult.score / storyResult.total) * 100) : 0,
     completedAt: storyResult.createdAt,
+    selectedForAverage: storyResult.selectedForAverage !== false,
   }));
-  const pointsEarned = storyResults.reduce((sum, storyResult) => sum + storyResult.score, 0);
-  const pointsPossible = storyResults.reduce((sum, storyResult) => sum + storyResult.total, 0);
+  const selectedResults = storyResults.filter((storyResult) => storyResult.selectedForAverage);
+  const pointsEarned = selectedResults.reduce((sum, storyResult) => sum + storyResult.score, 0);
+  const pointsPossible = selectedResults.reduce((sum, storyResult) => sum + storyResult.total, 0);
   const accuracy = pointsPossible ? Math.round((pointsEarned / pointsPossible) * 100) : null;
   return {
     id: learner._id,
@@ -1730,9 +1733,14 @@ function DeleteConfirmModal({ title = "Remove this learner?", subtitle, onCancel
 }
 
 // ---------- Students page ----------
-function StudentRow({ s, onEdit, onDelete, onToggle }) {
+function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
   const risk = riskOf(s);
   const isFullRefresher = risk === "fullRefresher";
+  const storyAttemptCounts = s.storyResults.reduce((counts, result) => {
+    const key = String(result.storyId);
+    counts.set(key, (counts.get(key) || 0) + 1);
+    return counts;
+  }, new Map());
   return (
     <div className="mb-2 rounded-2xl overflow-hidden" style={{ border: `1px solid ${C.cardBorder}` }}>
       <div
@@ -1771,17 +1779,26 @@ function StudentRow({ s, onEdit, onDelete, onToggle }) {
           ) : (
             <>
               <div className="font-semibold mb-3">
-                Overall story-test average: {s.accuracy}% across {s.storyResults.length} completed {s.storyResults.length === 1 ? "story" : "stories"}.
+                Overall story-test average: {s.accuracy}% using one selected attempt per story.
               </div>
               <div style={{ display: "grid", gap: "8px" }}>
                 {s.storyResults.map((storyResult) => (
                   <div
                     key={storyResult.id}
-                    style={{ display: "grid", gridTemplateColumns: "minmax(160px, 1fr) auto auto", gap: "18px", alignItems: "center" }}
+                    style={{ display: "grid", gridTemplateColumns: "auto minmax(160px, 1fr) auto auto", gap: "18px", alignItems: "center" }}
                   >
+                    {storyAttemptCounts.get(String(storyResult.storyId)) > 1 ? (
+                      <input
+                        type="radio"
+                        name={`average-score-${s.id}-${storyResult.storyId}`}
+                        checked={storyResult.selectedForAverage}
+                        onChange={() => onSelectScore(s.id, storyResult.id, storyResult.storyId)}
+                        aria-label={`Use the ${new Date(storyResult.completedAt).toLocaleString()} attempt of ${storyResult.storyTitle} in the average`}
+                      />
+                    ) : <span aria-hidden="true" />}
                     <span>{storyResult.storyTitle}</span>
                     <strong>{storyResult.score}/{storyResult.total} ({storyResult.percentage}%)</strong>
-                    <span>{new Date(storyResult.completedAt).toLocaleDateString()}</span>
+                    <span>{new Date(storyResult.completedAt).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
@@ -1802,6 +1819,31 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
   const filtered = students.filter((s) => s.lastName.toLowerCase().includes(search.toLowerCase()));
 
   const toggle = (id) => setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, expanded: !s.expanded } : s)));
+
+  const selectScoreForAverage = async (learnerId, resultId, storyId) => {
+    try {
+      const response = await fetch(`${API_URL}/api/story-results/${resultId}/select-for-average`, {
+        method: "PATCH",
+        headers: { "X-Teacher-Id": currentTeacher?.id || "" },
+      });
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not update the selected score."));
+
+      setStudents((previous) => previous.map((student) => {
+        if (student.id !== learnerId) return student;
+        const storyResults = student.storyResults.map((result) =>
+          String(result.storyId) === String(storyId)
+            ? { ...result, selectedForAverage: result.id === resultId }
+            : result
+        );
+        const selectedResults = storyResults.filter((result) => result.selectedForAverage);
+        const pointsEarned = selectedResults.reduce((sum, result) => sum + result.score, 0);
+        const pointsPossible = selectedResults.reduce((sum, result) => sum + result.total, 0);
+        return { ...student, storyResults, accuracy: pointsPossible ? Math.round((pointsEarned / pointsPossible) * 100) : null };
+      }));
+    } catch (requestError) {
+      await showError(requestError.message);
+    }
+  };
 
   const saveLearner = async (data, id) => {
     const payload = {
@@ -2087,6 +2129,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           onEdit={(st) => setModal({ type: "edit", student: st })}
           onDelete={deleteLearner}
           onToggle={toggle}
+          onSelectScore={selectScoreForAverage}
         />
       ))}
       {!loading && filtered.length === 0 && (

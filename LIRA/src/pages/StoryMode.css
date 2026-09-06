@@ -256,12 +256,11 @@
 
 .sm-book-card.is-completed,
 .sm-book-card.is-completed:hover {
-  cursor: not-allowed;
-  transform: none;
+  cursor: pointer;
 }
 
 .sm-book-card.is-completed .sm-book-cover {
-  filter: brightness(0.72);
+  filter: brightness(0.88);
 }
 
 .sm-completed-check {
