@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Heart, Pencil, MinusCircle, ChevronDown, ChevronUp, Upload, Search, X, Plus, CheckCircle2, Sparkles, FileText, ScanLine, Loader2, ArrowLeft, Lock, Eye, EyeOff } from "lucide-react";
+import { Heart, Pencil, MinusCircle, ChevronDown, ChevronUp, Upload, Search, X, Plus, CheckCircle2, Sparkles, FileText, ScanLine, Loader2, ArrowLeft, Lock, Eye, EyeOff, Trash2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
@@ -290,14 +290,17 @@ function learnerToStudent(learner) {
   const result = learner.latestStoryResult;
   const storyResults = (learner.storyResults || []).map((storyResult) => ({
     id: storyResult._id,
+    storyId: storyResult.storyId,
     storyTitle: storyResult.storyTitle,
     score: storyResult.score,
     total: storyResult.total,
     percentage: storyResult.total ? Math.round((storyResult.score / storyResult.total) * 100) : 0,
     completedAt: storyResult.createdAt,
+    selectedForAverage: storyResult.selectedForAverage !== false,
   }));
-  const pointsEarned = storyResults.reduce((sum, storyResult) => sum + storyResult.score, 0);
-  const pointsPossible = storyResults.reduce((sum, storyResult) => sum + storyResult.total, 0);
+  const selectedResults = storyResults.filter((storyResult) => storyResult.selectedForAverage);
+  const pointsEarned = selectedResults.reduce((sum, storyResult) => sum + storyResult.score, 0);
+  const pointsPossible = selectedResults.reduce((sum, storyResult) => sum + storyResult.total, 0);
   const accuracy = pointsPossible ? Math.round((pointsEarned / pointsPossible) * 100) : null;
   return {
     id: learner._id,
@@ -1730,9 +1733,14 @@ function DeleteConfirmModal({ title = "Remove this learner?", subtitle, onCancel
 }
 
 // ---------- Students page ----------
-function StudentRow({ s, onEdit, onDelete, onToggle }) {
+function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
   const risk = riskOf(s);
   const isFullRefresher = risk === "fullRefresher";
+  const storyAttemptCounts = s.storyResults.reduce((counts, result) => {
+    const key = String(result.storyId);
+    counts.set(key, (counts.get(key) || 0) + 1);
+    return counts;
+  }, new Map());
   return (
     <div className="mb-2 rounded-2xl overflow-hidden" style={{ border: `1px solid ${C.cardBorder}` }}>
       <div
@@ -1771,17 +1779,26 @@ function StudentRow({ s, onEdit, onDelete, onToggle }) {
           ) : (
             <>
               <div className="font-semibold mb-3">
-                Overall story-test average: {s.accuracy}% across {s.storyResults.length} completed {s.storyResults.length === 1 ? "story" : "stories"}.
+                Overall story-test average: {s.accuracy}% using one selected attempt per story.
               </div>
               <div style={{ display: "grid", gap: "8px" }}>
                 {s.storyResults.map((storyResult) => (
                   <div
                     key={storyResult.id}
-                    style={{ display: "grid", gridTemplateColumns: "minmax(160px, 1fr) auto auto", gap: "18px", alignItems: "center" }}
+                    style={{ display: "grid", gridTemplateColumns: "auto minmax(160px, 1fr) auto auto", gap: "18px", alignItems: "center" }}
                   >
+                    {storyAttemptCounts.get(String(storyResult.storyId)) > 1 ? (
+                      <input
+                        type="radio"
+                        name={`average-score-${s.id}-${storyResult.storyId}`}
+                        checked={storyResult.selectedForAverage}
+                        onChange={() => onSelectScore(s.id, storyResult.id, storyResult.storyId)}
+                        aria-label={`Use the ${new Date(storyResult.completedAt).toLocaleString()} attempt of ${storyResult.storyTitle} in the average`}
+                      />
+                    ) : <span aria-hidden="true" />}
                     <span>{storyResult.storyTitle}</span>
                     <strong>{storyResult.score}/{storyResult.total} ({storyResult.percentage}%)</strong>
-                    <span>{new Date(storyResult.completedAt).toLocaleDateString()}</span>
+                    <span>{new Date(storyResult.completedAt).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
@@ -1794,7 +1811,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle }) {
   );
 }
 
-function Students({ students, setStudents, sections, sectionName, onSectionChange, loading, error, onRefresh, currentTeacher }) {
+function Students({ students, setStudents, sections, sectionName, onSectionChange, onSectionDeleted, loading, error, onRefresh, currentTeacher }) {
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState(null);
   const fileRef = useRef(null);
@@ -1802,6 +1819,31 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
   const filtered = students.filter((s) => s.lastName.toLowerCase().includes(search.toLowerCase()));
 
   const toggle = (id) => setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, expanded: !s.expanded } : s)));
+
+  const selectScoreForAverage = async (learnerId, resultId, storyId) => {
+    try {
+      const response = await fetch(`${API_URL}/api/story-results/${resultId}/select-for-average`, {
+        method: "PATCH",
+        headers: { "X-Teacher-Id": currentTeacher?.id || "" },
+      });
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not update the selected score."));
+
+      setStudents((previous) => previous.map((student) => {
+        if (student.id !== learnerId) return student;
+        const storyResults = student.storyResults.map((result) =>
+          String(result.storyId) === String(storyId)
+            ? { ...result, selectedForAverage: result.id === resultId }
+            : result
+        );
+        const selectedResults = storyResults.filter((result) => result.selectedForAverage);
+        const pointsEarned = selectedResults.reduce((sum, result) => sum + result.score, 0);
+        const pointsPossible = selectedResults.reduce((sum, result) => sum + result.total, 0);
+        return { ...student, storyResults, accuracy: pointsPossible ? Math.round((pointsEarned / pointsPossible) * 100) : null };
+      }));
+    } catch (requestError) {
+      await showError(requestError.message);
+    }
+  };
 
   const saveLearner = async (data, id) => {
     const payload = {
@@ -1892,6 +1934,46 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     }
   };
 
+  const deleteSection = async () => {
+    if (!sectionName) return;
+    if (students.length > 0) {
+      await showWarning(
+        `Section ${sectionName} still has ${students.length} learner${students.length === 1 ? "" : "s"}. Remove or move all learners before deleting it.`,
+        "Section cannot be deleted"
+      );
+      return;
+    }
+
+    const confirmation = await liraAlert.fire({
+      icon: "warning",
+      title: `Delete Section ${sectionName}?`,
+      text: "This empty section will be permanently removed.",
+      showCancelButton: true,
+      confirmButtonText: "Delete section",
+      cancelButtonText: "Cancel"
+    });
+    if (!confirmation.isConfirmed) return;
+
+    try {
+      const section = sections.find((item) => item.name === sectionName);
+      if (!section?.id) throw new Error("Could not identify the selected section.");
+      const response = await fetch(`${API_URL}/api/sections/${section.id}`, {
+        method: "DELETE",
+        headers: { "X-Teacher-Id": currentTeacher?.id || "" },
+      });
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not delete the section."));
+      onSectionDeleted(section.id);
+      await liraAlert.fire({
+        icon: "success",
+        title: "Section deleted successfully",
+        text: `Section ${sectionName} has been removed.`,
+        confirmButtonText: "OK"
+      });
+    } catch (requestError) {
+      await showError(requestError.message);
+    }
+  };
+
   const handleFile = (file) => {
     if (!file) return;
     const reader = new FileReader();
@@ -1969,7 +2051,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         });
       }
 
-      const existingSectionNames = new Set(sections.map((section) => section.trim().toLowerCase()));
+      const existingSectionNames = new Set(sections.map((section) => section.name.trim().toLowerCase()));
       const newSectionsByName = new Map();
       newRows.forEach(({ section }) => {
         const normalizedSection = section.toLowerCase();
@@ -2056,7 +2138,17 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       </div>
 
       <div className="flex items-center gap-3 mt-4 flex-wrap">
-        {sections.length > 0 && <SectionSelect sections={sections} selectedSection={sectionName} onChange={onSectionChange} className="rounded-full px-4 py-2" />}
+        {sections.length > 0 && <SectionSelect sections={sections.map((section) => section.name)} selectedSection={sectionName} onChange={onSectionChange} className="rounded-full px-4 py-2" />}
+        {sectionName && (
+          <button
+            onClick={deleteSection}
+            className="px-4 py-2 rounded-full font-semibold flex items-center gap-2"
+            style={{ background: "#fff", border: "1px solid #C0504D", color: "#A33E3B" }}
+            title={students.length > 0 ? "Only empty sections can be deleted" : `Delete Section ${sectionName}`}
+          >
+            <Trash2 size={16} /> Delete section
+          </button>
+        )}
         <div className="flex items-center gap-2 flex-1 min-w-[200px] rounded-full px-4 py-2" style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}>
           <Search size={16} color={C.textMuted} />
           <input
@@ -2087,6 +2179,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           onEdit={(st) => setModal({ type: "edit", student: st })}
           onDelete={deleteLearner}
           onToggle={toggle}
+          onSelectScore={selectScoreForAverage}
         />
       ))}
       {!loading && filtered.length === 0 && (
@@ -3653,7 +3746,7 @@ export default function TeacherDashboard() {
   const [selectedSection, setSelectedSection] = useState("");
   const currentTeacher = getSession()?.user;
   const [sections, setSections] = useState([]);
-  const sectionName = selectedSection || sections[0] || "";
+  const sectionName = selectedSection || sections[0]?.name || "";
   const sectionStudents = sectionName
     ? students.filter((student) => student.section === sectionName)
     : [];
@@ -3671,10 +3764,12 @@ export default function TeacherDashboard() {
       if (!sectionsResponse.ok) throw new Error(await apiErrorMessage(sectionsResponse, "Could not load your sections."));
       const [learners, ownedSections] = await Promise.all([learnersResponse.json(), sectionsResponse.json()]);
       const databaseStudents = learners.map(learnerToStudent);
-      const databaseSections = ownedSections.map((section) => section.name).filter(Boolean);
+      const databaseSections = ownedSections
+        .filter((section) => section?._id && section?.name)
+        .map((section) => ({ id: section._id, name: section.name }));
       setStudents(databaseStudents);
       setSections(databaseSections);
-      setSelectedSection((currentSection) => databaseSections.includes(currentSection) ? currentSection : (databaseSections[0] || ""));
+      setSelectedSection((currentSection) => databaseSections.some((section) => section.name === currentSection) ? currentSection : (databaseSections[0]?.name || ""));
     } catch (requestError) {
       setLearnersError(requestError.message);
     } finally {
@@ -3691,14 +3786,22 @@ export default function TeacherDashboard() {
     navigate("/");
   }
 
+  function handleSectionDeleted(sectionId) {
+    setSections((currentSections) => {
+      const remainingSections = currentSections.filter((section) => section.id !== sectionId);
+      setSelectedSection(remainingSections[0]?.name || "");
+      return remainingSections;
+    });
+  }
+
   return (
     <div className="flex min-h-screen" style={{ background: `linear-gradient(160deg, #FBF6EC 0%, #F7E4D6 100%)`, fontFamily: "'Segoe UI', ui-sans-serif, system-ui" }}>
       <Sidebar page={page} setPage={setPage} onLogout={handleLogout} />
       <div className="flex-1 p-8 overflow-auto">
         {page === "dashboard" && (
-          <Dashboard students={sectionStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} currentTeacher={currentTeacher} />
+          <Dashboard students={sectionStudents} sections={sections.map((section) => section.name)} sectionName={sectionName} onSectionChange={setSelectedSection} currentTeacher={currentTeacher} />
         )}
-        {page === "students" && <Students students={sectionStudents} setStudents={setStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} loading={learnersLoading} error={learnersError} onRefresh={loadLearners} currentTeacher={currentTeacher} />}
+        {page === "students" && <Students students={sectionStudents} setStudents={setStudents} sections={sections} sectionName={sectionName} onSectionChange={setSelectedSection} onSectionDeleted={handleSectionDeleted} loading={learnersLoading} error={learnersError} onRefresh={loadLearners} currentTeacher={currentTeacher} />}
         {page === "flashcards" && <Flashcards currentTeacher={currentTeacher} />}
         {page === "stories" && <Stories currentTeacher={currentTeacher} />}
       </div>

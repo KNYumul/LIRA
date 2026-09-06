@@ -8,7 +8,8 @@ const storyResultSchema = new mongoose.Schema(
     language: { type: String, enum: ["ENG", "FIL"], required: true },
     score: { type: Number, required: true, min: 0 },
     total: { type: Number, required: true, min: 1 },
-    answers: { type: [Number], default: [] }
+    answers: { type: [Number], default: [] },
+    selectedForAverage: { type: Boolean, default: true, index: true }
   },
   { timestamps: true }
 );

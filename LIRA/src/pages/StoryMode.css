@@ -256,12 +256,11 @@
 
 .sm-book-card.is-completed,
 .sm-book-card.is-completed:hover {
-  cursor: not-allowed;
-  transform: none;
+  cursor: pointer;
 }
 
 .sm-book-card.is-completed .sm-book-cover {
-  filter: brightness(0.72);
+  filter: brightness(0.88);
 }
 
 .sm-completed-check {
@@ -556,7 +555,7 @@
   color: var(--text-dark);
 }
 
-.sm-quiz-total {
+/* .sm-quiz-total {
   position: absolute;
   top: 26px;
   right: 28px;
@@ -564,7 +563,7 @@
   font-size: 14px;
   color: #b7b7b7;
   font-weight: 600;
-}
+} */
 
 .sm-quiz-mascot {
   display: flex;

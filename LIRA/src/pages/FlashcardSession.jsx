@@ -46,7 +46,10 @@ export default function FlashcardSession() {
       {!loading && !error && current && <div className="fs-card-stack">
         <div className="fs-card-shadow" aria-hidden="true" />
         <div className="fs-card">
-          <div className="fs-card__top"><span className="fs-card__number">{index + 1}</span><span className="fs-card__total">/{cards.length}</span></div>
+          <div className="fs-card__top"><span className="fs-card__number">{index + 1}</span>
+          {/* <span className="fs-card__total">
+            /{cards.length}</span> */}
+            </div>
           <p className="fs-sentence"><span className="fs-sentence__rest">{current.content}</span></p>
           <button className="fs-mic" onClick={() => console.log("Mic tapped — no listening logic wired up yet.")} aria-label="Start listening">🎤</button>
           <span className="fs-mic__status">Tap the microphone to read aloud</span>

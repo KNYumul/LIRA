@@ -60,7 +60,7 @@ router.get("/", async (req, res) => {
     const learnerIds = learners.map((learner) => learner._id);
     const results = await StoryResult.find({ learnerId: { $in: learnerIds } })
       .sort({ createdAt: -1 })
-      .select("learnerId storyTitle score total createdAt");
+      .select("learnerId storyId storyTitle score total selectedForAverage createdAt");
     const resultsByLearner = new Map();
     results.forEach((result) => {
       const key = result.learnerId.toString();
@@ -96,7 +96,7 @@ router.post("/", async (req, res) => {
         ? [ownedSection.teacherId.firstName, ownedSection.teacherId.lastName].filter(Boolean).join(" ")
         : "another teacher";
       return res.status(403).json({
-        message: `${lastName || "This learner"} belongs to Section${ownedSection?.name || requestedSection}, which is managed by ${ownerName}.`,
+        message: `${lastName || "This learner"} belongs to Section ${ownedSection?.name || requestedSection}, which is managed by ${ownerName}.`,
         code: "SECTION_OWNED_BY_ANOTHER_TEACHER"
       });
     }

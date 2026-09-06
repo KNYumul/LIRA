@@ -915,8 +915,7 @@ function StoryMode({ onExit }) {
                     key={story.id}
                     className={`sm-book-card ${completedStoryIds.has(String(story.id)) ? 'is-completed' : ''}`}
                     onClick={() => openStory(story)}
-                    disabled={completedStoryIds.has(String(story.id))}
-                    aria-label={completedStoryIds.has(String(story.id)) ? `${language === 'FIL' ? story.titleFil : story.title}, completed` : language === 'FIL' ? story.titleFil : story.title}
+                    aria-label={completedStoryIds.has(String(story.id)) ? `${language === 'FIL' ? story.titleFil : story.title}, previously read` : language === 'FIL' ? story.titleFil : story.title}
                   >
                     {completedStoryIds.has(String(story.id)) && <span className="sm-completed-check" aria-hidden="true">✓</span>}
                     {story.starred && (
@@ -1091,7 +1090,7 @@ function StoryMode({ onExit }) {
           <div className="sm-quiz-card-shadow" aria-hidden="true" />
           <div className={`sm-quiz-card ${cardTransition}`}>
             <span className="sm-quiz-number">{quizIndex + 1}</span>
-            <span className="sm-quiz-total">/{total}</span>
+            {/* <span className="sm-quiz-total">/{total}</span> */}
 
             <div className="sm-quiz-mascot">
               <KoalaMascot />

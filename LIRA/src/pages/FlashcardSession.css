@@ -112,12 +112,12 @@
   font-size: 0.95rem;
 }
 
-.fs-card__total {
+/* .fs-card__total {
   font-family: "Poppins", sans-serif;
   color: #b9b9b9;
   font-weight: 600;
   font-size: 0.9rem;
-}
+} */
 
 /* Flashcard Target Sentence: Quicksand */
 .fs-sentence {
