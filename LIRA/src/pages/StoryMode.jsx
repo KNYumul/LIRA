@@ -494,8 +494,7 @@ function matchedWordCount(reference, spoken) {
   const heard = readingWords(spoken).map(normalizedWord);
   let expectedIndex = 0;
   for (const word of heard) {
-    const lookAhead = expected.slice(expectedIndex, expectedIndex + 5).indexOf(word);
-    if (lookAhead >= 0) expectedIndex += lookAhead + 1;
+    if (word === expected[expectedIndex]) expectedIndex += 1;
   }
   return Math.min(expectedIndex, expected.length);
 }
@@ -715,10 +714,19 @@ function StoryMode({ onExit }) {
       };
       recognizer.recognized = (_, event) => {
         if (event.result.reason !== SpeechSDK.ResultReason.RecognizedSpeech) return;
+        const previousCount = matchedWordCount(pageText, recognizedTextRef.current);
         recognizedTextRef.current = `${recognizedTextRef.current} ${event.result.text || ''}`.trim();
         const count = matchedWordCount(pageText, recognizedTextRef.current);
         setSpokenWordCount(count);
         setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
+        if (count === previousCount && event.result.text) {
+          const expectedWord = readingWords(pageText)[count];
+          setSpeechStatus(expectedWord
+            ? `Try again: “${expectedWord}”`
+            : 'Listening… Read the words at your own pace.');
+        } else {
+          setSpeechStatus('Listening… Read the words at your own pace.');
+        }
         if (language === 'ENG') {
           const result = SpeechSDK.PronunciationAssessmentResult.fromResult(event.result);
           if (Number.isFinite(result?.accuracyScore)) setSpeechScore(Math.round(result.accuracyScore));
