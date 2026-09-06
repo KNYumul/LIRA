@@ -970,16 +970,18 @@ function StoryMode({ onExit }) {
         </div>
 
         <div className="sm-reader-stage">
-          <button
-            type="button"
-            className={`sm-mic-btn ${isListening ? 'is-listening' : ''}`}
-            onClick={() => isListening ? stopListening() : startListening(pageText)}
-            aria-pressed={isListening}
-            aria-label={isListening ? 'Stop listening' : 'Start listening'}
-          >
-            <MicIcon />
-          </button>
-          <span className="sm-mic-label" role="status">{speechStatus}</span>
+          <div className="sm-mic-control">
+            <button
+              type="button"
+              className={`sm-mic-btn ${isListening ? 'is-listening' : ''}`}
+              onClick={() => isListening ? stopListening() : startListening(pageText)}
+              aria-pressed={isListening}
+              aria-label={isListening ? 'Stop listening' : 'Start listening'}
+            >
+              <MicIcon />
+            </button>
+            <span className="sm-mic-label" role="status">{speechStatus}</span>
+          </div>
 
           <div className={`sm-page-card ${isFlipping ? 'flipping' : ''}`}>
             <span className="sm-bookmark" aria-hidden="true" />
