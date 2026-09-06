@@ -481,6 +481,25 @@ const STORIES = [
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
+function readingWords(text) {
+  return String(text || '').match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu) || [];
+}
+
+function normalizedWord(word) {
+  return String(word || '').toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+}
+
+function matchedWordCount(reference, spoken) {
+  const expected = readingWords(reference).map(normalizedWord);
+  const heard = readingWords(spoken).map(normalizedWord);
+  let expectedIndex = 0;
+  for (const word of heard) {
+    const lookAhead = expected.slice(expectedIndex, expectedIndex + 5).indexOf(word);
+    if (lookAhead >= 0) expectedIndex += lookAhead + 1;
+  }
+  return Math.min(expectedIndex, expected.length);
+}
+
 function fallbackCover(title) {
   const safeTitle = String(title || 'Story').replace(/[&<>"']/g, '');
   const words = safeTitle.split(/\s+/).filter(Boolean);
@@ -585,7 +604,10 @@ function StoryMode({ onExit }) {
   const [pageIndex, setPageIndex] = useState(0);
   const [isFlipping, setIsFlipping] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [progress, setProgress] = useState(35);
+  const [progress, setProgress] = useState(0);
+  const [spokenWordCount, setSpokenWordCount] = useState(0);
+  const [speechStatus, setSpeechStatus] = useState('Tap the microphone and read aloud.');
+  const [speechScore, setSpeechScore] = useState(null);
 
   const [quizIndex, setQuizIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -597,7 +619,8 @@ function StoryMode({ onExit }) {
   const [cardTransition, setCardTransition] = useState('flashcard-active');
 
   const [carouselOffset, setCarouselOffset] = useState(0);
-  const listenTimer = useRef(null);
+  const recognizerRef = useRef(null);
+  const recognizedTextRef = useRef('');
 
   const filteredStories = stories.filter((story) => story.languageType === language);
 
@@ -636,21 +659,106 @@ function StoryMode({ onExit }) {
     return () => { cancelled = true; };
   }, []);
 
-  useEffect(() => {
-    if (isListening) {
-      listenTimer.current = setInterval(() => {
-        setProgress((p) => (p >= 100 ? 100 : p + 4));
-      }, 350);
-    } else {
-      clearInterval(listenTimer.current);
+  const stopListening = () => {
+    const recognizer = recognizerRef.current;
+    recognizerRef.current = null;
+    setIsListening(false);
+    if (recognizer) {
+      recognizer.stopContinuousRecognitionAsync(
+        () => recognizer.close(),
+        () => recognizer.close()
+      );
     }
-    return () => clearInterval(listenTimer.current);
-  }, [isListening]);
+  };
+
+  useEffect(() => () => {
+    const recognizer = recognizerRef.current;
+    recognizerRef.current = null;
+    if (recognizer) recognizer.stopContinuousRecognitionAsync(() => recognizer.close(), () => recognizer.close());
+  }, []);
+
+  const startListening = async (pageText) => {
+    setSpeechStatus('Connecting to your reading helper…');
+    setSpeechScore(null);
+    recognizedTextRef.current = '';
+    try {
+      const learnerId = getSession()?.user?.id;
+      const response = await fetch(`${API_URL}/api/speech/token`, {
+        method: 'POST',
+        headers: { 'X-Learner-Id': learnerId || '' },
+      });
+      const credentials = await response.json();
+      if (!response.ok) throw new Error(credentials.message || 'Could not start speech recognition.');
+
+      const SpeechSDK = await import('microsoft-cognitiveservices-speech-sdk');
+      const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(credentials.token, credentials.region);
+      speechConfig.speechRecognitionLanguage = language === 'FIL' ? 'fil-PH' : 'en-US';
+      speechConfig.outputFormat = SpeechSDK.OutputFormat.Detailed;
+      const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+      const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+
+      if (language === 'ENG') {
+        const assessment = new SpeechSDK.PronunciationAssessmentConfig(
+          pageText,
+          SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
+          SpeechSDK.PronunciationAssessmentGranularity.Word,
+          true
+        );
+        assessment.applyTo(recognizer);
+      }
+
+      recognizer.recognizing = (_, event) => {
+        const combined = `${recognizedTextRef.current} ${event.result.text || ''}`;
+        const count = matchedWordCount(pageText, combined);
+        setSpokenWordCount(count);
+        setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
+      };
+      recognizer.recognized = (_, event) => {
+        if (event.result.reason !== SpeechSDK.ResultReason.RecognizedSpeech) return;
+        recognizedTextRef.current = `${recognizedTextRef.current} ${event.result.text || ''}`.trim();
+        const count = matchedWordCount(pageText, recognizedTextRef.current);
+        setSpokenWordCount(count);
+        setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
+        if (language === 'ENG') {
+          const result = SpeechSDK.PronunciationAssessmentResult.fromResult(event.result);
+          if (Number.isFinite(result?.accuracyScore)) setSpeechScore(Math.round(result.accuracyScore));
+        }
+      };
+      recognizer.canceled = (_, event) => {
+        setSpeechStatus(event.reason === SpeechSDK.CancellationReason.Error
+          ? 'I lost the connection. Tap the microphone to try again.'
+          : 'Listening stopped.');
+        stopListening();
+      };
+      recognizer.sessionStopped = () => stopListening();
+      recognizerRef.current = recognizer;
+      recognizer.startContinuousRecognitionAsync(
+        () => { setIsListening(true); setSpeechStatus('Listening… Read the words at your own pace.'); },
+        (error) => {
+          recognizer.close();
+          recognizerRef.current = null;
+          setIsListening(false);
+          setSpeechStatus(String(error || 'Could not start the reading helper.'));
+        }
+      );
+    } catch (error) {
+      recognizerRef.current?.close();
+      recognizerRef.current = null;
+      setIsListening(false);
+      const denied = error?.name === 'NotAllowedError' || /permission|microphone/i.test(String(error?.message));
+      setSpeechStatus(denied
+        ? 'Microphone access is blocked. Allow it in your browser, then try again.'
+        : error.message || 'Could not start the reading helper.');
+    }
+  };
 
   const openStory = (story) => {
     setActiveStory(story);
     setPageIndex(0);
-    setProgress(35);
+    setProgress(0);
+    setSpokenWordCount(0);
+    setSpeechScore(null);
+    setSpeechStatus('Tap the microphone and read aloud.');
     setIsListening(false);
     setView('reading');
   };
@@ -659,11 +767,15 @@ function StoryMode({ onExit }) {
     if (!activeStory) return;
     const storyPages = activeStory.pages[language] || activeStory.pages['ENG'];
     
+    stopListening();
     setIsFlipping(true);
     setTimeout(() => {
       if (pageIndex < storyPages.length - 1) {
         setPageIndex((i) => i + 1);
-        setProgress(20);
+        setProgress(0);
+        setSpokenWordCount(0);
+        setSpeechScore(null);
+        setSpeechStatus('Tap the microphone and read aloud.');
       } else {
         setQuizIndex(0);
         setSelectedOption(null);
@@ -723,6 +835,7 @@ function StoryMode({ onExit }) {
   };
 
   const backToSelection = () => {
+    stopListening();
     setView('selection');
     setActiveStory(null);
     setIsListening(false);
@@ -839,6 +952,9 @@ function StoryMode({ onExit }) {
   if (view === 'reading' && activeStory) {
     const storyPages = activeStory.pages[language] || activeStory.pages['ENG'];
     const page = storyPages[pageIndex] || storyPages[0];
+    const pageText = `${page.highlight}${page.rest}`;
+    const textParts = pageText.match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*|[^\p{L}\p{N}]+/gu) || [];
+    let renderedWordIndex = 0;
 
     return (
       <section className="story-mode sm-reading-bg">
@@ -857,15 +973,13 @@ function StoryMode({ onExit }) {
           <button
             type="button"
             className={`sm-mic-btn ${isListening ? 'is-listening' : ''}`}
-            onClick={() => setIsListening((v) => !v)}
+            onClick={() => isListening ? stopListening() : startListening(pageText)}
             aria-pressed={isListening}
-            aria-label="Toggle listening"
+            aria-label={isListening ? 'Stop listening' : 'Start listening'}
           >
             <MicIcon />
           </button>
-          {/* <span className="sm-mic-label">
-            {isListening ? 'Listening...' : 'Tap to read aloud'}
-          </span> */}
+          <span className="sm-mic-label" role="status">{speechStatus}</span>
 
           <div className={`sm-page-card ${isFlipping ? 'flipping' : ''}`}>
             <span className="sm-bookmark" aria-hidden="true" />
@@ -874,9 +988,17 @@ function StoryMode({ onExit }) {
                 <div className="sm-progress-fill" style={{ width: `${progress}%` }} />
               </div>
               <p className="sm-page-text">
-                <span className="sm-highlighted">{page.highlight}</span>
-                {page.rest}
+                {textParts.map((part, index) => {
+                  if (!normalizedWord(part)) return <span key={`separator-${index}`}>{part}</span>;
+                  const wordIndex = renderedWordIndex++;
+                  return (
+                    <span key={`${part}-${index}`} className={wordIndex < spokenWordCount ? 'sm-word-read' : wordIndex === spokenWordCount && isListening ? 'sm-word-current' : ''}>
+                      {part}
+                    </span>
+                  );
+                })}
               </p>
+              {speechScore != null && <p className="sm-reading-score">Pronunciation accuracy: {speechScore}%</p>}
             </div>
             <span className="sm-page-fold" aria-hidden="true" />
           </div>

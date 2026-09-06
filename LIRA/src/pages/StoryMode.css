@@ -343,13 +343,15 @@
 
 .sm-mic-label {
   position: absolute;
-  margin-top: 110px;
+  top: calc(50% + 54px);
+  left: 0;
+  width: 170px;
+  text-align: center;
   font-family: 'Poppins', sans-serif;
   font-size: 14px;
   font-weight: 600;
   color: var(--text-dark);
   text-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  transform: translateX(-65px);
 }
 
 .sm-page-card {
@@ -428,6 +430,27 @@
 .sm-highlighted {
   color: var(--teal-dark);
   font-weight: 700;
+}
+
+.sm-word-read {
+  color: var(--teal-dark);
+  font-weight: 700;
+  background: rgba(127, 196, 217, 0.18);
+}
+
+.sm-word-current {
+  background: #ffe79a;
+  border-radius: 5px;
+  box-shadow: 0 0 0 3px #ffe79a;
+}
+
+.sm-reading-score {
+  margin: 20px 0 0;
+  color: var(--teal-dark);
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
 }
 
 .sm-next-page-btn {
