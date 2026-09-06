@@ -1,10 +1,18 @@
 const mongoose = require("mongoose");
 
+function formatLastName(value) {
+  const lastName = String(value || "").trim().toLocaleLowerCase();
+  return lastName
+    ? `${lastName.charAt(0).toLocaleUpperCase()}${lastName.slice(1)}`
+    : "";
+}
+
 const learnerSchema = new mongoose.Schema({
   lastName: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    set: formatLastName
   },
 
   birthdate: {
