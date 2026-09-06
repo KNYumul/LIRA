@@ -1692,7 +1692,7 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
           </button>
           <button
             disabled={!valid}
-            onClick={() => valid && onSubmit({ lastName: lastName.trim(), birthMonth: month, birthDay: day, birthYear: year })}
+            onClick={() => valid && onSubmit({ lastName: formatStudentName(lastName), birthMonth: month, birthDay: day, birthYear: year })}
             className="flex-1 rounded-full py-2 font-semibold text-white"
             style={{ background: valid ? "#EDA751" : "#EAD9BE" }}
           >
