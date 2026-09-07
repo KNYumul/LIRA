@@ -620,6 +620,11 @@ function StoryMode({ onExit }) {
   const [carouselOffset, setCarouselOffset] = useState(0);
   const recognizerRef = useRef(null);
   const recognizedTextRef = useRef('');
+  const listeningRequestRef = useRef(0);
+  const pageTransitionRef = useRef(null);
+  const readingPageRef = useRef({ text: '', index: 0 });
+  const speechBoundaryRef = useRef(0);
+  const latestSpeechEndRef = useRef(0);
 
   const filteredStories = stories.filter((story) => story.languageType === language);
 
@@ -659,6 +664,7 @@ function StoryMode({ onExit }) {
   }, []);
 
   const stopListening = () => {
+    listeningRequestRef.current += 1;
     const recognizer = recognizerRef.current;
     recognizerRef.current = null;
     setIsListening(false);
@@ -671,12 +677,19 @@ function StoryMode({ onExit }) {
   };
 
   useEffect(() => () => {
+    listeningRequestRef.current += 1;
+    clearTimeout(pageTransitionRef.current);
     const recognizer = recognizerRef.current;
     recognizerRef.current = null;
     if (recognizer) recognizer.stopContinuousRecognitionAsync(() => recognizer.close(), () => recognizer.close());
   }, []);
 
-  const startListening = async (pageText) => {
+  const startListening = async (pageText, readingPageIndex = pageIndex) => {
+    readingPageRef.current = { text: pageText, index: readingPageIndex };
+    speechBoundaryRef.current = 0;
+    latestSpeechEndRef.current = 0;
+    const request = ++listeningRequestRef.current;
+    setIsListening(true);
     setSpeechStatus('Connecting to your reading helper…');
     setSpeechScore(null);
     recognizedTextRef.current = '';
@@ -690,15 +703,18 @@ function StoryMode({ onExit }) {
       if (!response.ok) throw new Error(credentials.message || 'Could not start speech recognition.');
 
       const SpeechSDK = await import('microsoft-cognitiveservices-speech-sdk');
+      if (request !== listeningRequestRef.current) return;
       const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(credentials.token, credentials.region);
       speechConfig.speechRecognitionLanguage = language === 'FIL' ? 'fil-PH' : 'en-US';
       speechConfig.outputFormat = SpeechSDK.OutputFormat.Detailed;
+      speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, '500');
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
       const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
 
       if (language === 'ENG') {
         const assessment = new SpeechSDK.PronunciationAssessmentConfig(
-          pageText,
+          (activeStory.pages[language] || activeStory.pages.ENG)
+            .map((page) => `${page.highlight}${page.rest}`).join(' '),
           SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
           SpeechSDK.PronunciationAssessmentGranularity.Word,
           true
@@ -707,18 +723,26 @@ function StoryMode({ onExit }) {
       }
 
       recognizer.recognizing = (_, event) => {
+        if (recognizerRef.current !== recognizer) return;
+        latestSpeechEndRef.current = Math.max(latestSpeechEndRef.current, event.result.offset + event.result.duration);
+        if (pageTransitionRef.current !== null || event.result.offset < speechBoundaryRef.current) return;
+        const pageText = readingPageRef.current.text;
         const combined = `${recognizedTextRef.current} ${event.result.text || ''}`;
         const count = matchedWordCount(pageText, combined);
-        setSpokenWordCount(count);
-        setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
+        setSpokenWordCount((previous) => Math.max(previous, count));
+        setProgress((previous) => Math.max(previous, Math.round((count / Math.max(1, readingWords(pageText).length)) * 100)));
       };
       recognizer.recognized = (_, event) => {
+        if (recognizerRef.current !== recognizer) return;
         if (event.result.reason !== SpeechSDK.ResultReason.RecognizedSpeech) return;
+        latestSpeechEndRef.current = Math.max(latestSpeechEndRef.current, event.result.offset + event.result.duration);
+        if (pageTransitionRef.current !== null || event.result.offset < speechBoundaryRef.current) return;
+        const { text: pageText, index: readingPageIndex } = readingPageRef.current;
         const previousCount = matchedWordCount(pageText, recognizedTextRef.current);
         recognizedTextRef.current = `${recognizedTextRef.current} ${event.result.text || ''}`.trim();
         const count = matchedWordCount(pageText, recognizedTextRef.current);
-        setSpokenWordCount(count);
-        setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
+        setSpokenWordCount((previous) => Math.max(previous, count));
+        setProgress((previous) => Math.max(previous, Math.round((count / Math.max(1, readingWords(pageText).length)) * 100)));
         if (count === previousCount && event.result.text) {
           const expectedWord = readingWords(pageText)[count];
           setSpeechStatus(expectedWord
@@ -731,18 +755,27 @@ function StoryMode({ onExit }) {
           const result = SpeechSDK.PronunciationAssessmentResult.fromResult(event.result);
           if (Number.isFinite(result?.accuracyScore)) setSpeechScore(Math.round(result.accuracyScore));
         }
+        if (count >= readingWords(pageText).length) goNextPage(true, readingPageIndex);
       };
       recognizer.canceled = (_, event) => {
+        if (recognizerRef.current !== recognizer) return;
         setSpeechStatus(event.reason === SpeechSDK.CancellationReason.Error
           ? 'I lost the connection. Tap the microphone to try again.'
           : 'Listening stopped.');
         stopListening();
       };
-      recognizer.sessionStopped = () => stopListening();
+      recognizer.sessionStopped = () => {
+        if (recognizerRef.current === recognizer) stopListening();
+      };
       recognizerRef.current = recognizer;
       recognizer.startContinuousRecognitionAsync(
-        () => { setIsListening(true); setSpeechStatus('Listening… Read the words at your own pace.'); },
+        () => {
+          if (recognizerRef.current !== recognizer) return;
+          setIsListening(true);
+          setSpeechStatus('Listening… Read the words at your own pace.');
+        },
         (error) => {
+          if (recognizerRef.current !== recognizer) return;
           recognizer.close();
           recognizerRef.current = null;
           setIsListening(false);
@@ -750,6 +783,7 @@ function StoryMode({ onExit }) {
         }
       );
     } catch (error) {
+      if (request !== listeningRequestRef.current) return;
       recognizerRef.current?.close();
       recognizerRef.current = null;
       setIsListening(false);
@@ -771,19 +805,26 @@ function StoryMode({ onExit }) {
     setView('reading');
   };
 
-  const goNextPage = () => {
-    if (!activeStory) return;
+  const goNextPage = (continueListening = isListening, currentPageIndex = pageIndex) => {
+    if (!activeStory || pageTransitionRef.current !== null) return;
     const storyPages = activeStory.pages[language] || activeStory.pages['ENG'];
     
-    stopListening();
+    if (currentPageIndex >= storyPages.length - 1) stopListening();
     setIsFlipping(true);
-    setTimeout(() => {
-      if (pageIndex < storyPages.length - 1) {
-        setPageIndex((i) => i + 1);
+    pageTransitionRef.current = setTimeout(() => {
+      pageTransitionRef.current = null;
+      if (currentPageIndex < storyPages.length - 1) {
+        setPageIndex(currentPageIndex + 1);
         setProgress(0);
         setSpokenWordCount(0);
         setSpeechScore(null);
-        setSpeechStatus('Tap the microphone and read aloud.');
+        const nextPage = storyPages[currentPageIndex + 1];
+        readingPageRef.current = { text: `${nextPage.highlight}${nextPage.rest}`, index: currentPageIndex + 1 };
+        recognizedTextRef.current = '';
+        speechBoundaryRef.current = latestSpeechEndRef.current;
+        setSpeechStatus(continueListening && recognizerRef.current
+          ? 'Listening… Read the words at your own pace.'
+          : 'Tap the microphone and read aloud.');
       } else {
         setQuizIndex(0);
         setSelectedOption(null);
@@ -843,6 +884,9 @@ function StoryMode({ onExit }) {
   };
 
   const backToSelection = () => {
+    clearTimeout(pageTransitionRef.current);
+    pageTransitionRef.current = null;
+    setIsFlipping(false);
     stopListening();
     setView('selection');
     setActiveStory(null);
@@ -983,6 +1027,7 @@ function StoryMode({ onExit }) {
               type="button"
               className={`sm-mic-btn ${isListening ? 'is-listening' : ''}`}
               onClick={() => isListening ? stopListening() : startListening(pageText)}
+              disabled={isFlipping}
               aria-pressed={isListening}
               aria-label={isListening ? 'Stop listening' : 'Start listening'}
             >
@@ -1016,7 +1061,8 @@ function StoryMode({ onExit }) {
           <button
             type="button"
             className="sm-next-page-btn"
-            onClick={goNextPage}
+            onClick={() => goNextPage()}
+            disabled={isFlipping}
             aria-label={pageIndex < storyPages.length - 1 ? 'Next page' : 'Take the quiz'}
           >
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
