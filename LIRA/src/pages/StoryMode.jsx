@@ -607,6 +607,7 @@ function StoryMode({ onExit }) {
   const [spokenWordCount, setSpokenWordCount] = useState(0);
   const [speechStatus, setSpeechStatus] = useState('Tap the microphone and read aloud.');
   const [speechScore, setSpeechScore] = useState(null);
+  const [retryWordIndex, setRetryWordIndex] = useState(null);
 
   const [quizIndex, setQuizIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -685,6 +686,7 @@ function StoryMode({ onExit }) {
   }, []);
 
   const startListening = async (pageText, readingPageIndex = pageIndex) => {
+    setRetryWordIndex(null);
     readingPageRef.current = { text: pageText, index: readingPageIndex };
     speechBoundaryRef.current = 0;
     latestSpeechEndRef.current = 0;
@@ -729,6 +731,7 @@ function StoryMode({ onExit }) {
         const pageText = readingPageRef.current.text;
         const combined = `${recognizedTextRef.current} ${event.result.text || ''}`;
         const count = matchedWordCount(pageText, combined);
+        setRetryWordIndex((previous) => previous !== null && count > previous ? null : previous);
         setSpokenWordCount((previous) => Math.max(previous, count));
         setProgress((previous) => Math.max(previous, Math.round((count / Math.max(1, readingWords(pageText).length)) * 100)));
       };
@@ -745,11 +748,9 @@ function StoryMode({ onExit }) {
         setProgress((previous) => Math.max(previous, Math.round((count / Math.max(1, readingWords(pageText).length)) * 100)));
         if (count === previousCount && event.result.text) {
           const expectedWord = readingWords(pageText)[count];
-          setSpeechStatus(expectedWord
-            ? `Try again: “${expectedWord}”`
-            : 'Listening… Read the words at your own pace.');
+          setRetryWordIndex(expectedWord ? count : null);
         } else {
-          setSpeechStatus('Listening… Read the words at your own pace.');
+          setRetryWordIndex(null);
         }
         if (language === 'ENG') {
           const result = SpeechSDK.PronunciationAssessmentResult.fromResult(event.result);
@@ -795,6 +796,7 @@ function StoryMode({ onExit }) {
   };
 
   const openStory = (story) => {
+    setRetryWordIndex(null);
     setActiveStory(story);
     setPageIndex(0);
     setProgress(0);
@@ -814,6 +816,7 @@ function StoryMode({ onExit }) {
     pageTransitionRef.current = setTimeout(() => {
       pageTransitionRef.current = null;
       if (currentPageIndex < storyPages.length - 1) {
+        setRetryWordIndex(null);
         setPageIndex(currentPageIndex + 1);
         setProgress(0);
         setSpokenWordCount(0);
@@ -1047,12 +1050,15 @@ function StoryMode({ onExit }) {
                   if (!normalizedWord(part)) return <span key={`separator-${index}`}>{part}</span>;
                   const wordIndex = renderedWordIndex++;
                   return (
-                    <span key={`${part}-${index}`} className={wordIndex < spokenWordCount ? 'sm-word-read' : wordIndex === spokenWordCount && isListening ? 'sm-word-current' : ''}>
+                    <span key={`${part}-${index}`} className={wordIndex === retryWordIndex ? 'sm-word-retry' : wordIndex < spokenWordCount ? 'sm-word-read' : wordIndex === spokenWordCount && isListening ? 'sm-word-current' : ''}>
                       {part}
                     </span>
                   );
                 })}
               </p>
+              {retryWordIndex !== null && (
+                <p className="sm-reading-retry" role="status">Try: “{readingWords(pageText)[retryWordIndex]}”</p>
+              )}
               {speechScore != null && <p className="sm-reading-score">Pronunciation accuracy: {speechScore}%</p>}
             </div>
             <span className="sm-page-fold" aria-hidden="true" />

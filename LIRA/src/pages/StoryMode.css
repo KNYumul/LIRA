@@ -461,6 +461,15 @@
   box-shadow: 0 0 0 3px #ffe79a;
 }
 
+.sm-word-retry {
+  color: #a52828;
+  background: #ffe0e0;
+  border-radius: 5px;
+  box-shadow: 0 0 0 3px #ffe0e0;
+  text-decoration: underline wavy;
+}
+
+.sm-reading-retry,
 .sm-reading-score {
   margin: 20px 0 0;
   color: var(--teal-dark);
@@ -468,6 +477,14 @@
   font-size: 14px;
   font-weight: 700;
   text-align: center;
+}
+
+.sm-reading-retry {
+  color: #a52828;
+}
+
+.sm-reading-retry + .sm-reading-score {
+  margin-top: 8px;
 }
 
 .sm-next-page-btn {
