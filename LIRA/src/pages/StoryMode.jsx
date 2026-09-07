@@ -623,11 +623,33 @@ function StoryMode({ onExit }) {
   const recognizedTextRef = useRef('');
   const listeningRequestRef = useRef(0);
   const pageTransitionRef = useRef(null);
+  const readingScrollRef = useRef(null);
   const readingPageRef = useRef({ text: '', index: 0 });
   const speechBoundaryRef = useRef(0);
   const latestSpeechEndRef = useRef(0);
 
   const filteredStories = stories.filter((story) => story.languageType === language);
+
+  useEffect(() => {
+    readingScrollRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeStory, pageIndex, view]);
+
+  useEffect(() => {
+    const container = readingScrollRef.current;
+    if (!container || !isListening || isFlipping) return;
+    const currentWord = container.querySelector('.sm-word-retry, .sm-word-current');
+    if (!currentWord) return;
+
+    const viewport = container.getBoundingClientRect();
+    const word = currentWord.getBoundingClientRect();
+    const padding = Math.min(48, container.clientHeight / 4);
+    if (word.top < viewport.top + padding || word.bottom > viewport.top + container.clientHeight - padding) {
+      container.scrollTo({
+        top: Math.max(0, container.scrollTop + word.top - viewport.top - container.clientHeight / 3),
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+      });
+    }
+  }, [spokenWordCount, retryWordIndex, isListening, isFlipping, pageIndex, view]);
 
   const selectLanguage = (nextLanguage) => {
     setLanguage(nextLanguage);
@@ -1041,7 +1063,7 @@ function StoryMode({ onExit }) {
 
           <div className={`sm-page-card ${isFlipping ? 'flipping' : ''}`}>
             <span className="sm-bookmark" aria-hidden="true" />
-            <div className="sm-page-inner">
+            <div className="sm-page-inner" ref={readingScrollRef}>
               <div className="sm-progress-track">
                 <div className="sm-progress-fill" style={{ width: `${progress}%` }} />
               </div>
