@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { getSession } from '../utils/session';
+import { isInactivityPaused } from '../utils/inactivityPause';
 import { readingWords, normalizedWord, matchedWordCount } from '../utils/readingTracking';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -60,12 +61,16 @@ export default function FlashcardReader({ text, language }) {
       }
       recognizer.recognizing = (_, event) => {
         if (recognizerRef.current !== recognizer) return;
+        if (isInactivityPaused()) return;
+        if (event.result.text?.trim()) window.dispatchEvent(new Event('lira:student-activity'));
         const matched = matchedWordCount(text, `${spoken} ${event.result.text || ''}`);
         setCount(matched);
         setRetry((previous) => previous !== null && matched > previous ? null : previous);
       };
       recognizer.recognized = (_, event) => {
         if (recognizerRef.current !== recognizer) return;
+        if (isInactivityPaused()) return;
+        if (event.result.text?.trim()) window.dispatchEvent(new Event('lira:student-activity'));
         if (event.result.reason !== SDK.ResultReason.RecognizedSpeech) return;
         const previous = matchedWordCount(text, spoken);
         spoken = `${spoken} ${event.result.text || ''}`.trim();

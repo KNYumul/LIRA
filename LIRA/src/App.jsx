@@ -17,6 +17,7 @@ import Category from "./pages/Category";
 import FlashcardDifficulty from "./pages/FlashcardDifficulty";
 import FlashcardSession from "./pages/FlashcardSession";
 import { getSession } from "./utils/session";
+import StudentInactivityAlert from "./components/StudentInactivityAlert";
 
 function ScrollToHash() {
   const { hash, pathname } = useLocation();
@@ -60,6 +61,7 @@ function App() {
   return (
     <>
       <ScrollToHash />
+      <StudentInactivityAlert />
       <Routes>
         {/* ---------- Existing public site (unchanged) ---------- */}
         <Route element={<PublicLayout />}>

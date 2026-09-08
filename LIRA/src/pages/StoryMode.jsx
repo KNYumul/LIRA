@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import './StoryMode.css';
 import { getSession } from '../utils/session';
+import { INACTIVITY_PAUSE_EVENT, isInactivityPaused } from '../utils/inactivityPause';
 import { liraAlert } from '../utils/alerts';
 import { readingWords, normalizedWord, matchedWordCount } from '../utils/readingTracking';
 
@@ -619,19 +620,21 @@ function StoryMode({ onExit }) {
     timer.startedAt = null;
   };
   const resumeReadingTimer = () => {
-    if (!document.hidden && readingTimerRef.current.startedAt === null) readingTimerRef.current.startedAt = performance.now();
+    if (!document.hidden && !isInactivityPaused() && !exitPromptRef.current && readingTimerRef.current.startedAt === null) readingTimerRef.current.startedAt = performance.now();
   };
   useEffect(() => {
     if (view !== 'reading' || isFlipping) return;
     const updateTimer = () => {
-      if (document.hidden || exitPromptRef.current) pauseReadingTimer();
+      if (document.hidden || exitPromptRef.current || isInactivityPaused()) pauseReadingTimer();
       else resumeReadingTimer();
     };
     updateTimer();
     document.addEventListener('visibilitychange', updateTimer);
+    window.addEventListener(INACTIVITY_PAUSE_EVENT, updateTimer);
     return () => {
       pauseReadingTimer();
       document.removeEventListener('visibilitychange', updateTimer);
+      window.removeEventListener(INACTIVITY_PAUSE_EVENT, updateTimer);
     };
   }, [view, isFlipping]);
 
@@ -762,6 +765,8 @@ function StoryMode({ onExit }) {
 
       recognizer.recognizing = (_, event) => {
         if (recognizerRef.current !== recognizer) return;
+        if (isInactivityPaused()) return;
+        if (event.result.text?.trim()) window.dispatchEvent(new Event('lira:student-activity'));
         latestSpeechEndRef.current = Math.max(latestSpeechEndRef.current, event.result.offset + event.result.duration);
         if (pageTransitionRef.current !== null || event.result.offset < speechBoundaryRef.current) return;
         const pageText = readingPageRef.current.text;
@@ -773,6 +778,8 @@ function StoryMode({ onExit }) {
       };
       recognizer.recognized = (_, event) => {
         if (recognizerRef.current !== recognizer) return;
+        if (isInactivityPaused()) return;
+        if (event.result.text?.trim()) window.dispatchEvent(new Event('lira:student-activity'));
         if (event.result.reason !== SpeechSDK.ResultReason.RecognizedSpeech) return;
         latestSpeechEndRef.current = Math.max(latestSpeechEndRef.current, event.result.offset + event.result.duration);
         if (pageTransitionRef.current !== null || event.result.offset < speechBoundaryRef.current) return;
