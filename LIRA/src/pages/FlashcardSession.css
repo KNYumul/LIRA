@@ -199,3 +199,10 @@
 .fs-navigation { display: flex; justify-content: space-between; gap: 16px; margin-top: 24px; }
 .fs-navigation button { border: 0; border-radius: 999px; padding: 8px 18px; background: #cdeaf6; color: var(--ink); cursor: pointer; font-weight: 600; }
 .fs-navigation button:disabled { opacity: .4; cursor: not-allowed; }
+
+.fs-progress { height: 8px; background: #e1e7e8; border-radius: 999px; overflow: hidden; margin-bottom: 20px; }
+.fs-progress__fill { height: 100%; background: #4593bd; transition: width .2s ease; }
+.fs-word-current { background: #d5edf9; border-radius: 4px; }
+.fs-word-retry { color: #a83e37; background: #ffe1dc; border-radius: 4px; }
+.fs-reading-feedback { text-align: center; font-size: .85rem; margin: 0 0 16px; }
+.fs-mic:disabled { opacity: .4; cursor: not-allowed; }

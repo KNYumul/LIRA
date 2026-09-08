@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import './StoryMode.css';
 import { getSession } from '../utils/session';
+import { readingWords, normalizedWord, matchedWordCount } from '../utils/readingTracking';
 
 /* Static story catalog retained for reference; Student Story Mode now loads from /api/stories.
 import coverSiDindoPundido from '../assets/icons/si-dindo-pundido.jpg';
@@ -480,24 +481,6 @@ const STORIES = [
 */
 
 const API_URL = import.meta.env.VITE_API_URL || '';
-
-function readingWords(text) {
-  return String(text || '').match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu) || [];
-}
-
-function normalizedWord(word) {
-  return String(word || '').toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-}
-
-function matchedWordCount(reference, spoken) {
-  const expected = readingWords(reference).map(normalizedWord);
-  const heard = readingWords(spoken).map(normalizedWord);
-  let expectedIndex = 0;
-  for (const word of heard) {
-    if (word === expected[expectedIndex]) expectedIndex += 1;
-  }
-  return Math.min(expectedIndex, expected.length);
-}
 
 function fallbackCover(title) {
   const safeTitle = String(title || 'Story').replace(/[&<>"']/g, '');

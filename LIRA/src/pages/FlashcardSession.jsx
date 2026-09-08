@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import "./FlashcardSession.css";
+import FlashcardReader from "../components/FlashcardReader";
 import { getSession } from "../utils/session";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
@@ -50,9 +51,7 @@ export default function FlashcardSession() {
           {/* <span className="fs-card__total">
             /{cards.length}</span> */}
             </div>
-          <p className="fs-sentence"><span className="fs-sentence__rest">{current.content}</span></p>
-          <button className="fs-mic" onClick={() => console.log("Mic tapped — no listening logic wired up yet.")} aria-label="Start listening">🎤</button>
-          <span className="fs-mic__status">Tap the microphone to read aloud</span>
+          <FlashcardReader key={`${difficulty}-${lang}-${index}-${current._id || current.id || current.content}`} text={current.content} language={lang} />
           <div className="fs-navigation"><button type="button" disabled={index === 0} onClick={() => setIndex((value) => value - 1)}>Previous</button><button type="button" disabled={index === cards.length - 1} onClick={() => setIndex((value) => value + 1)}>Next</button></div>
         </div>
       </div>}
