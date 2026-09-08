@@ -22,7 +22,7 @@ function clientUrl() {
 }
 
 function googleEmailAllowed(email) {
-  if (email.endsWith("@deped.gov.ph")) return true;
+  if (/^[^\s@]+@deped\.gov\.ph$/.test(email)) return true;
   const testEmails = String(process.env.GOOGLE_TEST_EMAILS || "")
     .split(",")
     .map((entry) => entry.trim().toLowerCase())
@@ -90,7 +90,7 @@ router.get("/google/callback", async (req, res) => {
     const profile = await profileResponse.json();
     const email = String(profile.email || "").trim().toLowerCase();
     if (!profile.email_verified || !googleEmailAllowed(email)) {
-      return redirectError(res, "This Google account is not authorized for the Teacher Portal.");
+      return redirectError(res, "Please use a valid DepEd account (@deped.gov.ph).");
     }
 
     let teacher = await Teacher.findOne({ email });

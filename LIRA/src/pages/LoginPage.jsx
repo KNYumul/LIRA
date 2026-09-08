@@ -300,7 +300,7 @@ function LoginPage() {
           attemptedEmail: userEmail,
         };
         console.warn("JSON Warning (Invalid Domain):", JSON.stringify(warning, null, 2));
-        setError("Please enter a valid DepEd email address.");
+        setError("Please use a valid DepEd account (@deped.gov.ph).");
         return;
       }
 
