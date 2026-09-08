@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import './StoryMode.css';
 import { getSession } from '../utils/session';
+import { liraAlert } from '../utils/alerts';
 import { readingWords, normalizedWord, matchedWordCount } from '../utils/readingTracking';
 
 /* Static story catalog retained for reference; Student Story Mode now loads from /api/stories.
@@ -610,6 +611,14 @@ function StoryMode({ onExit }) {
   const readingPageRef = useRef({ text: '', index: 0 });
   const speechBoundaryRef = useRef(0);
   const latestSpeechEndRef = useRef(0);
+  const exitPromptRef = useRef(false);
+
+  useEffect(() => () => {
+    if (exitPromptRef.current) {
+      exitPromptRef.current = false;
+      liraAlert.close();
+    }
+  }, []);
 
   const filteredStories = stories.filter((story) => story.languageType === language);
 
@@ -891,7 +900,40 @@ function StoryMode({ onExit }) {
     }, 300);
   };
 
-  const backToSelection = () => {
+  const backToSelection = async () => {
+    if (exitPromptRef.current || savingScore || (view === 'quiz' && cardTransition !== 'flashcard-active')) return;
+    const storyQuiz = activeStory?.quiz[language] || activeStory?.quiz.ENG || [];
+    const unfinished = view === 'reading' || (view === 'quiz' && !quizDone && storyQuiz.length > 0);
+    if (unfinished) {
+      clearTimeout(pageTransitionRef.current);
+      pageTransitionRef.current = null;
+      setIsFlipping(false);
+      stopListening();
+      setSpeechStatus('Tap the microphone to keep reading.');
+      exitPromptRef.current = true;
+      const result = await liraAlert.fire({
+        title: 'Taking a little break?',
+        text: view === 'reading'
+          ? 'There’s more story to explore! If you leave now, you’ll start this story from the beginning next time.'
+          : 'You still have questions to try! If you leave now, you’ll start this story again and these answers won’t be saved.',
+        imageUrl: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 64 64"><circle cx="14" cy="16" r="10" fill="#AEDDE3"/><circle cx="50" cy="16" r="10" fill="#AEDDE3"/><circle cx="14" cy="16" r="5" fill="#F3AFC0"/><circle cx="50" cy="16" r="5" fill="#F3AFC0"/><circle cx="32" cy="32" r="23" fill="#BFE4E8"/><circle cx="23" cy="30" r="3" fill="#3F3F3F"/><circle cx="41" cy="30" r="3" fill="#3F3F3F"/><ellipse cx="32" cy="37" rx="6" ry="5" fill="#F3AFC0"/><path d="M26 45 Q32 50 38 45" fill="none" stroke="#3F3F3F" stroke-width="2" stroke-linecap="round"/></svg>'),
+        imageAlt: 'A smiling koala reading buddy',
+        showCancelButton: true,
+        confirmButtonText: 'Leave for now',
+        cancelButtonText: view === 'reading' ? 'Keep reading' : 'Keep going',
+        focusCancel: true,
+        cancelButtonColor: '#40899b',
+        confirmButtonColor: '#77716d',
+        customClass: {
+          popup: 'lira-sweet-alert sm-exit-popup',
+          confirmButton: 'lira-sweet-alert-button',
+          cancelButton: 'lira-sweet-alert-button',
+        },
+      });
+      if (!exitPromptRef.current) return;
+      exitPromptRef.current = false;
+      if (!result.isConfirmed) return;
+    }
     clearTimeout(pageTransitionRef.current);
     pageTransitionRef.current = null;
     setIsFlipping(false);

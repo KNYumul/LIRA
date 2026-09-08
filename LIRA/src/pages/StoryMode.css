@@ -701,6 +701,17 @@
   margin: 0 0 12px;
 }
 
+.sm-exit-popup {
+  border: 3px solid #bfe4e8;
+  border-radius: 28px;
+  background: #fffaf2;
+  font-family: 'Quicksand', 'Poppins', sans-serif;
+}
+
+.sm-exit-popup .swal2-title { color: #3f5960; }
+.sm-exit-popup .swal2-html-container { line-height: 1.6; }
+.sm-exit-popup .swal2-styled { min-height: 48px; border-radius: 999px; }
+
 .sm-quiz-done-btn {
   border: none;
   background-color: var(--teal-dark);
