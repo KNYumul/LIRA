@@ -60,7 +60,7 @@ router.get("/", async (req, res) => {
     const learnerIds = learners.map((learner) => learner._id);
     const results = await StoryResult.find({ learnerId: { $in: learnerIds } })
       .sort({ createdAt: -1 })
-      .select("learnerId storyId storyTitle score total selectedForAverage createdAt");
+      .select("learnerId storyId storyTitle score total readingWpm readingWordCount readingDurationSeconds selectedForAverage createdAt");
     const resultsByLearner = new Map();
     results.forEach((result) => {
       const key = result.learnerId.toString();

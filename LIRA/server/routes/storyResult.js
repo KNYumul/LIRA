@@ -25,26 +25,33 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const learnerId = req.get("X-Learner-Id");
-    const { storyId, language, answers } = req.body;
+    const { storyId, language, answers, readingDurationSeconds } = req.body;
     if (!mongoose.isValidObjectId(learnerId) || !mongoose.isValidObjectId(storyId)) {
       return res.status(400).json({ message: "A valid learner and story are required." });
     }
     if (!Array.isArray(answers)) return res.status(400).json({ message: "Quiz answers are required." });
 
+    if (readingDurationSeconds != null && (typeof readingDurationSeconds !== "number" || !Number.isFinite(readingDurationSeconds) || readingDurationSeconds < 0.001)) {
+      return res.status(400).json({ message: "Reading duration must be a positive number of seconds." });
+    }
     const [learner, story] = await Promise.all([
       Learner.findById(learnerId).select("_id"),
-      Story.findById(storyId).select("title lang questions")
+      Story.findById(storyId).select("title lang questions pages")
     ]);
     if (!learner) return res.status(401).json({ message: "Your learner account could not be verified." });
     if (!story) return res.status(404).json({ message: "Story not found." });
     const questions = story.questions.filter((question) =>
       question.question && Array.isArray(question.options) && question.options.length > 1 && Number.isInteger(question.correct)
     );
-    if (!questions.length) return res.status(400).json({ message: "This story has no scored questions." });
+    if (!questions.length && readingDurationSeconds == null) return res.status(400).json({ message: "Reading duration is required for a story without questions." });
     if (answers.length !== questions.length || answers.some((answer) => !Number.isInteger(answer))) {
       return res.status(400).json({ message: "Please answer every question before submitting." });
     }
 
+    const readingWordCount = readingDurationSeconds == null ? null : story.pages.reduce(
+      (sum, page) => sum + (String(page.text || '').match(/[\p{L}\p{N}]+(?:['\u2019-][\p{L}\p{N}]+)*/gu) || []).length, 0
+    );
+    const readingWpm = readingDurationSeconds == null || !readingWordCount ? null : Math.round(readingWordCount * 60 / readingDurationSeconds);
     const score = questions.reduce((sum, question, index) => sum + (answers[index] === question.correct ? 1 : 0), 0);
     const result = await StoryResult.create({
       learnerId,
@@ -54,13 +61,16 @@ router.post("/", async (req, res) => {
       score,
       total: questions.length,
       answers,
+      readingDurationSeconds,
+      readingWordCount,
+      readingWpm,
       selectedForAverage: true
     });
     await StoryResult.updateMany(
       { learnerId, storyId, _id: { $ne: result._id } },
       { $set: { selectedForAverage: false } }
     );
-    res.status(201).json({ message: "Story test completed.", storyId: result.storyId, completedAt: result.createdAt });
+    res.status(201).json({ message: "Story test completed.", storyId: result.storyId, completedAt: result.createdAt, readingWpm: result.readingWpm });
   } catch (error) {
     console.error("Could not save story result:", error);
     res.status(500).json({ message: "Could not save your story score." });

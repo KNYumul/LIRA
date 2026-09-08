@@ -612,6 +612,28 @@ function StoryMode({ onExit }) {
   const speechBoundaryRef = useRef(0);
   const latestSpeechEndRef = useRef(0);
   const exitPromptRef = useRef(false);
+  const readingTimerRef = useRef({ elapsed: 0, startedAt: null });
+  const pauseReadingTimer = () => {
+    const timer = readingTimerRef.current;
+    if (timer.startedAt !== null) timer.elapsed += performance.now() - timer.startedAt;
+    timer.startedAt = null;
+  };
+  const resumeReadingTimer = () => {
+    if (!document.hidden && readingTimerRef.current.startedAt === null) readingTimerRef.current.startedAt = performance.now();
+  };
+  useEffect(() => {
+    if (view !== 'reading' || isFlipping) return;
+    const updateTimer = () => {
+      if (document.hidden || exitPromptRef.current) pauseReadingTimer();
+      else resumeReadingTimer();
+    };
+    updateTimer();
+    document.addEventListener('visibilitychange', updateTimer);
+    return () => {
+      pauseReadingTimer();
+      document.removeEventListener('visibilitychange', updateTimer);
+    };
+  }, [view, isFlipping]);
 
   useEffect(() => () => {
     if (exitPromptRef.current) {
@@ -810,6 +832,7 @@ function StoryMode({ onExit }) {
   };
 
   const openStory = (story) => {
+    readingTimerRef.current = { elapsed: 0, startedAt: null };
     setRetryWordIndex(null);
     setActiveStory(story);
     setPageIndex(0);
@@ -826,6 +849,7 @@ function StoryMode({ onExit }) {
     const storyPages = activeStory.pages[language] || activeStory.pages['ENG'];
     
     if (currentPageIndex >= storyPages.length - 1) stopListening();
+    pauseReadingTimer();
     setIsFlipping(true);
     pageTransitionRef.current = setTimeout(() => {
       pageTransitionRef.current = null;
@@ -851,6 +875,7 @@ function StoryMode({ onExit }) {
         setScoreError('');
         setView('quiz');
         setCardTransition('flashcard-active');
+        if (!(activeStory.quiz[language] || activeStory.quiz.ENG || []).length) saveQuizResult([]);
       }
       setIsFlipping(false);
     }, 300);
@@ -868,7 +893,7 @@ function StoryMode({ onExit }) {
       const response = await fetch(`${API_URL}/api/story-results`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Learner-Id': learnerId || '' },
-        body: JSON.stringify({ storyId: activeStory.id, language, answers })
+        body: JSON.stringify({ storyId: activeStory.id, language, answers, readingDurationSeconds: readingTimerRef.current.elapsed / 1000 })
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || 'Could not save your score.');
@@ -910,6 +935,7 @@ function StoryMode({ onExit }) {
       setIsFlipping(false);
       stopListening();
       setSpeechStatus('Tap the microphone to keep reading.');
+      pauseReadingTimer();
       exitPromptRef.current = true;
       const result = await liraAlert.fire({
         title: 'Taking a little break?',
@@ -932,7 +958,10 @@ function StoryMode({ onExit }) {
       });
       if (!exitPromptRef.current) return;
       exitPromptRef.current = false;
-      if (!result.isConfirmed) return;
+      if (!result.isConfirmed) {
+        if (view === 'reading') resumeReadingTimer();
+        return;
+      }
     }
     clearTimeout(pageTransitionRef.current);
     pageTransitionRef.current = null;
@@ -1148,6 +1177,9 @@ function StoryMode({ onExit }) {
             <KoalaMascot />
             <h2>Story complete!</h2>
             <p>This story does not have comprehension questions yet.</p>
+            {savingScore && <p>Saving reading result...</p>}
+            {quizResult?.readingWpm != null && <p>Estimated reading speed: {quizResult.readingWpm} WPM</p>}
+            {scoreError && <p>{scoreError}</p>}
             <button type="button" className="sm-quiz-done-btn" onClick={backToSelection}>Back to Stories</button>
           </div>
         </section>
@@ -1171,6 +1203,7 @@ function StoryMode({ onExit }) {
             <KoalaMascot />
             <h2>Great job!</h2>
             <p>{quizResult ? 'Your story test has been completed and sent to your teacher.' : `You finished all ${total} questions.`}</p>
+            {quizResult?.readingWpm != null && <p>Estimated reading speed: {quizResult.readingWpm} WPM</p>}
             {scoreError && <p style={{ color: '#B94B47' }}>{scoreError} Your teacher will not see this attempt yet.</p>}
             <button type="button" className="sm-quiz-done-btn" onClick={backToSelection}>
               Back to Stories

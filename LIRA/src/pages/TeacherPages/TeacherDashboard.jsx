@@ -292,6 +292,7 @@ function learnerToStudent(learner) {
     id: storyResult._id,
     storyId: storyResult.storyId,
     storyTitle: storyResult.storyTitle,
+    readingWpm: storyResult.readingWpm ?? null,
     score: storyResult.score,
     total: storyResult.total,
     percentage: storyResult.total ? Math.round((storyResult.score / storyResult.total) * 100) : 0,
@@ -309,7 +310,7 @@ function learnerToStudent(learner) {
     birthMonth,
     birthDay,
     birthYear,
-    wpm: null,
+    wpm: storyResults.find((attempt) => attempt.readingWpm != null)?.readingWpm ?? null,
     accuracy,
     historyDate: result?.createdAt ? new Date(result.createdAt).toLocaleDateString() : "--",
     storyResults,
@@ -1774,12 +1775,12 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
       </div>
       {s.expanded && (
         <div className="px-5 py-4 text-sm" style={{ background: isFullRefresher ? C.warningBg : "#F7F3EA", color: isFullRefresher ? "#fff" : C.text }}>
-          {risk === "noData" ? (
+          {!s.storyResults.length ? (
             `No story test score has been recorded for ${s.lastName} yet.`
           ) : (
             <>
               <div className="font-semibold mb-3">
-                Overall story-test average: {s.accuracy}% using one selected attempt per story.
+                Overall story-test average: {s.accuracy == null ? "--" : `${s.accuracy}%`} using one selected attempt per story.
               </div>
               <div style={{ display: "grid", gap: "8px" }}>
                 {s.storyResults.map((storyResult) => (
@@ -1797,7 +1798,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
                       />
                     ) : <span aria-hidden="true" />}
                     <span>{storyResult.storyTitle}</span>
-                    <strong>{storyResult.score}/{storyResult.total} ({storyResult.percentage}%)</strong>
+                    <strong>{storyResult.total > 0 ? `${storyResult.score}/${storyResult.total} (${storyResult.percentage}%)` : "No quiz"}{storyResult.readingWpm != null ? ` | ${storyResult.readingWpm} WPM (estimated)` : ""}</strong>
                     <span>{new Date(storyResult.completedAt).toLocaleString()}</span>
                   </div>
                 ))}
