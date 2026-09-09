@@ -65,7 +65,7 @@ export default function FlashcardReader({ text, language }) {
         if (event.result.text?.trim()) window.dispatchEvent(new Event('lira:student-activity'));
         const matched = matchedWordCount(text, `${spoken} ${event.result.text || ''}`);
         setCount(matched);
-        setRetry((previous) => previous !== null && matched > previous ? null : previous);
+        setRetry((previous) => previous === matched ? previous : null);
       };
       recognizer.recognized = (_, event) => {
         if (recognizerRef.current !== recognizer) return;

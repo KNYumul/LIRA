@@ -726,6 +726,8 @@ function StoryMode({ onExit }) {
 
   const startListening = async (pageText, readingPageIndex = pageIndex) => {
     setRetryWordIndex(null);
+    setSpokenWordCount(0);
+    setProgress(0);
     readingPageRef.current = { text: pageText, index: readingPageIndex };
     speechBoundaryRef.current = 0;
     latestSpeechEndRef.current = 0;
@@ -772,9 +774,11 @@ function StoryMode({ onExit }) {
         const pageText = readingPageRef.current.text;
         const combined = `${recognizedTextRef.current} ${event.result.text || ''}`;
         const count = matchedWordCount(pageText, combined);
-        setRetryWordIndex((previous) => previous !== null && count > previous ? null : previous);
-        setSpokenWordCount((previous) => Math.max(previous, count));
-        setProgress((previous) => Math.max(previous, Math.round((count / Math.max(1, readingWords(pageText).length)) * 100)));
+        setRetryWordIndex((previous) => previous === count ? previous : null);
+        // Interim transcripts can be revised; every reading indicator must use
+        // the same match position, including when recognition moves backward.
+        setSpokenWordCount(count);
+        setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
       };
       recognizer.recognized = (_, event) => {
         if (recognizerRef.current !== recognizer) return;
@@ -787,8 +791,8 @@ function StoryMode({ onExit }) {
         const previousCount = matchedWordCount(pageText, recognizedTextRef.current);
         recognizedTextRef.current = `${recognizedTextRef.current} ${event.result.text || ''}`.trim();
         const count = matchedWordCount(pageText, recognizedTextRef.current);
-        setSpokenWordCount((previous) => Math.max(previous, count));
-        setProgress((previous) => Math.max(previous, Math.round((count / Math.max(1, readingWords(pageText).length)) * 100)));
+        setSpokenWordCount(count);
+        setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
         if (count === previousCount && event.result.text) {
           const expectedWord = readingWords(pageText)[count];
           setRetryWordIndex(expectedWord ? count : null);
