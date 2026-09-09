@@ -9,6 +9,7 @@ import './TeacherDashboard.css';
 import { clearSession, getSession, saveSession } from "../../utils/session";
 import { clearSavedPortalPage, getSavedPortalPage, savePortalPage } from "../../utils/portalPage";
 import { liraAlert, showError, showWarning } from "../../utils/alerts";
+import { extractCsvLastName, findCsvNameColumn } from "../../utils/csvNames";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -1986,9 +1987,8 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         return;
       }
       const headers = parseCsvLine(lines[0] || "").map(csvHeaderKey);
-      const lastNameColumn = headers.findIndex((header) =>
-        ["lastname", "surname", "studentlastname", "learnerlastname"].includes(header)
-      );
+      const nameColumn = findCsvNameColumn(headers);
+      const lastNameColumn = nameColumn.index;
       const birthdateColumn = headers.findIndex((header) =>
         ["birthdate", "dateofbirth", "dob", "studentbirthdate", "learnerbirthdate"].includes(header)
       );
@@ -1998,7 +1998,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       const hasHeaders = lastNameColumn >= 0 && birthdateColumn >= 0 && sectionColumn >= 0;
       if (!hasHeaders) {
         const missingHeaders = [];
-        if (lastNameColumn < 0) missingHeaders.push("Last Name");
+        if (lastNameColumn < 0) missingHeaders.push("Last Name or Full Name");
         if (birthdateColumn < 0) missingHeaders.push("Birthdate");
         if (sectionColumn < 0) missingHeaders.push("Section");
         await showWarning(
@@ -2019,7 +2019,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       const csvLearners = new Set();
       for (let i = startIdx; i < lines.length; i++) {
         const row = parseCsvLine(lines[i]);
-        const lastName = formatStudentName(row[columns.lastName]);
+        const lastName = formatStudentName(extractCsvLastName(row[columns.lastName], nameColumn.fullName));
         const birthdate = String(row[columns.birthdate] || "").trim();
         const section = String(row[columns.section] || "").trim();
         const usesSpaceSeparatedDate = /^\d{1,2}\s+\d{1,2}\s+\d{4}$/.test(birthdate);
@@ -2134,7 +2134,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       >
         <Upload size={20} color="#4A4A4A" />
         <div className="font-medium mt-2" style={{ color: C.text }}>Drag & Drop your CSV roster here, or click to upload</div>
-        <div className="text-xs mt-1" style={{ color: C.textMuted }}>Columns expected: Last Name, Birthdate, Section</div>
+        <div className="text-xs mt-1" style={{ color: C.textMuted }}>Columns expected: Last Name (or Full Name / Name), Birthdate, Section. Full names: “Lastname, Firstname Middlename” (quote the CSV field) or “Firstname Middlename Lastname”. For ambiguous compound surnames, use a Last Name column or the comma format.</div>
         <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
       </div>
 
