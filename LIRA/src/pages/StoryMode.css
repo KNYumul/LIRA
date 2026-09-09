@@ -325,6 +325,17 @@
   .sm-next-page-btn {
     justify-self: start;
   }
+
+  .sm-mic-control {
+    position: relative;
+    height: 84px;
+  }
+
+  .sm-mic-control .sm-mic-label {
+    position: absolute;
+    top: calc(100% + 16px);
+    left: 0;
+  }
 }
 
 .sm-mic-control {
@@ -352,17 +363,21 @@
 }
 
 .sm-mic-btn.is-listening {
-  background-color: var(--teal-dark);
+  background-color: #35a66f;
   animation: sm-pulse 1.4s ease-in-out infinite;
 }
 
 @keyframes sm-pulse {
-  0%, 100% { box-shadow: 0 12px 28px rgba(90, 169, 192, 0.45); }
-  50% { box-shadow: 0 12px 36px rgba(90, 169, 192, 0.8); }
+  0%, 100% { box-shadow: 0 12px 28px rgba(53, 166, 111, 0.45); }
+  50% { box-shadow: 0 12px 36px rgba(53, 166, 111, 0.8); }
 }
 
 .sm-mic-label {
   width: 100%;
+  /* Keep the centered mic control the same height as status messages change. */
+  height: 9em;
+  line-height: 1.5;
+  overflow-y: auto;
   text-align: center;
   font-family: 'Poppins', sans-serif;
   font-size: 14px;

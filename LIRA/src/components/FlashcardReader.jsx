@@ -21,7 +21,7 @@ export default function FlashcardReader({ text, language }) {
     if (recognizer) recognizer.stopContinuousRecognitionAsync(() => recognizer.close(), () => recognizer.close());
   }, []);
 
-  const stop = (message = 'Listening stopped. Tap the microphone to read again.') => {
+  const stop = (message = 'Microphone turned off. Tap the microphone to read again.') => {
     requestRef.current += 1;
     const recognizer = recognizerRef.current;
     recognizerRef.current = null;
@@ -32,11 +32,13 @@ export default function FlashcardReader({ text, language }) {
 
   const start = async () => {
     const request = ++requestRef.current;
+    const resumeCount = count < words.length ? count : 0;
     setListening(true);
-    setCount(0);
+    setCount(resumeCount);
     setRetry(null);
     setStatus('Connecting to your reading helper…');
-    let spoken = '';
+    // Preserve progress across mic sessions; a finished card can be read again.
+    let spoken = words.slice(0, resumeCount).join(' ');
     try {
       const response = await fetch(`${API_URL}/api/speech/token`, {
         method: 'POST',

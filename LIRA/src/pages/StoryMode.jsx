@@ -725,15 +725,15 @@ function StoryMode({ onExit }) {
 
   const startListening = async (pageText, readingPageIndex = pageIndex) => {
     setRetryWordIndex(null);
-    setSpokenWordCount(0);
-    setProgress(0);
     readingPageRef.current = { text: pageText, index: readingPageIndex };
     speechBoundaryRef.current = 0;
     latestSpeechEndRef.current = 0;
     const request = ++listeningRequestRef.current;
     setIsListening(true);
     setSpeechStatus('Connecting to your reading helper…');
-    recognizedTextRef.current = '';
+    // A new recognizer starts with an empty transcript. Seed it with the
+    // accepted words so pausing and resuming preserves the visible position.
+    recognizedTextRef.current = readingWords(pageText).slice(0, spokenWordCount).join(' ');
     try {
       const learnerId = getSession()?.user?.id;
       const response = await fetch(`${API_URL}/api/speech/token`, {
@@ -1109,7 +1109,14 @@ function StoryMode({ onExit }) {
             <button
               type="button"
               className={`sm-mic-btn ${isListening ? 'is-listening' : ''}`}
-              onClick={() => isListening ? stopListening() : startListening(pageText)}
+              onClick={() => {
+                if (isListening) {
+                  stopListening();
+                  setSpeechStatus('Microphone turned off. Tap the microphone to keep reading.');
+                } else {
+                  startListening(pageText);
+                }
+              }}
               disabled={isFlipping}
               aria-pressed={isListening}
               aria-label={isListening ? 'Stop listening' : 'Start listening'}
