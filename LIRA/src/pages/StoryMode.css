@@ -260,10 +260,10 @@
 }
 
 .sm-book-card.is-completed .sm-book-cover {
-  filter: brightness(0.88);
+  filter: brightness(0.78);
 }
 
-.sm-completed-check {
+.sm-completed-star {
   position: absolute;
   z-index: 3;
   top: 50%;
@@ -275,7 +275,7 @@
   display: grid;
   place-items: center;
   color: #fff;
-  background: #4f9d69;
+  background: #facc15;
   border: 4px solid #fff;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   font-size: 34px;

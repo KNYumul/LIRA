@@ -1052,7 +1052,7 @@ function StoryMode({ onExit }) {
                     onClick={() => openStory(story)}
                     aria-label={completedStoryIds.has(String(story.id)) ? `${language === 'FIL' ? story.titleFil : story.title}, previously read` : language === 'FIL' ? story.titleFil : story.title}
                   >
-                    {completedStoryIds.has(String(story.id)) && <span className="sm-completed-check" aria-hidden="true">✓</span>}
+                    {completedStoryIds.has(String(story.id)) && <span className="sm-completed-star" aria-hidden="true">★</span>}
                     {story.starred && (
                       <span className="sm-star" aria-hidden="true">★</span>
                     )}
