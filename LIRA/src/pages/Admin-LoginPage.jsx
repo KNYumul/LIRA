@@ -88,21 +88,7 @@ function AdminLoginPage() {
         attemptedEmail: email,
       };
       console.warn("JSON Warning (Invalid Domain):", JSON.stringify(warning, null, 2));
-      setError("Only official @deped.gov.ph email addresses are accepted.");
-      return;
-    }
-
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,50}$/;
-    if (!passwordRegex.test(password)) {
-      const warning = {
-        status: 400,
-        type: "VALIDATION_WARNING",
-        message: "Password does not meet complexity requirements.",
-      };
-      console.warn("JSON Warning (Weak Password):", JSON.stringify(warning, null, 2));
-      setError(
-        "Password must be 8-50 characters long and contain at least one uppercase letter, one number, and one special character."
-      );
+      setError("incorrect username or password");
       return;
     }
 

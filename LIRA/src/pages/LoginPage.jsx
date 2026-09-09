@@ -300,12 +300,12 @@ function LoginPage() {
           attemptedEmail: userEmail,
         };
         console.warn("JSON Warning (Invalid Domain):", JSON.stringify(warning, null, 2));
-        setError("Please use a valid DepEd account (@deped.gov.ph).");
+        setError(isSignUp ? "Please use a valid DepEd account (@deped.gov.ph)." : "incorrect username or password");
         return;
       }
 
       const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,50}$/;
-      if (!passwordRegex.test(userPassword)) {
+      if (isSignUp && !passwordRegex.test(userPassword)) {
         const warning = {
           status: 400,
           type: "VALIDATION_WARNING",
