@@ -662,7 +662,7 @@ function StoryMode({ onExit }) {
     if (word.top < viewport.top + padding || word.bottom > viewport.top + container.clientHeight - padding) {
       container.scrollTo({
         top: Math.max(0, container.scrollTop + word.top - viewport.top - container.clientHeight / 3),
-        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+        behavior: 'instant',
       });
     }
   }, [spokenWordCount, retryWordIndex, isListening, isFlipping, pageIndex, view]);
@@ -748,6 +748,7 @@ function StoryMode({ onExit }) {
       const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(credentials.token, credentials.region);
       speechConfig.speechRecognitionLanguage = language === 'FIL' ? 'fil-PH' : 'en-US';
       speechConfig.outputFormat = SpeechSDK.OutputFormat.Detailed;
+      speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceResponse_StablePartialResultThreshold, '1');
       speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, '500');
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
       const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);

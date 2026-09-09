@@ -49,6 +49,7 @@ export default function FlashcardReader({ text, language }) {
       const config = SDK.SpeechConfig.fromAuthorizationToken(credentials.token, credentials.region);
       config.speechRecognitionLanguage = language === 'FIL' ? 'fil-PH' : 'en-US';
       config.outputFormat = SDK.OutputFormat.Detailed;
+      config.setProperty(SDK.PropertyId.SpeechServiceResponse_StablePartialResultThreshold, '1');
       config.setProperty(SDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, '500');
       const recognizer = new SDK.SpeechRecognizer(config, SDK.AudioConfig.fromDefaultMicrophoneInput());
       recognizerRef.current = recognizer;
