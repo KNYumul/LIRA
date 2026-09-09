@@ -591,7 +591,6 @@ function StoryMode({ onExit }) {
   const [progress, setProgress] = useState(0);
   const [spokenWordCount, setSpokenWordCount] = useState(0);
   const [speechStatus, setSpeechStatus] = useState('Tap the microphone and read aloud.');
-  const [speechScore, setSpeechScore] = useState(null);
   const [retryWordIndex, setRetryWordIndex] = useState(null);
 
   const [quizIndex, setQuizIndex] = useState(0);
@@ -734,7 +733,6 @@ function StoryMode({ onExit }) {
     const request = ++listeningRequestRef.current;
     setIsListening(true);
     setSpeechStatus('Connecting to your reading helper…');
-    setSpeechScore(null);
     recognizedTextRef.current = '';
     try {
       const learnerId = getSession()?.user?.id;
@@ -799,10 +797,6 @@ function StoryMode({ onExit }) {
         } else {
           setRetryWordIndex(null);
         }
-        if (language === 'ENG') {
-          const result = SpeechSDK.PronunciationAssessmentResult.fromResult(event.result);
-          if (Number.isFinite(result?.accuracyScore)) setSpeechScore(Math.round(result.accuracyScore));
-        }
         if (count >= readingWords(pageText).length) goNextPage(true, readingPageIndex);
       };
       recognizer.canceled = (_, event) => {
@@ -849,7 +843,6 @@ function StoryMode({ onExit }) {
     setPageIndex(0);
     setProgress(0);
     setSpokenWordCount(0);
-    setSpeechScore(null);
     setSpeechStatus('Tap the microphone and read aloud.');
     setIsListening(false);
     setView('reading');
@@ -869,7 +862,6 @@ function StoryMode({ onExit }) {
         setPageIndex(currentPageIndex + 1);
         setProgress(0);
         setSpokenWordCount(0);
-        setSpeechScore(null);
         const nextPage = storyPages[currentPageIndex + 1];
         readingPageRef.current = { text: `${nextPage.highlight}${nextPage.rest}`, index: currentPageIndex + 1 };
         recognizedTextRef.current = '';
@@ -1146,7 +1138,6 @@ function StoryMode({ onExit }) {
               {retryWordIndex !== null && (
                 <p className="sm-reading-retry" role="status">Try: “{readingWords(pageText)[retryWordIndex]}”</p>
               )}
-              {speechScore != null && <p className="sm-reading-score">Pronunciation accuracy: {speechScore}%</p>}
             </div>
             <span className="sm-page-fold" aria-hidden="true" />
           </div>

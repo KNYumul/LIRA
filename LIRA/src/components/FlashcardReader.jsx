@@ -9,7 +9,6 @@ export default function FlashcardReader({ text, language }) {
   const [listening, setListening] = useState(false);
   const [count, setCount] = useState(0);
   const [retry, setRetry] = useState(null);
-  const [score, setScore] = useState(null);
   const [status, setStatus] = useState('Tap the microphone to read aloud.');
   const recognizerRef = useRef(null);
   const requestRef = useRef(0);
@@ -36,7 +35,6 @@ export default function FlashcardReader({ text, language }) {
     setListening(true);
     setCount(0);
     setRetry(null);
-    setScore(null);
     setStatus('Connecting to your reading helper…');
     let spoken = '';
     try {
@@ -77,10 +75,6 @@ export default function FlashcardReader({ text, language }) {
         const matched = matchedWordCount(text, spoken);
         setCount(matched);
         setRetry(matched === previous && event.result.text && matched < words.length ? matched : null);
-        if (language === 'ENG') {
-          const result = SDK.PronunciationAssessmentResult.fromResult(event.result);
-          if (Number.isFinite(result?.accuracyScore)) setScore(Math.round(result.accuracyScore));
-        }
         if (matched >= words.length) stop('Great job! You finished this flashcard.');
       };
       recognizer.canceled = (_, event) => {
@@ -118,7 +112,6 @@ export default function FlashcardReader({ text, language }) {
       return <span key={index} className={position === retry ? 'fs-word-retry' : position < count ? 'fs-sentence__read' : position === count && listening ? 'fs-word-current' : 'fs-sentence__rest'}>{part}</span>;
     })}</p>
     {retry !== null && <p className="fs-reading-feedback" role="status">Try: “{words[retry]}”</p>}
-    {score !== null && <p className="fs-reading-feedback">Pronunciation accuracy: {score}%</p>}
     <button type="button" className={`fs-mic ${listening ? 'fs-mic--active' : ''}`} onClick={() => listening ? stop() : start()} disabled={!words.length} aria-pressed={listening} aria-label={listening ? 'Stop listening' : 'Start listening'}>🎤</button>
     <span className="fs-mic__status" role="status">{status}</span>
   </>;
