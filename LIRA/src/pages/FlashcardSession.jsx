@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import "./FlashcardSession.css";
+import CompletionScreen from "../components/CompletionScreen";
 import FlashcardReader from "../components/FlashcardReader";
 import { getSession } from "../utils/session";
 
@@ -15,6 +16,7 @@ export default function FlashcardSession() {
   const lang = searchParams.get("lang") === "FIL" ? "FIL" : "ENG";
   const [cards, setCards] = useState([]);
   const [index, setIndex] = useState(0);
+  const [finished, setFinished] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const current = cards[index];
@@ -24,7 +26,7 @@ export default function FlashcardSession() {
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      setLoading(true); setError("");
+      setLoading(true); setError(""); setFinished(false);
       try {
         const learnerId = getSession()?.user?.id;
         const response = await fetch(`${API_URL}/api/flashcards?category=${encodeURIComponent(difficulty)}&lang=${lang}`, { headers: { "X-Learner-Id": learnerId || "" } });
@@ -37,6 +39,8 @@ export default function FlashcardSession() {
     load();
     return () => { cancelled = true; };
   }, [difficulty, lang]);
+
+  if (finished) return <CompletionScreen onBack={() => navigate(`/flashcards?lang=${lang}`)} backLabel="Back to Flashcards" />;
 
   return <div className="fs-page" style={{ backgroundImage: `url(${bgSession})` }}>
     <header className="fs-header"><button className="fs-back" onClick={() => navigate(`/flashcards?lang=${lang}`)} aria-label="Back">←</button><h1 className="fs-title">{label} · {languageLabel}</h1></header>
@@ -52,7 +56,7 @@ export default function FlashcardSession() {
             /{cards.length}</span> */}
             </div>
           <FlashcardReader key={`${difficulty}-${lang}-${index}-${current._id || current.id || current.content}`} text={current.content} language={lang} />
-          <div className="fs-navigation"><button type="button" disabled={index === 0} onClick={() => setIndex((value) => value - 1)}>Previous</button><button type="button" disabled={index === cards.length - 1} onClick={() => setIndex((value) => value + 1)}>Next</button></div>
+          <div className="fs-navigation"><button type="button" disabled={index === 0} onClick={() => setIndex((value) => value - 1)}>Previous</button><button type="button" onClick={() => index === cards.length - 1 ? setFinished(true) : setIndex((value) => value + 1)}>{index === cards.length - 1 ? "Finish" : "Next"}</button></div>
         </div>
       </div>}
     </main>

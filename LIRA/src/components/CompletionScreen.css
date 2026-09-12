@@ -1,0 +1,165 @@
+.completion-page {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-image: url('/completion-backdrop.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* ---------- decorative frosted-glass squares ---------- */
+.completion-decor-square {
+  position: absolute;
+  width: clamp(70px, 6.2vw, 118px);
+  height: clamp(70px, 6.2vw, 118px);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 8px 24px rgba(120, 110, 90, 0.08);
+  pointer-events: none;
+}
+
+.completion-decor-square--tl {
+  top: 1.5%;
+  left: 4.5%;
+}
+.completion-decor-square--tr {
+  top: 1.5%;
+  right: 3%;
+}
+.completion-decor-square--tr2 {
+  top: 1.5%;
+  right: -2.5%;
+  opacity: 0.7;
+}
+.completion-decor-square--ml {
+  top: 56%;
+  left: -1.5%;
+  opacity: 0.7;
+}
+.completion-decor-square--mr {
+  top: 49%;
+  right: -3%;
+}
+.completion-decor-square--bl {
+  top: 87%;
+  left: 5.5%;
+}
+.completion-decor-square--br {
+  top: 87%;
+  right: 3%;
+}
+.completion-decor-square--br2 {
+  top: 87%;
+  right: -2.5%;
+  opacity: 0.7;
+}
+
+/* ---------- back button ---------- */
+.completion-back-button {
+  position: absolute;
+  top: 8%;
+  left: 6%;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: none;
+  font-size: 1.1rem;
+  color: #3f3f3f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  transition: background 0.15s ease;
+}
+
+.completion-back-button:hover {
+  background: #f4f4f4;
+}
+
+.completion-back-button:active {
+  transform: translateY(0);
+}
+
+/* ---------- main content ---------- */
+.completion-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 24px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 900px;
+}
+
+.completion-hero-image {
+  width: min(68vw, 420px);
+  max-width: 100%;
+  height: auto;
+  max-height: min(42dvh, 360px);
+  object-fit: contain;
+  margin-bottom: 0;
+  user-select: none;
+}
+
+.completion-title {
+  font-family: 'Baloo 2', 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: clamp(28px, 3.2vw, 38px);
+  line-height: 1.15;
+  color: #3b3f45;
+  margin: 8px 0 10px;
+}
+
+.completion-subtitle {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 400;
+  font-size: clamp(14px, 1.3vw, 17px);
+  line-height: 1.5;
+  color: #6b7280;
+  max-width: 620px;
+  margin: 0;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 640px) {
+  .completion-back-button {
+    top: 5%;
+    left: 5%;
+  }
+
+  .completion-hero-image {
+    width: min(78vw, 340px);
+  }
+
+  .completion-decor-square {
+    display: none;
+  }
+}
+
+.completion-page { box-sizing: border-box; padding: 72px 0 24px; }
+.completion-back-button { z-index: 2; }
+.completion-back-button:focus-visible { outline: 3px solid #44836b; outline-offset: 4px; }
+.completion-status { margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.4; color: #6b7280; }
+.completion-error { color: #B94B47; }
+
+.completion-status p { margin: 4px 0; }
+@media (max-height: 600px) {
+  .completion-page { padding: 16px 0; }
+  .completion-hero-image { max-height: max(64px, calc(100dvh - 260px)); }
+  .completion-back-button { top: 12px; left: 12px; width: 44px; height: 44px; }
+  .completion-title { font-size: 28px; margin: 4px 0 8px; }
+}

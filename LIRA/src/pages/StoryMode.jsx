@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import './StoryMode.css';
+import CompletionScreen from '../components/CompletionScreen';
 import { getSession } from '../utils/session';
 import { INACTIVITY_PAUSE_EVENT, isInactivityPaused } from '../utils/inactivityPause';
 import { liraAlert } from '../utils/alerts';
@@ -1171,52 +1172,14 @@ function StoryMode({ onExit }) {
     const storyQuiz = activeStory.quiz[language] || activeStory.quiz['ENG'];
     const total = storyQuiz.length;
 
-    if (total === 0) {
+    if (total === 0 || quizDone) {
       return (
-        <section className="story-mode sm-reading-bg">
-          <div className="sm-header">
-            <div className="sm-header-left">
-              <BackButton onClick={backToSelection} />
-              <h1 className="sm-title">{language === 'FIL' ? activeStory.titleFil : activeStory.title}</h1>
-            </div>
-          </div>
-          <div className="sm-quiz-done">
-            <KoalaMascot />
-            <h2>Story complete!</h2>
-            <p>This story does not have comprehension questions yet.</p>
-            {savingScore && <p>Saving reading result...</p>}
-            {quizResult?.readingWpm != null && <p>Estimated reading speed: {quizResult.readingWpm} WPM</p>}
-            {scoreError && <p>{scoreError}</p>}
-            <button type="button" className="sm-quiz-done-btn" onClick={backToSelection}>Back to Stories</button>
-          </div>
-        </section>
-      );
-    }
-
-    if (quizDone) {
-      return (
-        <section className="story-mode sm-reading-bg">
-          <div className="sm-header">
-            <div className="sm-header-left">
-              <BackButton onClick={backToSelection} />
-              <h1 className="sm-title">
-                {language === 'FIL' ? activeStory.titleFil : activeStory.title}
-              </h1>
-            </div>
-            <div className="sm-header-center" />
-            <div className="sm-header-right" />
-          </div>
-          <div className="sm-quiz-done">
-            <KoalaMascot />
-            <h2>Great job!</h2>
-            <p>{quizResult ? 'Your story test has been completed and sent to your teacher.' : `You finished all ${total} questions.`}</p>
-            {quizResult?.readingWpm != null && <p>Estimated reading speed: {quizResult.readingWpm} WPM</p>}
-            {scoreError && <p style={{ color: '#B94B47' }}>{scoreError} Your teacher will not see this attempt yet.</p>}
-            <button type="button" className="sm-quiz-done-btn" onClick={backToSelection}>
-              Back to Stories
-            </button>
-          </div>
-        </section>
+        <CompletionScreen onBack={backToSelection} backLabel="Back to Stories">
+          {savingScore && <p>Saving reading result...</p>}
+          {quizResult && <p>Your story result has been sent to your teacher.</p>}
+          {quizResult?.readingWpm != null && <p>Estimated reading speed: {quizResult.readingWpm} WPM</p>}
+          {scoreError && <p className="completion-error">{scoreError} Your teacher will not see this attempt yet.</p>}
+        </CompletionScreen>
       );
     }
 
