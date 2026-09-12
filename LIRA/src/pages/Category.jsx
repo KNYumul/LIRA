@@ -37,7 +37,7 @@ export default function Category() {
       />
 
       <main className="dash-main">
-        <div className="lang-toggle" role="group" aria-label="Language">
+        {/* <div className="lang-toggle" role="group" aria-label="Language">
           <button
             className={`lang-toggle__option ${
               lang === "ENG" ? "lang-toggle__option--active" : ""
@@ -53,8 +53,8 @@ export default function Category() {
             onClick={() => selectLanguage("FIL")}
           >
             FIL
-          </button>
-        </div>
+          </button> */}
+        {/* </div> */}
 
         <div className="dash-cards">
           <button
