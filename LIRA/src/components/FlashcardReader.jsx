@@ -9,7 +9,6 @@ export default function FlashcardReader({ text, language }) {
   const [listening, setListening] = useState(false);
   const [count, setCount] = useState(0);
   const [retry, setRetry] = useState(null);
-  const [score, setScore] = useState(null);
   const [status, setStatus] = useState('Tap the microphone to read aloud.');
   const recognizerRef = useRef(null);
   const requestRef = useRef(0);
@@ -22,7 +21,7 @@ export default function FlashcardReader({ text, language }) {
     if (recognizer) recognizer.stopContinuousRecognitionAsync(() => recognizer.close(), () => recognizer.close());
   }, []);
 
-  const stop = (message = 'Listening stopped. Tap the microphone to read again.') => {
+  const stop = (message = 'Microphone turned off. Tap the microphone to read again.') => {
     requestRef.current += 1;
     const recognizer = recognizerRef.current;
     recognizerRef.current = null;
@@ -33,12 +32,13 @@ export default function FlashcardReader({ text, language }) {
 
   const start = async () => {
     const request = ++requestRef.current;
+    const resumeCount = count < words.length ? count : 0;
     setListening(true);
-    setCount(0);
+    setCount(resumeCount);
     setRetry(null);
-    setScore(null);
     setStatus('Connecting to your reading helper…');
-    let spoken = '';
+    // Preserve progress across mic sessions; a finished card can be read again.
+    let spoken = words.slice(0, resumeCount).join(' ');
     try {
       const response = await fetch(`${API_URL}/api/speech/token`, {
         method: 'POST',
@@ -51,6 +51,7 @@ export default function FlashcardReader({ text, language }) {
       const config = SDK.SpeechConfig.fromAuthorizationToken(credentials.token, credentials.region);
       config.speechRecognitionLanguage = language === 'FIL' ? 'fil-PH' : 'en-US';
       config.outputFormat = SDK.OutputFormat.Detailed;
+      config.setProperty(SDK.PropertyId.SpeechServiceResponse_StablePartialResultThreshold, '1');
       config.setProperty(SDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, '500');
       const recognizer = new SDK.SpeechRecognizer(config, SDK.AudioConfig.fromDefaultMicrophoneInput());
       recognizerRef.current = recognizer;
@@ -65,7 +66,7 @@ export default function FlashcardReader({ text, language }) {
         if (event.result.text?.trim()) window.dispatchEvent(new Event('lira:student-activity'));
         const matched = matchedWordCount(text, `${spoken} ${event.result.text || ''}`);
         setCount(matched);
-        setRetry((previous) => previous !== null && matched > previous ? null : previous);
+        setRetry((previous) => previous === matched ? previous : null);
       };
       recognizer.recognized = (_, event) => {
         if (recognizerRef.current !== recognizer) return;
@@ -77,10 +78,6 @@ export default function FlashcardReader({ text, language }) {
         const matched = matchedWordCount(text, spoken);
         setCount(matched);
         setRetry(matched === previous && event.result.text && matched < words.length ? matched : null);
-        if (language === 'ENG') {
-          const result = SDK.PronunciationAssessmentResult.fromResult(event.result);
-          if (Number.isFinite(result?.accuracyScore)) setScore(Math.round(result.accuracyScore));
-        }
         if (matched >= words.length) stop('Great job! You finished this flashcard.');
       };
       recognizer.canceled = (_, event) => {
@@ -118,7 +115,6 @@ export default function FlashcardReader({ text, language }) {
       return <span key={index} className={position === retry ? 'fs-word-retry' : position < count ? 'fs-sentence__read' : position === count && listening ? 'fs-word-current' : 'fs-sentence__rest'}>{part}</span>;
     })}</p>
     {retry !== null && <p className="fs-reading-feedback" role="status">Try: “{words[retry]}”</p>}
-    {score !== null && <p className="fs-reading-feedback">Pronunciation accuracy: {score}%</p>}
     <button type="button" className={`fs-mic ${listening ? 'fs-mic--active' : ''}`} onClick={() => listening ? stop() : start()} disabled={!words.length} aria-pressed={listening} aria-label={listening ? 'Stop listening' : 'Start listening'}>🎤</button>
     <span className="fs-mic__status" role="status">{status}</span>
   </>;

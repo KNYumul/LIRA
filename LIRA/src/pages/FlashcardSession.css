@@ -157,22 +157,28 @@
 }
 
 .fs-mic--active {
+  background: #35a66f;
   animation: fs-pulse 1.4s ease-in-out infinite;
 }
 
 @keyframes fs-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(143, 200, 232, 0.5);
+    box-shadow: 0 0 0 0 rgba(53, 166, 111, 0.5);
   }
   50% {
-    box-shadow: 0 0 0 10px rgba(143, 200, 232, 0);
+    box-shadow: 0 0 0 10px rgba(53, 166, 111, 0);
   }
 }
 
 /* Mic Status Subtitle: Poppins Thin */
 .fs-mic__status {
   display: block;
+  /* Reserve four lines so wrapping status text does not shift the card. */
+  height: 6em;
+  flex-shrink: 0;
+  line-height: 1.5;
+  overflow-y: auto;
   text-align: center;
   font-family: "Poppins", sans-serif;
   font-weight: 300;

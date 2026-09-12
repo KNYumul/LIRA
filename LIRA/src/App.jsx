@@ -19,6 +19,35 @@ import FlashcardSession from "./pages/FlashcardSession";
 import { getSession } from "./utils/session";
 import StudentInactivityAlert from "./components/StudentInactivityAlert";
 
+const PAGE_TITLES = {
+  "/": "Home",
+  "/help-center": "Help Center",
+  "/login": "Login",
+  "/admin/login": "Admin Login",
+  "/privacy-policy": "Privacy Policy",
+  "/terms-of-use": "Terms of Use",
+  "/category": "Choose an Activity",
+  "/story-mode": "Story Mode",
+  "/flashcards": "Flashcards",
+  "/flashcards/easy": "Easy Flashcards",
+  "/flashcards/medium": "Medium Flashcards",
+  "/flashcards/hard": "Hard Flashcards",
+  "/teacher": "Teacher Dashboard",
+  "/admin": "Admin Dashboard",
+};
+
+function PageTitle() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const path = pathname.replace(/\/+$/, "").toLowerCase() || "/";
+    const title = PAGE_TITLES[path] || (path.startsWith("/flashcards/") ? "Flashcards" : "");
+    document.title = title ? `${title} | LIRA` : "LIRA";
+  }, [pathname]);
+
+  return null;
+}
+
 function ScrollToHash() {
   const { hash, pathname } = useLocation();
 
@@ -60,6 +89,7 @@ function ProtectedRoute({ role, children }) {
 function App() {
   return (
     <>
+      <PageTitle />
       <ScrollToHash />
       <StudentInactivityAlert />
       <Routes>

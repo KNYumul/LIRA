@@ -592,7 +592,6 @@ function StoryMode({ onExit }) {
   const [progress, setProgress] = useState(0);
   const [spokenWordCount, setSpokenWordCount] = useState(0);
   const [speechStatus, setSpeechStatus] = useState('Tap the microphone and read aloud.');
-  const [speechScore, setSpeechScore] = useState(null);
   const [retryWordIndex, setRetryWordIndex] = useState(null);
 
   const [quizIndex, setQuizIndex] = useState(0);
@@ -664,7 +663,7 @@ function StoryMode({ onExit }) {
     if (word.top < viewport.top + padding || word.bottom > viewport.top + container.clientHeight - padding) {
       container.scrollTo({
         top: Math.max(0, container.scrollTop + word.top - viewport.top - container.clientHeight / 3),
-        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+        behavior: 'instant',
       });
     }
   }, [spokenWordCount, retryWordIndex, isListening, isFlipping, pageIndex, view]);
@@ -733,8 +732,9 @@ function StoryMode({ onExit }) {
     const request = ++listeningRequestRef.current;
     setIsListening(true);
     setSpeechStatus('Connecting to your reading helper…');
-    setSpeechScore(null);
-    recognizedTextRef.current = '';
+    // A new recognizer starts with an empty transcript. Seed it with the
+    // accepted words so pausing and resuming preserves the visible position.
+    recognizedTextRef.current = readingWords(pageText).slice(0, spokenWordCount).join(' ');
     try {
       const learnerId = getSession()?.user?.id;
       const response = await fetch(`${API_URL}/api/speech/token`, {
@@ -749,6 +749,7 @@ function StoryMode({ onExit }) {
       const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(credentials.token, credentials.region);
       speechConfig.speechRecognitionLanguage = language === 'FIL' ? 'fil-PH' : 'en-US';
       speechConfig.outputFormat = SpeechSDK.OutputFormat.Detailed;
+      speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceResponse_StablePartialResultThreshold, '1');
       speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, '500');
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
       const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
@@ -773,9 +774,11 @@ function StoryMode({ onExit }) {
         const pageText = readingPageRef.current.text;
         const combined = `${recognizedTextRef.current} ${event.result.text || ''}`;
         const count = matchedWordCount(pageText, combined);
-        setRetryWordIndex((previous) => previous !== null && count > previous ? null : previous);
-        setSpokenWordCount((previous) => Math.max(previous, count));
-        setProgress((previous) => Math.max(previous, Math.round((count / Math.max(1, readingWords(pageText).length)) * 100)));
+        setRetryWordIndex((previous) => previous === count ? previous : null);
+        // Interim transcripts can be revised; every reading indicator must use
+        // the same match position, including when recognition moves backward.
+        setSpokenWordCount(count);
+        setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
       };
       recognizer.recognized = (_, event) => {
         if (recognizerRef.current !== recognizer) return;
@@ -788,17 +791,13 @@ function StoryMode({ onExit }) {
         const previousCount = matchedWordCount(pageText, recognizedTextRef.current);
         recognizedTextRef.current = `${recognizedTextRef.current} ${event.result.text || ''}`.trim();
         const count = matchedWordCount(pageText, recognizedTextRef.current);
-        setSpokenWordCount((previous) => Math.max(previous, count));
-        setProgress((previous) => Math.max(previous, Math.round((count / Math.max(1, readingWords(pageText).length)) * 100)));
+        setSpokenWordCount(count);
+        setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
         if (count === previousCount && event.result.text) {
           const expectedWord = readingWords(pageText)[count];
           setRetryWordIndex(expectedWord ? count : null);
         } else {
           setRetryWordIndex(null);
-        }
-        if (language === 'ENG') {
-          const result = SpeechSDK.PronunciationAssessmentResult.fromResult(event.result);
-          if (Number.isFinite(result?.accuracyScore)) setSpeechScore(Math.round(result.accuracyScore));
         }
         if (count >= readingWords(pageText).length) goNextPage(true, readingPageIndex);
       };
@@ -846,7 +845,6 @@ function StoryMode({ onExit }) {
     setPageIndex(0);
     setProgress(0);
     setSpokenWordCount(0);
-    setSpeechScore(null);
     setSpeechStatus('Tap the microphone and read aloud.');
     setIsListening(false);
     setView('reading');
@@ -866,7 +864,6 @@ function StoryMode({ onExit }) {
         setPageIndex(currentPageIndex + 1);
         setProgress(0);
         setSpokenWordCount(0);
-        setSpeechScore(null);
         const nextPage = storyPages[currentPageIndex + 1];
         readingPageRef.current = { text: `${nextPage.highlight}${nextPage.rest}`, index: currentPageIndex + 1 };
         recognizedTextRef.current = '';
@@ -1056,7 +1053,7 @@ function StoryMode({ onExit }) {
                     onClick={() => openStory(story)}
                     aria-label={completedStoryIds.has(String(story.id)) ? `${language === 'FIL' ? story.titleFil : story.title}, previously read` : language === 'FIL' ? story.titleFil : story.title}
                   >
-                    {completedStoryIds.has(String(story.id)) && <span className="sm-completed-check" aria-hidden="true">✓</span>}
+                    {completedStoryIds.has(String(story.id)) && <span className="sm-completed-star" aria-hidden="true">★</span>}
                     {story.starred && (
                       <span className="sm-star" aria-hidden="true">★</span>
                     )}
@@ -1113,7 +1110,14 @@ function StoryMode({ onExit }) {
             <button
               type="button"
               className={`sm-mic-btn ${isListening ? 'is-listening' : ''}`}
-              onClick={() => isListening ? stopListening() : startListening(pageText)}
+              onClick={() => {
+                if (isListening) {
+                  stopListening();
+                  setSpeechStatus('Microphone turned off. Tap the microphone to keep reading.');
+                } else {
+                  startListening(pageText);
+                }
+              }}
               disabled={isFlipping}
               aria-pressed={isListening}
               aria-label={isListening ? 'Stop listening' : 'Start listening'}
@@ -1143,7 +1147,6 @@ function StoryMode({ onExit }) {
               {retryWordIndex !== null && (
                 <p className="sm-reading-retry" role="status">Try: “{readingWords(pageText)[retryWordIndex]}”</p>
               )}
-              {speechScore != null && <p className="sm-reading-score">Pronunciation accuracy: {speechScore}%</p>}
             </div>
             <span className="sm-page-fold" aria-hidden="true" />
           </div>
