@@ -10,6 +10,7 @@ import { clearSession, getSession, saveSession } from "../../utils/session";
 import { clearSavedPortalPage, getSavedPortalPage, savePortalPage } from "../../utils/portalPage";
 import { liraAlert, showError, showWarning } from "../../utils/alerts";
 import { extractCsvLastName, findCsvNameColumn } from "../../utils/csvNames";
+import { storySlides } from "../../utils/storySlides";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -163,7 +164,11 @@ async function extractPdfPages(file) {
     const text = extractPdfPageText(content);
     pageTexts.push(text || `(No selectable text was found on page ${i} of the PDF — it may be a scanned image. You can type the content in manually.)`);
   }
-  return splitPdfStoryAndQuestions(pageTexts);
+  const extracted = splitPdfStoryAndQuestions(pageTexts);
+  return {
+    ...extracted,
+    pages: storySlides(extracted.pages).map((text, index) => ({ id: index + 1, text })),
+  };
 }
 
 function isPdfFile(file) {
@@ -3577,7 +3582,7 @@ function Stories({ currentTeacher }) {
             ? "The story pages and multiple-choice questions were pulled from your uploaded PDF. Review the extracted content and mark any correct answers that were not included in the document before assigning it to your class."
             : "This story's text was scanned (OCR) from your uploaded photo. Review the text below, fix anything that didn't come through cleanly, or generate comprehension questions before assigning it to your class.",
         pages,
-        contentUnit: method === "pdf" ? "paragraph" : "page",
+        contentUnit: "page",
         questions: extractedQuestions,
       };
     } else {

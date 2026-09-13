@@ -452,6 +452,7 @@
 }
 
 .sm-page-text {
+  white-space: pre-line;
   font-family: 'Quicksand', sans-serif;
   font-size: 20px;
   line-height: 1.7;

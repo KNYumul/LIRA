@@ -6,6 +6,7 @@ import { getSession } from '../utils/session';
 import { INACTIVITY_PAUSE_EVENT, isInactivityPaused } from '../utils/inactivityPause';
 import { liraAlert } from '../utils/alerts';
 import { readingWords, normalizedWord, matchedWordCount } from '../utils/readingTracking';
+import { storySlides } from '../utils/storySlides';
 
 /* Static story catalog retained for reference; Student Story Mode now loads from /api/stories.
 import coverSiDindoPundido from '../assets/icons/si-dindo-pundido.jpg';
@@ -529,7 +530,7 @@ function databaseStory(story) {
     cover: story.coverImage || fallbackCover(story.title),
     languageType: language,
     starred: false,
-    pages: { [language]: (story.pages || []).map((page) => learnerPage(page.text)).filter((page) => page.highlight || page.rest) },
+    pages: { [language]: storySlides(story.pages || [], language).map(learnerPage) },
     quiz: {
       [language]: (story.questions || [])
         .filter((question) => question.question && Array.isArray(question.options) && question.options.length > 1 && Number.isInteger(question.correct))
