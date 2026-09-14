@@ -11,6 +11,9 @@ import { clearSavedPortalPage, getSavedPortalPage, savePortalPage } from "../../
 import { liraAlert, showError, showWarning } from "../../utils/alerts";
 import { extractCsvLastName, findCsvNameColumn } from "../../utils/csvNames";
 import { storySlides } from "../../utils/storySlides";
+import { splitScannedStory } from "../../utils/scannedStory";
+import ScanImageList from "../../components/ScanImageList";
+import { readPdfPages } from "../../utils/pdfOcr";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -19,19 +22,23 @@ function countWords(str) {
 }
 
 // ---------- OCR a scanned/photographed page (Scan Documents) ----------
-async function extractImagePages(file) {
+async function extractImagePages(files, onProgress) {
   const worker = await createWorker("eng");
   try {
-    const {
-      data: { text },
-    } = await worker.recognize(file);
-    const cleaned = text.replace(/\s+\n/g, "\n").trim();
-    return [
-      {
-        id: 1,
-        text: cleaned || "(No readable text was found in this image. You can type the content in manually.)",
-      },
-    ];
+    const pageTexts = [];
+    for (const [index, file] of files.entries()) {
+      onProgress(`Scanning image ${index + 1} of ${files.length}: ${file.name}`);
+      let text;
+      try {
+        ({ data: { text } } = await worker.recognize(file));
+      } catch {
+        throw new Error(`Could not scan "${file.name}". Replace or remove this image and try again.`);
+      }
+      const cleaned = text.replace(/[ \t]+\n/g, "\n").trim();
+      if (!cleaned) throw new Error(`No readable text found in "${file.name}". Choose a clearer image and try again.`);
+      pageTexts.push(cleaned);
+    }
+    return splitScannedStory(pageTexts);
   } finally {
     await worker.terminate();
   }
@@ -108,7 +115,7 @@ function splitPdfStoryAndQuestions(pageTexts) {
     ...cleanedPages.slice(0, questionStartPage),
     cleanedPages[questionStartPage].slice(0, markerIndex).trim(),
   ].filter(Boolean);
-  storyTextSections[0] = storyTextSections[0]
+  if (storyTextSections.length) storyTextSections[0] = storyTextSections[0]
     .replace(/^[\s\S]*?\bStory by\b[^\n]*(?:\n\s*\n|$)/i, "")
     .trim();
   const storyParagraphs = storyTextSections
@@ -154,21 +161,23 @@ function extractPdfPageText(content) {
   }).join("").trim();
 }
 
-async function extractPdfPages(file) {
+async function extractPdfPages(file, onProgress) {
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  const pageTexts = [];
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const text = extractPdfPageText(content);
-    pageTexts.push(text || `(No selectable text was found on page ${i} of the PDF — it may be a scanned image. You can type the content in manually.)`);
+  const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+  try {
+    const pdf = await loadingTask.promise;
+    const pageTexts = await readPdfPages(pdf, { extractText: extractPdfPageText, createWorker, onProgress });
+    const scanned = splitScannedStory(pageTexts);
+    // Retain the existing parser for selectable PDFs whose lines are flattened.
+    const extracted = scanned.questions.length ? scanned : splitPdfStoryAndQuestions(scanned.pages.map((page) => page.text));
+    return {
+      ...extracted,
+      title: scanned.title,
+      pages: storySlides(extracted.pages).map((text, index) => ({ id: index + 1, text })),
+    };
+  } finally {
+    await loadingTask.destroy();
   }
-  const extracted = splitPdfStoryAndQuestions(pageTexts);
-  return {
-    ...extracted,
-    pages: storySlides(extracted.pages).map((text, index) => ({ id: index + 1, text })),
-  };
 }
 
 function isPdfFile(file) {
@@ -2939,6 +2948,8 @@ const ADD_STORY_METHODS = [
 function AddStoryModal({ onCancel, onSubmit }) {
   const [method, setMethod] = useState(null);
   const [file, setFile] = useState(null);
+  const [images, setImages] = useState([]);
+  const [scanProgress, setScanProgress] = useState("");
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState("");
   const [generation, setGeneration] = useState({
@@ -2953,6 +2964,7 @@ function AddStoryModal({ onCancel, onSubmit }) {
   const chooseMethod = (m) => {
     setMethod(m.key);
     setFile(null);
+    setImages([]);
     setScanError("");
     if (m.accept) {
       setTimeout(() => fileRef.current?.click(), 0);
@@ -2962,7 +2974,7 @@ function AddStoryModal({ onCancel, onSubmit }) {
   const needsFile = method === "pdf" || method === "scan";
   const valid = method !== null
     && !scanning
-    && (!needsFile || Boolean(file))
+    && (!needsFile || (method === "scan" ? images.length > 0 : Boolean(file)))
     && (method !== "ai" || Boolean(generation.topic.trim()));
 
   const updateGeneration = (field, value) => {
@@ -2983,26 +2995,16 @@ function AddStoryModal({ onCancel, onSubmit }) {
       }
       return;
     }
-    if (needsFile && file) {
+    if (needsFile) {
       setScanning(true);
       setScanError("");
+      setScanProgress(method === "pdf" ? "Opening PDF…" : "Preparing image scanner…");
       try {
-        const extracted = method === "pdf" ? await extractPdfPages(file) : { pages: await extractImagePages(file), questions: [] };
-        onSubmit({ method, file, ...extracted });
-      } catch {
-        setScanError(
-          method === "pdf"
-            ? "We couldn't extract text from that PDF. An editable story has been created so you can add the text manually."
-            : "Couldn't scan that image. You can still add it and type the content in manually."
-        );
-        onSubmit({
-          method,
-          file,
-          pages: [{
-            id: 1,
-            text: `We couldn't extract text from "${file.name}". Type or paste the story content here.`,
-          }],
-        });
+        const extracted = method === "pdf" ? await extractPdfPages(file, setScanProgress) : await extractImagePages(images, setScanProgress);
+        await onSubmit({ method, file: method === "scan" ? images[0] : file, ...extracted });
+      } catch (error) {
+        setScanError(error.message || "Could not read the selected files. Please try again.");
+      } finally {
         setScanning(false);
       }
       return;
@@ -3038,6 +3040,7 @@ function AddStoryModal({ onCancel, onSubmit }) {
             return (
               <button
                 key={m.key}
+                disabled={scanning}
                 onClick={() => chooseMethod(m)}
                 aria-pressed={selected}
                 className="relative rounded-2xl py-6 flex flex-col items-center gap-2 transition-all"
@@ -3066,7 +3069,15 @@ function AddStoryModal({ onCancel, onSubmit }) {
           })}
         </div>
 
-        {method && (method === "pdf" || method === "scan") && !scanning && (
+        {method === "scan" && !scanning && (
+          <div className="mt-4 text-sm" style={{ color: C.text }}>
+            <p>Add story and question pages. Drag images to arrange the reading order, or use the arrows. Click an image to enlarge it.</p>
+            <ScanImageList images={images} setImages={setImages} />
+            <button type="button" className="underline" onClick={() => fileRef.current?.click()}>Add images</button>
+            <p className="mt-2 text-xs">Numbered questions with A–D choices are detected automatically. Review the text and select the correct answers before saving.</p>
+          </div>
+        )}
+        {method === "pdf" && !scanning && (
           <div
             className="mt-4 rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-sm"
             style={{
@@ -3136,10 +3147,10 @@ function AddStoryModal({ onCancel, onSubmit }) {
           <div className="flex items-center justify-center gap-2 text-xs mt-3" style={{ color: C.textMuted }}>
             <Loader2 size={14} className="animate-spin" />
             {method === "pdf"
-              ? "Scanning your PDF and pulling out the text…"
+              ? scanProgress
               : method === "ai"
                 ? "Generating your story and questions…"
-                : "Scanning your image and pulling out the text…"}
+                : scanProgress}
           </div>
         )}
         {scanError && (
@@ -3149,9 +3160,22 @@ function AddStoryModal({ onCancel, onSubmit }) {
         <input
           ref={fileRef}
           type="file"
+          multiple={method === "scan"}
+          disabled={scanning}
           accept={ADD_STORY_METHODS.find((m) => m.key === method)?.accept || undefined}
           className="hidden"
           onChange={(e) => {
+            if (method === "scan") {
+              const selected = Array.from(e.target.files || []);
+              e.target.value = "";
+              if (selected.some((image) => !image.type.startsWith("image/"))) {
+                setScanError("Please choose image files only.");
+                return;
+              }
+              setImages((current) => [...current, ...selected]);
+              setScanError("");
+              return;
+            }
             const selectedFile = e.target.files?.[0] || null;
             if (method === "pdf" && selectedFile && !isPdfFile(selectedFile)) {
               setFile(null);
@@ -3165,7 +3189,7 @@ function AddStoryModal({ onCancel, onSubmit }) {
         />
 
         <div className="flex gap-3 mt-6">
-          <button onClick={onCancel} className="flex-1 rounded-full py-2 font-medium" style={{ border: `1px solid ${C.cardBorder}`, color: C.text }}>
+          <button disabled={scanning} onClick={onCancel} className="flex-1 rounded-full py-2 font-medium" style={{ border: `1px solid ${C.cardBorder}`, color: C.text }}>
             Cancel
           </button>
           <button
@@ -3175,7 +3199,7 @@ function AddStoryModal({ onCancel, onSubmit }) {
             style={{ background: valid ? "#EDA751" : "#EAD9BE" }}
           >
             {scanning && <Loader2 size={16} className="animate-spin" />}
-            {needsFile && !file ? "Choose a File" : method === "ai" ? "Generate Story" : "Add Story"}
+            {method === "scan" ? (images.length ? `Scan ${images.length} image${images.length === 1 ? "" : "s"}` : "Choose Images") : needsFile && !file ? "Choose a File" : method === "ai" ? "Generate Story" : "Add Story"}
           </button>
         </div>
       </div>
@@ -3562,16 +3586,16 @@ function Stories({ currentTeacher }) {
 
   const filtered = stories.filter((s) => s.lang === lang);
 
-  const createStory = async ({ method, file, pages: extractedPages, questions: extractedQuestions = [], generation }) => {
+  const createStory = async ({ method, file, title: extractedTitle, pages: extractedPages, questions: extractedQuestions = [], generation }) => {
     let newStory;
     if (method === "pdf" || method === "scan") {
       const name = file ? file.name.replace(/\.[^/.]+$/, "") : (method === "pdf" ? "Imported PDF" : "Scanned Document");
       const pages =
         extractedPages && extractedPages.length > 0
           ? extractedPages
-          : [{ id: 1, text: file ? `Content extracted from "${file.name}". Edit this page to add or fix the story text.` : "Edit this page to add your story content." }];
+          : [{ id: 1, text: method === "scan" ? "" : file ? `Content extracted from "${file.name}". Edit this page to add or fix the story text.` : "Edit this page to add your story content." }];
       newStory = {
-        title: name,
+        title: extractedTitle || name,
         lang,
         badge: "Custom Story",
         cover: "linear-gradient(160deg,#E7D8EE 0%,#B79AC7 100%)",
@@ -3580,7 +3604,7 @@ function Stories({ currentTeacher }) {
         description:
           method === "pdf"
             ? "The story pages and multiple-choice questions were pulled from your uploaded PDF. Review the extracted content and mark any correct answers that were not included in the document before assigning it to your class."
-            : "This story's text was scanned (OCR) from your uploaded photo. Review the text below, fix anything that didn't come through cleanly, or generate comprehension questions before assigning it to your class.",
+            : "Story text and detected multiple-choice questions were scanned from your images. Review the extracted content and select the correct answers before assigning it to your class.",
         pages,
         contentUnit: "page",
         questions: extractedQuestions,
