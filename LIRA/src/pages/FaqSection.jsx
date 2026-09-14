@@ -51,7 +51,7 @@ const FAQS = [
     id: 'student-accounts',
     question: 'How do students get their accounts?',
     answer:
-      "Student accounts aren't self-registered. A teacher uploads a class masterlist (CSV or Excel), and LIRA creates an account for each learner using their last name and birthdate as login details.",
+      "Student accounts aren't self-registered. A teacher uploads a class masterlist (CSV), and LIRA creates an account for each learner using their last name and birthdate as login details.",
   },
   {
     id: 'filipino-availability',
