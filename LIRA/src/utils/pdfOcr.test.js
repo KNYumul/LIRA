@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readPdfPages } from "./pdfOcr.js";
 
 function fixture(texts, recognized = ["Scanned text"]) {
-  const calls = { workers: 0, renders: [], cleaned: [], terminated: 0, progress: [], canvases: [] };
+  const calls = { workers: 0, languages: [], renders: [], cleaned: [], terminated: 0, progress: [], canvases: [] };
   const pdf = {
     numPages: texts.length,
     async getPage(number) {
@@ -17,7 +17,8 @@ function fixture(texts, recognized = ["Scanned text"]) {
   };
   const options = {
     extractText: (value) => value,
-    createWorker: async () => {
+    createWorker: async (languages) => {
+      calls.languages.push(languages);
       calls.workers += 1;
       return {
         recognize: async () => {
@@ -68,4 +69,16 @@ test("unreadable pages produce an error instead of inserting a message into the 
   const { pdf, options, calls } = fixture([""], [" \n "]);
   await assert.rejects(readPdfPages(pdf, options), /PDF page 1: No readable text/);
   assert.equal(calls.terminated, 1);
+});
+
+test("Filipino PDFs use Tagalog and English data in one worker", async () => {
+  const { pdf, options, calls } = fixture(["", ""], ["May puno.", "May bahay."]);
+  await readPdfPages(pdf, { ...options, language: "FIL" });
+  assert.deepEqual(calls.languages, [["fil", "eng"]]);
+});
+
+test("English-tab PDFs also load Filipino to handle a mistaken tab selection", async () => {
+  const { pdf, options, calls } = fixture([""]);
+  await readPdfPages(pdf, options);
+  assert.deepEqual(calls.languages, [["eng", "fil"]]);
 });

@@ -13,7 +13,8 @@ import { extractCsvLastName, findCsvNameColumn } from "../../utils/csvNames";
 import { storySlides } from "../../utils/storySlides";
 import { splitScannedStory } from "../../utils/scannedStory";
 import ScanImageList from "../../components/ScanImageList";
-import { readPdfPages } from "../../utils/pdfOcr";
+import { readPdfPages, ocrLanguages } from "../../utils/pdfOcr";
+import { detectStoryLanguage } from "../../utils/storyLanguage";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -22,8 +23,8 @@ function countWords(str) {
 }
 
 // ---------- OCR a scanned/photographed page (Scan Documents) ----------
-async function extractImagePages(files, onProgress) {
-  const worker = await createWorker("eng");
+async function extractImagePages(files, onProgress, language) {
+  const worker = await createWorker(ocrLanguages(language));
   try {
     const pageTexts = [];
     for (const [index, file] of files.entries()) {
@@ -161,12 +162,12 @@ function extractPdfPageText(content) {
   }).join("").trim();
 }
 
-async function extractPdfPages(file, onProgress) {
+async function extractPdfPages(file, onProgress, language) {
   const arrayBuffer = await file.arrayBuffer();
   const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
   try {
     const pdf = await loadingTask.promise;
-    const pageTexts = await readPdfPages(pdf, { extractText: extractPdfPageText, createWorker, onProgress });
+    const pageTexts = await readPdfPages(pdf, { extractText: extractPdfPageText, createWorker, onProgress, language });
     const scanned = splitScannedStory(pageTexts);
     // Retain the existing parser for selectable PDFs whose lines are flattened.
     const extracted = scanned.questions.length ? scanned : splitPdfStoryAndQuestions(scanned.pages.map((page) => page.text));
@@ -2945,7 +2946,7 @@ const ADD_STORY_METHODS = [
   { key: "ai", label: "Generate AI", icon: Sparkles, iconColor: "#8B6DD6", accept: null },
 ];
 
-function AddStoryModal({ onCancel, onSubmit }) {
+function AddStoryModal({ onCancel, onSubmit, language = "ENG" }) {
   const [method, setMethod] = useState(null);
   const [file, setFile] = useState(null);
   const [images, setImages] = useState([]);
@@ -3000,7 +3001,7 @@ function AddStoryModal({ onCancel, onSubmit }) {
       setScanError("");
       setScanProgress(method === "pdf" ? "Opening PDF…" : "Preparing image scanner…");
       try {
-        const extracted = method === "pdf" ? await extractPdfPages(file, setScanProgress) : await extractImagePages(images, setScanProgress);
+        const extracted = method === "pdf" ? await extractPdfPages(file, setScanProgress, language) : await extractImagePages(images, setScanProgress, language);
         await onSubmit({ method, file: method === "scan" ? images[0] : file, ...extracted });
       } catch (error) {
         setScanError(error.message || "Could not read the selected files. Please try again.");
@@ -3073,7 +3074,10 @@ function AddStoryModal({ onCancel, onSubmit }) {
           <div className="mt-4 text-sm" style={{ color: C.text }}>
             <p>Add story and question pages. Drag images to arrange the reading order, or use the arrows. Click an image to enlarge it.</p>
             <ScanImageList images={images} setImages={setImages} />
-            <button type="button" className="underline" onClick={() => fileRef.current?.click()}>Add images</button>
+            <button type="button" className="inline-flex items-center gap-2 rounded-full bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm font-semibold text-white cursor-pointer transition-colors" onClick={() => fileRef.current?.click()}>
+              <Plus size={16} aria-hidden="true" />
+              Add images
+            </button>
             <p className="mt-2 text-xs">Numbered questions with A–D choices are detected automatically. Review the text and select the correct answers before saving.</p>
           </div>
         )}
@@ -3589,6 +3593,35 @@ function Stories({ currentTeacher }) {
   const createStory = async ({ method, file, title: extractedTitle, pages: extractedPages, questions: extractedQuestions = [], generation }) => {
     let newStory;
     if (method === "pdf" || method === "scan") {
+      let storyLanguage = lang;
+      const storyText = (extractedPages || []).map((page) => page.text).join(" ");
+      const detectedLanguage = detectStoryLanguage(storyText.trim() || extractedQuestions
+        .map((question) => [question.question, ...question.options].join(" ")).join(" "));
+      if (detectedLanguage && detectedLanguage !== lang) {
+        const detectedLabel = detectedLanguage === "FIL" ? "Filipino" : "English";
+        const selectedLabel = lang === "FIL" ? "Filipino" : "English";
+        const choice = await liraAlert.fire({
+          icon: "question",
+          title: "Check story language",
+          text: `This story appears to be ${detectedLabel}, but you selected ${selectedLabel}. Change its language to ${detectedLabel}?`,
+          showDenyButton: true,
+          showCancelButton: true,
+          confirmButtonText: `Use ${detectedLabel}`,
+          denyButtonText: `Keep ${selectedLabel}`,
+          confirmButtonColor: "#3D995A",
+          denyButtonColor: "#DC3545",
+          customClass: {
+            popup: "lira-sweet-alert",
+            confirmButton: "lira-sweet-alert-button",
+            denyButton: "lira-sweet-alert-button",
+            cancelButton: "lira-sweet-alert-button",
+          },
+          cancelButtonText: "Back to upload",
+          allowOutsideClick: false,
+        });
+        if (choice.isConfirmed) storyLanguage = detectedLanguage;
+        else if (!choice.isDenied) return;
+      }
       const name = file ? file.name.replace(/\.[^/.]+$/, "") : (method === "pdf" ? "Imported PDF" : "Scanned Document");
       const pages =
         extractedPages && extractedPages.length > 0
@@ -3596,7 +3629,7 @@ function Stories({ currentTeacher }) {
           : [{ id: 1, text: method === "scan" ? "" : file ? `Content extracted from "${file.name}". Edit this page to add or fix the story text.` : "Edit this page to add your story content." }];
       newStory = {
         title: extractedTitle || name,
-        lang,
+        lang: storyLanguage,
         badge: "Custom Story",
         cover: "linear-gradient(160deg,#E7D8EE 0%,#B79AC7 100%)",
         coverText: "#3A2A47",
@@ -3639,6 +3672,7 @@ function Stories({ currentTeacher }) {
       };
     }
     setShowAddStory(false);
+    setLang(newStory.lang);
     setEditTarget({ ...newStory, isNewStory: true });
   };
 
@@ -3750,7 +3784,7 @@ function Stories({ currentTeacher }) {
       )}
 
       {showAddStory && (
-        <AddStoryModal onCancel={() => setShowAddStory(false)} onSubmit={createStory} />
+        <AddStoryModal language={lang} onCancel={() => setShowAddStory(false)} onSubmit={createStory} />
       )}
       {editTarget && (
         <StoryEditModal

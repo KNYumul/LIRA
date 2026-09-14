@@ -1,5 +1,10 @@
+// The current Tesseract.js CDN publishes Filipino/Tagalog data under fil.
+export function ocrLanguages(language = "ENG") {
+  return language === "FIL" ? ["fil", "eng"] : ["eng", "fil"];
+}
+
 // OCR only image-only pages; reuse one worker for the whole document.
-export async function readPdfPages(pdf, { extractText, createWorker, createCanvas = () => document.createElement("canvas"), onProgress = () => {} }) {
+export async function readPdfPages(pdf, { extractText, createWorker, language = "ENG", createCanvas = () => document.createElement("canvas"), onProgress = () => {} }) {
   let worker;
   const pageTexts = [];
   try {
@@ -11,7 +16,7 @@ export async function readPdfPages(pdf, { extractText, createWorker, createCanva
         let text = extractText(await page.getTextContent()).trim();
         if (!text) {
           onProgress(`Scanning PDF page ${number} of ${pdf.numPages}…`);
-          worker ??= await createWorker("eng");
+          worker ??= await createWorker(ocrLanguages(language));
           const original = page.getViewport({ scale: 1 });
           // Render at double resolution, capped to avoid huge page allocations.
           const scale = Math.min(2, 3200 / Math.max(original.width, original.height));
