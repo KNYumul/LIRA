@@ -52,7 +52,7 @@ export default function FlashcardReader({ text, language }) {
       config.speechRecognitionLanguage = language === 'FIL' ? 'fil-PH' : 'en-US';
       config.outputFormat = SDK.OutputFormat.Detailed;
       config.setProperty(SDK.PropertyId.SpeechServiceResponse_StablePartialResultThreshold, '1');
-      config.setProperty(SDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, '500');
+      config.setProperty(SDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, language === 'FIL' ? '900' : '500');
       const recognizer = new SDK.SpeechRecognizer(config, SDK.AudioConfig.fromDefaultMicrophoneInput());
       recognizerRef.current = recognizer;
       if (language === 'ENG') {
@@ -64,7 +64,7 @@ export default function FlashcardReader({ text, language }) {
         if (recognizerRef.current !== recognizer) return;
         if (isInactivityPaused()) return;
         if (event.result.text?.trim()) window.dispatchEvent(new Event('lira:student-activity'));
-        const matched = matchedWordCount(text, `${spoken} ${event.result.text || ''}`);
+        const matched = matchedWordCount(text, `${spoken} ${event.result.text || ''}`, language);
         setCount(matched);
         setRetry((previous) => previous === matched ? previous : null);
       };
@@ -73,9 +73,9 @@ export default function FlashcardReader({ text, language }) {
         if (isInactivityPaused()) return;
         if (event.result.text?.trim()) window.dispatchEvent(new Event('lira:student-activity'));
         if (event.result.reason !== SDK.ResultReason.RecognizedSpeech) return;
-        const previous = matchedWordCount(text, spoken);
+        const previous = matchedWordCount(text, spoken, language);
         spoken = `${spoken} ${event.result.text || ''}`.trim();
-        const matched = matchedWordCount(text, spoken);
+        const matched = matchedWordCount(text, spoken, language);
         setCount(matched);
         setRetry(matched === previous && event.result.text && matched < words.length ? matched : null);
         if (matched >= words.length) stop('Great job! You finished this flashcard.');

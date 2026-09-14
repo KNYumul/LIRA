@@ -2,6 +2,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { matchedWordCount } from './readingTracking.js';
 
+test('Filipino accepts split hyphens and written stress marks', () => {
+  assert.equal(matchedWordCount('Araw-araw ay masayá ang bata.', 'araw araw ay masaya ang bata', 'FIL'), 5);
+  assert.equal(matchedWordCount('Siya ay nag aaral.', 'siya ay nag-aaral', 'FIL'), 4);
+  assert.equal(matchedWordCount('Ang pag-ibig ay mahalaga.', 'ang pag ibig ay mahalaga', 'FIL'), 4);
+});
+
+test('Filipino still requires missing words and every part of a compound', () => {
+  assert.equal(matchedWordCount('Ang bata ay nagbasa ng libro.', 'ang bata nagbasa ng libro', 'FIL'), 2);
+  assert.equal(matchedWordCount('Araw-araw ay masaya.', 'araw ay masaya', 'FIL'), 0);
+  assert.equal(matchedWordCount('Ang bata ay masaya.', 'ang bato ay masaya', 'FIL'), 1);
+  assert.equal(matchedWordCount('Araw-araw ay masaya.', 'araw araw ay masaya'), 0);
+});
+
 test('advances immediately through a fast multiword partial result', () => {
   assert.equal(matchedWordCount('The little bird flew over the tree.', 'the little bird flew over'), 5);
 });

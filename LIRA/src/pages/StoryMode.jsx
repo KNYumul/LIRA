@@ -751,7 +751,7 @@ function StoryMode({ onExit }) {
       speechConfig.speechRecognitionLanguage = language === 'FIL' ? 'fil-PH' : 'en-US';
       speechConfig.outputFormat = SpeechSDK.OutputFormat.Detailed;
       speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceResponse_StablePartialResultThreshold, '1');
-      speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, '500');
+      speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, language === 'FIL' ? '900' : '500');
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
       const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
 
@@ -774,7 +774,7 @@ function StoryMode({ onExit }) {
         if (pageTransitionRef.current !== null || event.result.offset < speechBoundaryRef.current) return;
         const pageText = readingPageRef.current.text;
         const combined = `${recognizedTextRef.current} ${event.result.text || ''}`;
-        const count = matchedWordCount(pageText, combined);
+        const count = matchedWordCount(pageText, combined, language);
         setRetryWordIndex((previous) => previous === count ? previous : null);
         // Interim transcripts can be revised; every reading indicator must use
         // the same match position, including when recognition moves backward.
@@ -789,9 +789,9 @@ function StoryMode({ onExit }) {
         latestSpeechEndRef.current = Math.max(latestSpeechEndRef.current, event.result.offset + event.result.duration);
         if (pageTransitionRef.current !== null || event.result.offset < speechBoundaryRef.current) return;
         const { text: pageText, index: readingPageIndex } = readingPageRef.current;
-        const previousCount = matchedWordCount(pageText, recognizedTextRef.current);
+        const previousCount = matchedWordCount(pageText, recognizedTextRef.current, language);
         recognizedTextRef.current = `${recognizedTextRef.current} ${event.result.text || ''}`.trim();
-        const count = matchedWordCount(pageText, recognizedTextRef.current);
+        const count = matchedWordCount(pageText, recognizedTextRef.current, language);
         setSpokenWordCount(count);
         setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
         if (count === previousCount && event.result.text) {
