@@ -614,6 +614,7 @@ function StoryMode({ onExit }) {
   const speechBoundaryRef = useRef(0);
   const latestSpeechEndRef = useRef(0);
   const exitPromptRef = useRef(false);
+  const readingAccuracyRef = useRef({ sum: 0, count: 0 });
   const readingTimerRef = useRef({ elapsed: 0, startedAt: null });
   const pauseReadingTimer = () => {
     const timer = readingTimerRef.current;
@@ -788,6 +789,18 @@ function StoryMode({ onExit }) {
         if (event.result.reason !== SpeechSDK.ResultReason.RecognizedSpeech) return;
         latestSpeechEndRef.current = Math.max(latestSpeechEndRef.current, event.result.offset + event.result.duration);
         if (pageTransitionRef.current !== null || event.result.offset < speechBoundaryRef.current) return;
+        if (language === 'ENG') {
+          const assessment = SpeechSDK.PronunciationAssessmentResult.fromResult(event.result);
+          // Segment omissions are not measurements of spoken-word pronunciation.
+          for (const word of assessment.detailResult?.Words || []) {
+            const result = word.PronunciationAssessment;
+            if (result?.ErrorType !== 'Omission' && Number.isFinite(result?.AccuracyScore)
+              && result.AccuracyScore >= 0 && result.AccuracyScore <= 100) {
+              readingAccuracyRef.current.sum += result.AccuracyScore;
+              readingAccuracyRef.current.count += 1;
+            }
+          }
+        }
         const { text: pageText, index: readingPageIndex } = readingPageRef.current;
         const previousCount = matchedWordCount(pageText, recognizedTextRef.current, language);
         recognizedTextRef.current = `${recognizedTextRef.current} ${event.result.text || ''}`.trim();
@@ -841,6 +854,7 @@ function StoryMode({ onExit }) {
 
   const openStory = (story) => {
     readingTimerRef.current = { elapsed: 0, startedAt: null };
+    readingAccuracyRef.current = { sum: 0, count: 0 };
     setRetryWordIndex(null);
     setActiveStory(story);
     setPageIndex(0);
@@ -899,7 +913,7 @@ function StoryMode({ onExit }) {
       const response = await fetch(`${API_URL}/api/story-results`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Learner-Id': learnerId || '' },
-        body: JSON.stringify({ storyId: activeStory.id, language, answers, readingDurationSeconds: readingTimerRef.current.elapsed / 1000 })
+        body: JSON.stringify({ storyId: activeStory.id, language, answers, readingDurationSeconds: readingTimerRef.current.elapsed / 1000, readingAccuracy: readingAccuracyRef.current.count ? Math.round(readingAccuracyRef.current.sum / readingAccuracyRef.current.count) : null })
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || 'Could not save your score.');

@@ -10,6 +10,7 @@ const storyResultSchema = new mongoose.Schema(
     total: { type: Number, required: true, min: 0 },
     readingDurationSeconds: { type: Number, min: 0, default: null },
     readingWordCount: { type: Number, min: 0, default: null },
+    readingAccuracy: { type: Number, min: 0, max: 100, default: null },
     readingWpm: { type: Number, min: 0, default: null },
     answers: { type: [Number], default: [] },
     selectedForAverage: { type: Boolean, default: true, index: true }

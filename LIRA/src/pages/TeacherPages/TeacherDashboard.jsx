@@ -301,6 +301,11 @@ function formatStudentName(value) {
   return name ? `${name.charAt(0).toLocaleUpperCase()}${name.slice(1)}` : "";
 }
 
+function averageReadingAccuracy(results) {
+  const assessed = results.filter((result) => result.selectedForAverage && result.readingAccuracy != null);
+  return assessed.length ? Math.round(assessed.reduce((sum, result) => sum + result.readingAccuracy, 0) / assessed.length) : null;
+}
+
 function learnerToStudent(learner) {
   const [birthYear = "", birthMonth = "", birthDay = ""] = (learner.birthdate || "").split("-");
   const result = learner.latestStoryResult;
@@ -309,6 +314,7 @@ function learnerToStudent(learner) {
     storyId: storyResult.storyId,
     storyTitle: storyResult.storyTitle,
     readingWpm: storyResult.readingWpm ?? null,
+    readingAccuracy: storyResult.readingAccuracy ?? null,
     score: storyResult.score,
     total: storyResult.total,
     percentage: storyResult.total ? Math.round((storyResult.score / storyResult.total) * 100) : 0,
@@ -328,6 +334,7 @@ function learnerToStudent(learner) {
     birthYear,
     wpm: storyResults.find((attempt) => attempt.readingWpm != null)?.readingWpm ?? null,
     accuracy,
+    readingAccuracy: averageReadingAccuracy(storyResults),
     historyDate: result?.createdAt ? new Date(result.createdAt).toLocaleDateString() : "--",
     storyResults,
     hasReadingData: storyResults.length > 0,
@@ -1750,6 +1757,8 @@ function DeleteConfirmModal({ title = "Remove this learner?", subtitle, onCancel
 }
 
 // ---------- Students page ----------
+const STUDENT_COLUMNS = "minmax(0, 1.4fr) minmax(0, 0.7fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr)";
+
 function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
   const risk = riskOf(s);
   const isFullRefresher = risk === "fullRefresher";
@@ -1763,7 +1772,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
       <div
         className="grid items-center px-5 py-4 cursor-pointer"
         style={{
-          gridTemplateColumns: "1.4fr 0.8fr 0.8fr 1fr 1fr 0.8fr",
+          gridTemplateColumns: STUDENT_COLUMNS,
           background: isFullRefresher ? C.highRowBg : C.cardBg,
           color: "#000",
         }}
@@ -1771,7 +1780,8 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
       >
         <div className="font-semibold">{s.lastName}</div>
         <div className="font-semibold">{s.wpm == null ? "--" : `${s.wpm} wpm`}</div>
-        <div className="font-semibold">{s.accuracy == null ? "--" : `${s.accuracy}%`}</div>
+        <div className="font-semibold text-center tabular-nums">{s.accuracy == null ? "--" : `${s.accuracy}%`}</div>
+        <div className="font-semibold text-center tabular-nums">{s.readingAccuracy == null ? "--" : `${s.readingAccuracy}%`}</div>
         <div>{s.historyDate}</div>
         <div>
           <span
@@ -1796,25 +1806,35 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
           ) : (
             <>
               <div className="font-semibold mb-3">
-                Overall story-test average: {s.accuracy == null ? "--" : `${s.accuracy}%`} using one selected attempt per story.
+                Comprehension Score: {s.accuracy == null ? "--" : `${s.accuracy}%`} using one selected attempt per story.
               </div>
-              <div className="overflow-x-auto" style={{ display: "grid", gap: "8px" }}>
+              <p className="mb-3">Reading Accuracy: {s.readingAccuracy == null ? "--" : `${s.readingAccuracy}%`}. Average spoken-word pronunciation score across selected assessed attempts (English). Unavailable scores appear as --.</p>
+              <div className="overflow-x-auto">
+                <div className="grid gap-2">
+                  <div className="grid items-center py-1 text-xs font-semibold" style={{ gridTemplateColumns: STUDENT_COLUMNS }}>
+                    <span>Story</span>
+                    <span>WPM (est.)</span>
+                    <span className="text-center">Comprehension Score</span>
+                    <span className="text-center">Reading Accuracy</span>
+                    <span style={{ gridColumn: "5 / 7" }}>Completed</span>
+                    <span className="text-center">Selection</span>
+                  </div>
                 {s.storyResults.map((storyResult) => (
                   <div
                     key={storyResult.id}
-                    className="rounded-lg px-2 py-2"
+                    className="rounded-lg py-2 px-3"
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "minmax(120px, 220px) max-content minmax(170px, 1fr) 84px",
-                      minWidth: "max-content",
-                      gap: "8px",
+                      gridTemplateColumns: STUDENT_COLUMNS,
                       alignItems: "center",
                       background: storyResult.selectedForAverage ? C.cream : "transparent",
                     }}
                   >
-                    <span>{storyResult.storyTitle}</span>
-                    <strong className="rounded-md px-2 py-1" style={{ background: storyResult.selectedForAverage ? C.low : "transparent" }}>{storyResult.total > 0 ? `${storyResult.score}/${storyResult.total} (${storyResult.percentage}%)` : "No quiz"}{storyResult.readingWpm != null ? ` | ${storyResult.readingWpm} WPM (estimated)` : ""}</strong>
-                    <span className="pl-2">{new Date(storyResult.completedAt).toLocaleString()}</span>
+                    <span className="pr-2 break-words">{storyResult.storyTitle}</span>
+                    <span className="tabular-nums">{storyResult.readingWpm ?? "--"}</span>
+                    <strong className="rounded-md px-2 py-1 text-center tabular-nums" style={{ background: storyResult.selectedForAverage ? C.low : "transparent" }}>{storyResult.total > 0 ? `${storyResult.score}/${storyResult.total} (${storyResult.percentage}%)` : "No quiz"}</strong>
+                    <strong className="text-center tabular-nums">{storyResult.readingAccuracy == null ? "--" : `${storyResult.readingAccuracy}%`}</strong>
+                    <span style={{ gridColumn: "5 / 7" }}>{new Date(storyResult.completedAt).toLocaleString()}</span>
                     {storyAttemptCounts.get(String(storyResult.storyId)) > 1 ? (
                       <button
                         type="button"
@@ -1830,6 +1850,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
                     ) : <span aria-hidden="true" />}
                   </div>
                 ))}
+              </div>
               </div>
               {isFullRefresher && <div className="mt-3">This learner needs a full refresher. Consider reviewing the stories together and revisiting the missed comprehension skills.</div>}
             </>
@@ -1867,7 +1888,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         const selectedResults = storyResults.filter((result) => result.selectedForAverage);
         const pointsEarned = selectedResults.reduce((sum, result) => sum + result.score, 0);
         const pointsPossible = selectedResults.reduce((sum, result) => sum + result.total, 0);
-        return { ...student, storyResults, accuracy: pointsPossible ? Math.round((pointsEarned / pointsPossible) * 100) : null };
+        return { ...student, storyResults, readingAccuracy: averageReadingAccuracy(storyResults), accuracy: pointsPossible ? Math.round((pointsEarned / pointsPossible) * 100) : null };
       }));
     } catch (requestError) {
       await showError(requestError.message);
@@ -2195,8 +2216,8 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         </button>
       </div>
 
-      <div className="grid px-5 py-2 mt-5 text-xs font-semibold" style={{ gridTemplateColumns: "1.4fr 0.8fr 0.8fr 1fr 1fr 0.8fr", color: C.textMuted }}>
-        <div>Learner</div><div>WPM</div><div>Avg. Score</div><div>Latest Test</div><div>Risk Level</div><div className="text-right">Actions</div>
+      <div className="grid px-5 py-2 mt-5 text-xs font-semibold border border-transparent" style={{ gridTemplateColumns: STUDENT_COLUMNS, color: C.textMuted }}>
+        <div>Learner</div><div>WPM</div><div className="text-center">Comprehension Score</div><div className="text-center">Reading Accuracy</div><div>Latest Test</div><div>Risk Level</div><div className="text-right">Actions</div>
       </div>
 
       {loading && <div className="text-center py-10 text-sm" style={{ color: C.textMuted }}>Loading learners...</div>}
@@ -2232,7 +2253,8 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
               <th>No.</th>
               <th>Learner</th>
               <th>WPM</th>
-              <th>Average Score</th>
+              <th>Comprehension Score</th>
+              <th>Reading Accuracy</th>
               <th>History</th>
               <th>Risk Level</th>
               <th>Action</th>
@@ -2256,6 +2278,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
                   <td>{student.lastName}</td>
                   <td>{student.wpm == null ? "--" : student.wpm}</td>
                   <td>{student.accuracy == null ? "--" : `${student.accuracy}%`}</td>
+                  <td>{student.readingAccuracy == null ? "--" : `${student.readingAccuracy}%`}</td>
                   <td>{student.historyDate}</td>
                   <td>{riskLabel[risk]}</td>
                   <td>{action}</td>
