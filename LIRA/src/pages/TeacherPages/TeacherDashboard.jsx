@@ -15,6 +15,7 @@ import { splitScannedStory } from "../../utils/scannedStory";
 import ScanImageList from "../../components/ScanImageList";
 import { readPdfPages, ocrLanguages } from "../../utils/pdfOcr";
 import { detectStoryLanguage } from "../../utils/storyLanguage";
+import { storyFeedbackIssues } from "../../utils/storyFeedback";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -3347,10 +3348,22 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions, onChec
     setCheckingStory(true);
     setCheckError("");
     try {
-      const feedback = await onCheckStory({ pages, language: story.lang });
+      const issues = await onCheckStory({ pages, language: story.lang });
+      const feedback = document.createElement(issues.length ? "ul" : "p");
+      if (issues.length) {
+        Object.assign(feedback.style, { textAlign: "left", listStyleType: "disc", paddingLeft: "1.5rem" });
+        issues.forEach((issue) => {
+          const item = document.createElement("li");
+          item.textContent = issue;
+          item.style.marginBottom = "0.75rem";
+          feedback.appendChild(item);
+        });
+      } else {
+        feedback.textContent = "No spelling or other issues found.";
+      }
       await liraAlert.fire({
         title: "AI story review",
-        text: feedback,
+        html: feedback,
         confirmButtonText: "Back to story",
       });
     } catch (error) {
@@ -3468,10 +3481,11 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions, onChec
               </div>
               {coverError && <div className="text-xs mt-2" style={{ color: "#C0504D" }}>{coverError}</div>}
               <p className="text-xs mt-2" style={{ color: C.textMuted }}>{story.description}</p>
-              <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center justify-between gap-3 mt-3">
                 <span className="text-sm font-semibold" style={{ color: C.text }}>
                   {pages.length} {usesParagraphs ? "paragraphs" : "pages"}
                 </span>
+                <div className="flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={checkStory}
@@ -3482,9 +3496,6 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions, onChec
                   {checkingStory && <Loader2 size={13} className="animate-spin" />}
                   {checkingStory ? "Checking..." : "Check with AI"}
                 </button>
-              </div>
-              {checkError && <p role="alert" className="text-xs mt-2" style={{ color: "#C0504D" }}>{checkError}</p>}
-              <div className="flex justify-end mt-3">
                 <button
                   type="button"
                   onClick={() => setActiveTab("questions")}
@@ -3493,7 +3504,9 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions, onChec
                 >
                   Manage Questions ({questions.filter((q) => q.question).length}) &rarr;
                 </button>
+                </div>
               </div>
+              {checkError && <p role="alert" className="text-xs mt-2" style={{ color: "#C0504D" }}>{checkError}</p>}
             </div>
 
             <div className="flex-1 overflow-y-auto px-6">
@@ -3791,7 +3804,7 @@ function Stories({ currentTeacher }) {
     });
     if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not check the story."));
     const result = await response.json();
-    return result.feedback;
+    return storyFeedbackIssues(result);
   };
 
   const confirmDeleteStory = async (storyToDelete) => {
