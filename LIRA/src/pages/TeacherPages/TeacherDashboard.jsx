@@ -12,6 +12,7 @@ import { liraAlert, showError, showWarning } from "../../utils/alerts";
 import { extractCsvLastName, findCsvNameColumn } from "../../utils/csvNames";
 import { storySlides } from "../../utils/storySlides";
 import { splitScannedStory } from "../../utils/scannedStory";
+import StoryHeatmap from "../../components/StoryHeatmap";
 import ScanImageList from "../../components/ScanImageList";
 import { readPdfPages, ocrLanguages } from "../../utils/pdfOcr";
 import { detectStoryLanguage } from "../../utils/storyLanguage";
@@ -314,6 +315,7 @@ function learnerToStudent(learner) {
     id: storyResult._id,
     storyId: storyResult.storyId,
     storyTitle: storyResult.storyTitle,
+    readingWordStats: storyResult.readingWordStats || [],
     readingWpm: storyResult.readingWpm ?? null,
     readingAccuracy: storyResult.readingAccuracy ?? null,
     score: storyResult.score,
@@ -645,10 +647,10 @@ function Dashboard({
 
 
   // ---------------------------------------------------------
-  // WPM heatmap
+  // Chart availability
   // ---------------------------------------------------------
 
-  const heatmapCells = students.slice(0, 28);
+
 
   const hasChartData = students.length > 0;
 
@@ -1300,78 +1302,11 @@ function Dashboard({
 
 
             {/* =================================================
-                WPM HEATMAP
+                STORY WORD HEATMAP
             ================================================= */}
 
-            <section className="dashboard-bottom-card dashboard-heatmap-card">
-
-              <div className="dashboard-heatmap-title">
-                Reading Heatmaps - WPM Growth
-              </div>
-
-
-              {heatmapCells.length > 0 ? (
-
-                <div className="dashboard-heatmap">
-
-                  {heatmapCells.map((student) => {
-
-                    const risk = riskOf(student);
-
-                    return (
-                      <div
-                        key={student.id}
-                        className="dashboard-heatmap-cell"
-                        title={`${student.lastName}: ${
-                          student.wpm == null
-                            ? "No Data"
-                            : `${student.wpm} WPM`
-                        }`}
-                        style={{
-                          background:
-                            riskColor[risk],
-                        }}
-                      >
-
-                        <span>
-                          {student.wpm == null
-                            ? "—"
-                            : student.wpm}
-                        </span>
-
-                      </div>
-                    );
-
-                  })}
-
-                </div>
-
-              ) : (
-
-                <div className="dashboard-empty dashboard-empty-heatmap">
-
-                  <div
-                    className="dashboard-empty-title"
-                    style={{
-                      color: C.text,
-                    }}
-                  >
-                    No reading data yet
-                  </div>
-
-                  <div
-                    style={{
-                      color: C.textMuted,
-                    }}
-                  >
-                    Each learner's tile will light up here as WPM data comes in.
-                  </div>
-
-                </div>
-
-              )}
-
-            </section>
+            <StoryHeatmap students={students} sections={sections} sectionName={sectionName}
+              onSectionChange={onSectionChange} teacherId={currentTeacher?.id} />
 
           </div>
 

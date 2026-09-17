@@ -614,6 +614,7 @@ function StoryMode({ onExit }) {
   const speechBoundaryRef = useRef(0);
   const latestSpeechEndRef = useRef(0);
   const exitPromptRef = useRef(false);
+  const readingWordStatsRef = useRef(Object.create(null));
   const readingAccuracyRef = useRef({ sum: 0, count: 0 });
   const readingTimerRef = useRef({ elapsed: 0, startedAt: null });
   const pauseReadingTimer = () => {
@@ -805,6 +806,15 @@ function StoryMode({ onExit }) {
         const previousCount = matchedWordCount(pageText, recognizedTextRef.current, language);
         recognizedTextRef.current = `${recognizedTextRef.current} ${event.result.text || ''}`.trim();
         const count = matchedWordCount(pageText, recognizedTextRef.current, language);
+        const words = readingWords(pageText);
+        const recordWord = (word, retry) => {
+          const key = normalizedWord(word);
+          const stat = readingWordStatsRef.current[key] ||= { word: key, attempts: 0, retries: 0 };
+          stat.attempts += 1;
+          if (retry) stat.retries += 1;
+        };
+        for (let index = previousCount; index < count; index += 1) recordWord(words[index], false);
+        if (count === previousCount && event.result.text?.trim() && words[count]) recordWord(words[count], true);
         setSpokenWordCount(count);
         setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
         if (count === previousCount && event.result.text) {
@@ -854,6 +864,7 @@ function StoryMode({ onExit }) {
 
   const openStory = (story) => {
     readingTimerRef.current = { elapsed: 0, startedAt: null };
+    readingWordStatsRef.current = Object.create(null);
     readingAccuracyRef.current = { sum: 0, count: 0 };
     setRetryWordIndex(null);
     setActiveStory(story);
@@ -913,7 +924,7 @@ function StoryMode({ onExit }) {
       const response = await fetch(`${API_URL}/api/story-results`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Learner-Id': learnerId || '' },
-        body: JSON.stringify({ storyId: activeStory.id, language, answers, readingDurationSeconds: readingTimerRef.current.elapsed / 1000, readingAccuracy: readingAccuracyRef.current.count ? Math.round(readingAccuracyRef.current.sum / readingAccuracyRef.current.count) : null })
+        body: JSON.stringify({ storyId: activeStory.id, language, answers, readingWordStats: Object.values(readingWordStatsRef.current), readingDurationSeconds: readingTimerRef.current.elapsed / 1000, readingAccuracy: readingAccuracyRef.current.count ? Math.round(readingAccuracyRef.current.sum / readingAccuracyRef.current.count) : null })
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || 'Could not save your score.');
