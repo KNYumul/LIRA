@@ -1765,7 +1765,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
         style={{
           gridTemplateColumns: "1.4fr 0.8fr 0.8fr 1fr 1fr 0.8fr",
           background: isFullRefresher ? C.highRowBg : C.cardBg,
-          color: isFullRefresher ? "#FFFFFF" : C.text,
+          color: "#000",
         }}
         onClick={() => onToggle(s.id)}
       >
@@ -1782,15 +1782,15 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
           </span>
         </div>
         <div className="flex items-center gap-3 justify-end" onClick={(e) => e.stopPropagation()}>
-          <button onClick={() => onEdit(s)}><Pencil size={16} color={isFullRefresher ? "#fff" : "#666"} /></button>
+          <button onClick={() => onEdit(s)}><Pencil size={16} color="#000" /></button>
           <button onClick={() => onDelete(s)}><MinusCircle size={18} color="#C0504D" /></button>
           <button onClick={() => onToggle(s.id)}>
-            {s.expanded ? <ChevronUp size={16} color={isFullRefresher ? "#fff" : "#666"} /> : <ChevronDown size={16} color={isFullRefresher ? "#fff" : "#666"} />}
+            {s.expanded ? <ChevronUp size={16} color="#000" /> : <ChevronDown size={16} color="#000" />}
           </button>
         </div>
       </div>
       {s.expanded && (
-        <div className="px-5 py-4 text-sm" style={{ background: isFullRefresher ? C.warningBg : "#F7F3EA", color: isFullRefresher ? "#fff" : C.text }}>
+        <div className="px-5 py-4 text-sm" style={{ background: isFullRefresher ? C.warningBg : "#F7F3EA", color: "#000" }}>
           {!s.storyResults.length ? (
             `No story test score has been recorded for ${s.lastName} yet.`
           ) : (
@@ -1798,24 +1798,36 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
               <div className="font-semibold mb-3">
                 Overall story-test average: {s.accuracy == null ? "--" : `${s.accuracy}%`} using one selected attempt per story.
               </div>
-              <div style={{ display: "grid", gap: "8px" }}>
+              <div className="overflow-x-auto" style={{ display: "grid", gap: "8px" }}>
                 {s.storyResults.map((storyResult) => (
                   <div
                     key={storyResult.id}
-                    style={{ display: "grid", gridTemplateColumns: "auto minmax(160px, 1fr) auto auto", gap: "18px", alignItems: "center" }}
+                    className="rounded-lg px-2 py-2"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "minmax(120px, 220px) max-content minmax(170px, 1fr) 84px",
+                      minWidth: "max-content",
+                      gap: "8px",
+                      alignItems: "center",
+                      background: storyResult.selectedForAverage ? C.cream : "transparent",
+                    }}
                   >
-                    {storyAttemptCounts.get(String(storyResult.storyId)) > 1 ? (
-                      <input
-                        type="radio"
-                        name={`average-score-${s.id}-${storyResult.storyId}`}
-                        checked={storyResult.selectedForAverage}
-                        onChange={() => onSelectScore(s.id, storyResult.id, storyResult.storyId)}
-                        aria-label={`Use the ${new Date(storyResult.completedAt).toLocaleString()} attempt of ${storyResult.storyTitle} in the average`}
-                      />
-                    ) : <span aria-hidden="true" />}
                     <span>{storyResult.storyTitle}</span>
-                    <strong>{storyResult.total > 0 ? `${storyResult.score}/${storyResult.total} (${storyResult.percentage}%)` : "No quiz"}{storyResult.readingWpm != null ? ` | ${storyResult.readingWpm} WPM (estimated)` : ""}</strong>
-                    <span>{new Date(storyResult.completedAt).toLocaleString()}</span>
+                    <strong className="rounded-md px-2 py-1" style={{ background: storyResult.selectedForAverage ? C.low : "transparent" }}>{storyResult.total > 0 ? `${storyResult.score}/${storyResult.total} (${storyResult.percentage}%)` : "No quiz"}{storyResult.readingWpm != null ? ` | ${storyResult.readingWpm} WPM (estimated)` : ""}</strong>
+                    <span className="pl-2">{new Date(storyResult.completedAt).toLocaleString()}</span>
+                    {storyAttemptCounts.get(String(storyResult.storyId)) > 1 ? (
+                      <button
+                        type="button"
+                        className="rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer disabled:cursor-default"
+                        style={{ background: storyResult.selectedForAverage ? C.activePill : C.coralDark, color: storyResult.selectedForAverage ? "#000" : "#fff" }}
+                        disabled={storyResult.selectedForAverage}
+                        aria-pressed={Boolean(storyResult.selectedForAverage)}
+                        onClick={() => onSelectScore(s.id, storyResult.id, storyResult.storyId)}
+                        aria-label={`${storyResult.selectedForAverage ? "Selected" : "Select"} ${new Date(storyResult.completedAt).toLocaleString()} attempt of ${storyResult.storyTitle} for the average`}
+                      >
+                        {storyResult.selectedForAverage ? "Selected" : "Select"}
+                      </button>
+                    ) : <span aria-hidden="true" />}
                   </div>
                 ))}
               </div>
@@ -3074,8 +3086,8 @@ function AddStoryModal({ onCancel, onSubmit, language = "ENG" }) {
           <div className="mt-4 text-sm" style={{ color: C.text }}>
             <p>Add story and question pages. Drag images to arrange the reading order, or use the arrows. Click an image to enlarge it.</p>
             <ScanImageList images={images} setImages={setImages} />
-            <button type="button" className="inline-flex items-center gap-2 rounded-full bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm font-semibold text-white cursor-pointer transition-colors" onClick={() => fileRef.current?.click()}>
-              <Plus size={16} aria-hidden="true" />
+            <button type="button" className="inline-flex items-center gap-1.5 rounded-full bg-[#EDA751] hover:bg-[#DF9844] px-3 py-1.5 text-xs font-semibold text-white cursor-pointer transition-colors" onClick={() => fileRef.current?.click()}>
+              <Plus size={14} aria-hidden="true" />
               Add images
             </button>
             <p className="mt-2 text-xs">Numbered questions with A–D choices are detected automatically. Review the text and select the correct answers before saving.</p>
@@ -3212,7 +3224,7 @@ function AddStoryModal({ onCancel, onSubmit, language = "ENG" }) {
 }
 
 // ---------- Unified In-Place Story & Questions Modal ----------
-function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
+function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions, onCheckStory }) {
   const [activeTab, setActiveTab] = useState("story");
   const [title, setTitle] = useState(story.title);
   const [editingTitle, setEditingTitle] = useState(false);
@@ -3224,6 +3236,8 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
   const [processingCover, setProcessingCover] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [regenerateError, setRegenerateError] = useState("");
+  const [checkingStory, setCheckingStory] = useState(false);
+  const [checkError, setCheckError] = useState("");
 
   const coverInputRef = useRef(null);
   const titleInputRef = useRef(null);
@@ -3303,6 +3317,23 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
       setRegenerateError(error.message || "Could not regenerate the questions.");
     } finally {
       setRegenerating(false);
+    }
+  };
+
+  const checkStory = async () => {
+    setCheckingStory(true);
+    setCheckError("");
+    try {
+      const feedback = await onCheckStory({ pages, language: story.lang });
+      await liraAlert.fire({
+        title: "AI story review",
+        text: feedback,
+        confirmButtonText: "Back to story",
+      });
+    } catch (error) {
+      setCheckError(error.message || "Could not check the story. Please try again.");
+    } finally {
+      setCheckingStory(false);
     }
   };
 
@@ -3418,6 +3449,19 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
                 <span className="text-sm font-semibold" style={{ color: C.text }}>
                   {pages.length} {usesParagraphs ? "paragraphs" : "pages"}
                 </span>
+                <button
+                  type="button"
+                  onClick={checkStory}
+                  disabled={checkingStory || !pages.some((page) => page.text?.trim())}
+                  className="text-xs px-6 py-2 rounded-full font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: "#fff", border: "1px solid #A9B5AC", color: "#718878" }}
+                >
+                  {checkingStory && <Loader2 size={13} className="animate-spin" />}
+                  {checkingStory ? "Checking..." : "Check with AI"}
+                </button>
+              </div>
+              {checkError && <p role="alert" className="text-xs mt-2" style={{ color: "#C0504D" }}>{checkError}</p>}
+              <div className="flex justify-end mt-3">
                 <button
                   type="button"
                   onClick={() => setActiveTab("questions")}
@@ -3716,6 +3760,17 @@ function Stories({ currentTeacher }) {
     return result.questions;
   };
 
+  const checkStory = async ({ pages, language }) => {
+    const response = await fetch(`${storyUrl()}/check`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...teacherHeaders() },
+      body: JSON.stringify({ pages, language }),
+    });
+    if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not check the story."));
+    const result = await response.json();
+    return result.feedback;
+  };
+
   const confirmDeleteStory = async (storyToDelete) => {
     try {
       const response = await fetch(storyUrl(storyToDelete.id), { method: "DELETE", headers: teacherHeaders() });
@@ -3788,6 +3843,7 @@ function Stories({ currentTeacher }) {
       )}
       {editTarget && (
         <StoryEditModal
+          onCheckStory={checkStory}
           story={editTarget}
           onCancel={() => setEditTarget(null)}
           onSave={saveStory}
