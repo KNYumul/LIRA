@@ -101,7 +101,7 @@ const SECTIONS = [
     content: (
       <p>
         Questions about these terms can be sent to{" "}
-        <strong>hello@lira-reading.ph</strong>.
+        <strong>support.lira3@gmail.com</strong>.
       </p>
     ),
   },
