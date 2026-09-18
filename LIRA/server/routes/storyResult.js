@@ -6,6 +6,8 @@ const StoryResult = require("../models/StoryResult");
 const Section = require("../models/Section");
 const Teacher = require("../models/Teacher");
 
+const { recordingSession } = require("../utils/recordingSession");
+const { parseRecording } = require("../utils/recording");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
@@ -25,6 +27,13 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const learnerId = req.get("X-Learner-Id");
+    let recording;
+    try { recording = parseRecording(req.body.recording); }
+    catch (error) { return res.status(400).json({ message: error.message }); }
+    if (recording.length) {
+      const session = await recordingSession(req, 'student');
+      if (!session || String(session.userId) !== learnerId) return res.status(401).json({ message: 'Please sign in again to submit your recording.' });
+    }
     const { storyId, language, answers, readingDurationSeconds, readingAccuracy, readingWordStats = [] } = req.body;
     if (!mongoose.isValidObjectId(learnerId) || !mongoose.isValidObjectId(storyId)) {
       return res.status(400).json({ message: "A valid learner and story are required." });
@@ -79,6 +88,8 @@ router.post("/", async (req, res) => {
       readingWordStats,
       readingWpm,
       readingAccuracy: story.lang === "ENG" ? readingAccuracy : null,
+      recording,
+      recordingSegmentCount: recording.length,
       selectedForAverage: true
     });
     await StoryResult.updateMany(
@@ -118,6 +129,34 @@ router.patch("/:id/select-for-average", async (req, res) => {
   } catch (error) {
     console.error("Could not select story result:", error);
     res.status(500).json({ message: "Could not update the score selection." });
+  }
+});
+
+router.get('/:id/recording/:segment', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    const session = await recordingSession(req, 'teacher');
+    if (!session || !(await Teacher.exists({ _id: session.userId, active: true }))) {
+      return res.status(401).json({ message: 'Please sign in as a teacher to listen to recordings.' });
+    }
+    if (!mongoose.isValidObjectId(req.params.id) || !/^\d+$/.test(req.params.segment)) return res.sendStatus(404);
+    const result = await StoryResult.findById(req.params.id);
+    if (!result) return res.sendStatus(404);
+    const learner = await Learner.findById(result.learnerId).select('sectionId');
+    if (!learner || !(await Section.exists({ _id: learner.sectionId, teacherId: session.userId }))) {
+      return res.status(403).json({ message: 'You can only listen to learners in your sections.' });
+    }
+    const index = Number(req.params.segment);
+    if (index >= result.recordingSegmentCount) return res.sendStatus(404);
+    const stored = await StoryResult.findById(result._id).select('+recording');
+    const segment = stored?.recording[index];
+    if (!segment) return res.sendStatus(404);
+    res.set('Content-Type', segment.mimeType);
+    res.set('X-Content-Type-Options', 'nosniff');
+    res.send(Buffer.from(segment.data));
+  } catch (error) {
+    console.error('Could not load recording:', error);
+    res.status(500).json({ message: 'Could not load the recording.' });
   }
 });
 

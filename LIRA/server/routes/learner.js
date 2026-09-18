@@ -5,6 +5,7 @@ const Teacher = require("../models/Teacher");
 const StoryResult = require("../models/StoryResult");
 const { loginKey, cooldownStatus, failedLogin, clearFailedLogins, sendCooldown } = require("../utils/loginCooldown");
 
+const { issueSession } = require("../utils/recordingSession");
 const router = express.Router();
 
 async function currentTeacher(req, res) {
@@ -60,7 +61,7 @@ router.get("/", async (req, res) => {
     const learnerIds = learners.map((learner) => learner._id);
     const results = await StoryResult.find({ learnerId: { $in: learnerIds } })
       .sort({ createdAt: -1 })
-      .select("learnerId storyId storyTitle score total readingAccuracy readingWpm readingWordStats readingWordCount readingDurationSeconds selectedForAverage createdAt");
+      .select("learnerId storyId storyTitle score total readingAccuracy readingWpm readingWordStats readingWordCount readingDurationSeconds recordingSegmentCount selectedForAverage createdAt");
     const resultsByLearner = new Map();
     results.forEach((result) => {
       const key = result.learnerId.toString();
@@ -171,6 +172,7 @@ router.post("/login", async (req, res) => {
     clearFailedLogins(key);
     res.json({
       message: "Login successful!",
+      token: await issueSession(learner._id, "student"),
       learner: { id: learner._id, lastName: learner.lastName, birthdate: learner.birthdate, section: learner.section }
     });
   } catch (error) {

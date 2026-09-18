@@ -4,6 +4,7 @@ const Teacher = require("../models/Teacher");
 const Section = require("../models/Section");
 const { hashPassword } = require("../utils/password");
 
+const { issueSession } = require("../utils/recordingSession");
 const router = express.Router();
 const oauthStates = new Map();
 const loginSessions = new Map();
@@ -129,10 +130,10 @@ router.get("/google/callback", async (req, res) => {
   }
 });
 
-router.get("/google/session", (req, res) => {
+router.get("/google/session", async (req, res) => {
   const session = takeFresh(loginSessions, String(req.query.code || ""));
   if (!session) return res.status(400).json({ message: "The Google login session expired or was already used." });
-  res.json({ message: "Google login successful.", teacher: session.teacher });
+  res.json({ message: "Google login successful.", teacher: session.teacher, token: await issueSession(session.teacher.id, "teacher") });
 });
 
 module.exports = router;

@@ -4,6 +4,7 @@ const Section = require("../models/Section");
 const { hashPassword, verifyPassword } = require("../utils/password");
 const { loginKey, cooldownStatus, failedLogin, clearFailedLogins, sendCooldown } = require("../utils/loginCooldown");
 
+const { issueSession } = require("../utils/recordingSession");
 const router = express.Router();
 
 function publicTeacher(teacher, sections = []) {
@@ -219,7 +220,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: `Invalid email or password. ${failure.remainingAttempts} attempt${failure.remainingAttempts === 1 ? "" : "s"} remaining.` });
     }
     clearFailedLogins(key);
-    res.json({ message: "Login successful.", teacher: publicTeacher(teacher) });
+    res.json({ message: "Login successful.", token: await issueSession(teacher._id, "teacher"), teacher: publicTeacher(teacher) });
   } catch (error) {
     console.error("Teacher login failed:", error);
     res.status(500).json({ message: "Could not log in." });

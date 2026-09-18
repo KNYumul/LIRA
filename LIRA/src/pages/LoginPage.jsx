@@ -86,7 +86,7 @@ function LoginPage() {
       .then(async (response) => {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || "Google login failed.");
-        saveSession({ role: "teacher", user: data.teacher });
+        saveSession({ role: "teacher", user: data.teacher, token: data.token });
         navigate("/teacher");
       })
       .catch((googleError) => setError(googleError.message || "Google login failed."));
@@ -236,7 +236,7 @@ function LoginPage() {
           )
         );
 
-        saveSession({ role: "student", user: data.learner });
+        saveSession({ role: "student", user: data.learner, token: data.token });
         navigate("/category");
       } catch (error) {
         console.error("Login error:", error);
@@ -368,7 +368,7 @@ function LoginPage() {
           return;
         }
 
-        saveSession({ role: "teacher", user: data.teacher });
+        saveSession({ role: "teacher", user: data.teacher, token: data.token });
         navigate("/teacher");
       } catch (error) {
         console.error("Teacher portal error:", error);

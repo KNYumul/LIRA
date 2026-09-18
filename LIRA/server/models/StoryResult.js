@@ -17,6 +17,11 @@ const storyResultSchema = new mongoose.Schema(
       attempts: { type: Number, min: 1, required: true },
       retries: { type: Number, min: 0, required: true }
     }, { _id: false })], default: [] },
+    recording: { type: [new mongoose.Schema({
+      mimeType: String,
+      data: Buffer,
+    }, { _id: false })], select: false, default: [] },
+    recordingSegmentCount: { type: Number, default: 0 },
     answers: { type: [Number], default: [] },
     selectedForAverage: { type: Boolean, default: true, index: true }
   },

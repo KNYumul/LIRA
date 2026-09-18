@@ -1,3 +1,4 @@
+import TeacherRecording from '../../components/TeacherRecording';
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Heart, Pencil, MinusCircle, ChevronDown, ChevronUp, Upload, Search, X, Plus, CheckCircle2, Sparkles, FileText, ScanLine, Loader2, ArrowLeft, Lock, Eye, EyeOff, Trash2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
@@ -313,6 +314,7 @@ function learnerToStudent(learner) {
   const result = learner.latestStoryResult;
   const storyResults = (learner.storyResults || []).map((storyResult) => ({
     id: storyResult._id,
+    recordingSegmentCount: storyResult.recordingSegmentCount || 0,
     storyId: storyResult.storyId,
     storyTitle: storyResult.storyTitle,
     readingWordStats: storyResult.readingWordStats || [],
@@ -744,6 +746,7 @@ function Dashboard({
 
       if (data.teacher) {
         saveSession({
+          ...getSession(),
           role: "teacher",
           user: data.teacher,
         });
@@ -1784,6 +1787,9 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
                         {storyResult.selectedForAverage ? "Selected" : "Select"}
                       </button>
                     ) : <span aria-hidden="true" />}
+                    <div style={{ gridColumn: "1 / -1", marginTop: 8 }}>
+                      <TeacherRecording resultId={storyResult.id} count={storyResult.recordingSegmentCount} />
+                    </div>
                   </div>
                 ))}
               </div>

@@ -1,3 +1,4 @@
+import { ReadingRecorder } from '../utils/readingRecorder';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import './StoryMode.css';
@@ -599,12 +600,12 @@ function StoryMode({ onExit }) {
   const [selectedOption, setSelectedOption] = useState(null);
   const [quizDone, setQuizDone] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState([]);
-  const [quizResult, setQuizResult] = useState(null);
   const [scoreError, setScoreError] = useState('');
   const [savingScore, setSavingScore] = useState(false);
   const [cardTransition, setCardTransition] = useState('flashcard-active');
 
   const [carouselOffset, setCarouselOffset] = useState(0);
+  const recordingRef = useRef(new ReadingRecorder());
   const recognizerRef = useRef(null);
   const recognizedTextRef = useRef('');
   const listeningRequestRef = useRef(0);
@@ -707,6 +708,7 @@ function StoryMode({ onExit }) {
   }, []);
 
   const stopListening = () => {
+    recordingRef.current.stop();
     listeningRequestRef.current += 1;
     const recognizer = recognizerRef.current;
     recognizerRef.current = null;
@@ -719,7 +721,27 @@ function StoryMode({ onExit }) {
     }
   };
 
+  useEffect(() => {
+    const pauseMicrophone = () => {
+      if (!document.hidden && !isInactivityPaused()) return;
+      recordingRef.current.stop();
+      listeningRequestRef.current += 1;
+      const recognizer = recognizerRef.current;
+      recognizerRef.current = null;
+      if (recognizer) recognizer.stopContinuousRecognitionAsync(() => recognizer.close(), () => recognizer.close());
+      setIsListening(false);
+      setSpeechStatus('Microphone paused. Tap it to continue recording your reading.');
+    };
+    document.addEventListener('visibilitychange', pauseMicrophone);
+    window.addEventListener(INACTIVITY_PAUSE_EVENT, pauseMicrophone);
+    return () => {
+      document.removeEventListener('visibilitychange', pauseMicrophone);
+      window.removeEventListener(INACTIVITY_PAUSE_EVENT, pauseMicrophone);
+    };
+  }, []);
+
   useEffect(() => () => {
+    recordingRef.current.stop();
     listeningRequestRef.current += 1;
     clearTimeout(pageTransitionRef.current);
     const recognizer = recognizerRef.current;
@@ -739,6 +761,8 @@ function StoryMode({ onExit }) {
     // accepted words so pausing and resuming preserves the visible position.
     recognizedTextRef.current = readingWords(pageText).slice(0, spokenWordCount).join(' ');
     try {
+      if (!getSession()?.token) throw new Error('Please sign in again before recording your reading.');
+      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) throw new Error('Recording requires a supported browser and HTTPS (or localhost).');
       const learnerId = getSession()?.user?.id;
       const response = await fetch(`${API_URL}/api/speech/token`, {
         method: 'POST',
@@ -754,7 +778,21 @@ function StoryMode({ onExit }) {
       speechConfig.outputFormat = SpeechSDK.OutputFormat.Detailed;
       speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceResponse_StablePartialResultThreshold, '1');
       speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, language === 'FIL' ? '900' : '500');
-      const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (request !== listeningRequestRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      try {
+        recordingRef.current.start(stream, (message) => {
+          stopListening();
+          setSpeechStatus(message);
+        });
+      } catch (error) {
+        stream.getTracks().forEach((track) => track.stop());
+        throw error;
+      }
+      const audioConfig = SpeechSDK.AudioConfig.fromStreamInput(stream);
       const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
 
       if (language === 'ENG') {
@@ -844,6 +882,7 @@ function StoryMode({ onExit }) {
         },
         (error) => {
           if (recognizerRef.current !== recognizer) return;
+          recordingRef.current.stop();
           recognizer.close();
           recognizerRef.current = null;
           setIsListening(false);
@@ -852,6 +891,7 @@ function StoryMode({ onExit }) {
       );
     } catch (error) {
       if (request !== listeningRequestRef.current) return;
+      recordingRef.current.stop();
       recognizerRef.current?.close();
       recognizerRef.current = null;
       setIsListening(false);
@@ -863,6 +903,8 @@ function StoryMode({ onExit }) {
   };
 
   const openStory = (story) => {
+    recordingRef.current.stop();
+    recordingRef.current = new ReadingRecorder();
     readingTimerRef.current = { elapsed: 0, startedAt: null };
     readingWordStatsRef.current = Object.create(null);
     readingAccuracyRef.current = { sum: 0, count: 0 };
@@ -902,7 +944,6 @@ function StoryMode({ onExit }) {
         setSelectedOption(null);
         setQuizDone(false);
         setQuizAnswers([]);
-        setQuizResult(null);
         setScoreError('');
         setView('quiz');
         setCardTransition('flashcard-active');
@@ -923,12 +964,11 @@ function StoryMode({ onExit }) {
       const learnerId = getSession()?.user?.id;
       const response = await fetch(`${API_URL}/api/story-results`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Learner-Id': learnerId || '' },
-        body: JSON.stringify({ storyId: activeStory.id, language, answers, readingWordStats: Object.values(readingWordStatsRef.current), readingDurationSeconds: readingTimerRef.current.elapsed / 1000, readingAccuracy: readingAccuracyRef.current.count ? Math.round(readingAccuracyRef.current.sum / readingAccuracyRef.current.count) : null })
+        headers: { 'Content-Type': 'application/json', 'X-Learner-Id': learnerId || '', Authorization: `Bearer ${getSession()?.token || ''}` },
+        body: JSON.stringify({ recording: await recordingRef.current.serialize(), storyId: activeStory.id, language, answers, readingWordStats: Object.values(readingWordStatsRef.current), readingDurationSeconds: readingTimerRef.current.elapsed / 1000, readingAccuracy: readingAccuracyRef.current.count ? Math.round(readingAccuracyRef.current.sum / readingAccuracyRef.current.count) : null })
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || 'Could not save your score.');
-      setQuizResult(result);
       setCompletedStoryIds((previous) => new Set(previous).add(String(activeStory.id)));
     } catch (error) {
       setScoreError(error.message || 'Could not save your score.');
@@ -1205,8 +1245,6 @@ function StoryMode({ onExit }) {
       return (
         <CompletionScreen onBack={backToSelection} backLabel="Back to Stories">
           {savingScore && <p>Saving reading result...</p>}
-          {quizResult && <p>Your story result has been sent to your teacher.</p>}
-          {quizResult?.readingWpm != null && <p>Estimated reading speed: {quizResult.readingWpm} WPM</p>}
           {scoreError && <p className="completion-error">{scoreError} Your teacher will not see this attempt yet.</p>}
         </CompletionScreen>
       );

@@ -18,6 +18,7 @@ const app = express();
 
 app.use(cors());
 // Story cover images are resized in the browser and sent as data URLs.
+app.use("/api/story-results", express.json({ limit: "12mb" }));
 app.use(express.json({ limit: "3mb" }));
 
 app.use("/api/learners", learnerRoutes);
