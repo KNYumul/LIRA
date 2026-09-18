@@ -25,12 +25,15 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const learnerId = req.get("X-Learner-Id");
-    const { storyId, language, answers, readingDurationSeconds } = req.body;
+    const { storyId, language, answers, readingDurationSeconds, readingAccuracy, readingWordStats = [] } = req.body;
     if (!mongoose.isValidObjectId(learnerId) || !mongoose.isValidObjectId(storyId)) {
       return res.status(400).json({ message: "A valid learner and story are required." });
     }
     if (!Array.isArray(answers)) return res.status(400).json({ message: "Quiz answers are required." });
 
+    if (readingAccuracy != null && (typeof readingAccuracy !== "number" || !Number.isFinite(readingAccuracy) || readingAccuracy < 0 || readingAccuracy > 100)) {
+      return res.status(400).json({ message: "Reading accuracy must be a number from 0 to 100." });
+    }
     if (readingDurationSeconds != null && (typeof readingDurationSeconds !== "number" || !Number.isFinite(readingDurationSeconds) || readingDurationSeconds < 0.001)) {
       return res.status(400).json({ message: "Reading duration must be a positive number of seconds." });
     }
@@ -40,6 +43,16 @@ router.post("/", async (req, res) => {
     ]);
     if (!learner) return res.status(401).json({ message: "Your learner account could not be verified." });
     if (!story) return res.status(404).json({ message: "Story not found." });
+    const storyWords = new Set(story.pages.flatMap((page) =>
+      (String(page.text || '').match(/[\p{L}\p{N}]+(?:['\u2019-][\p{L}\p{N}]+)*/gu) || [])
+        .map((word) => word.toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))));
+    if (!Array.isArray(readingWordStats) || readingWordStats.length > storyWords.size
+      || new Set(readingWordStats.map((stat) => stat?.word)).size !== readingWordStats.length
+      || readingWordStats.some((stat) => !stat || !storyWords.has(stat.word)
+        || !Number.isSafeInteger(stat.attempts) || stat.attempts < 1
+        || !Number.isSafeInteger(stat.retries) || stat.retries < 0 || stat.retries > stat.attempts)) {
+      return res.status(400).json({ message: "Invalid word reading data." });
+    }
     const questions = story.questions.filter((question) =>
       question.question && Array.isArray(question.options) && question.options.length > 1 && Number.isInteger(question.correct)
     );
@@ -63,7 +76,9 @@ router.post("/", async (req, res) => {
       answers,
       readingDurationSeconds,
       readingWordCount,
+      readingWordStats,
       readingWpm,
+      readingAccuracy: story.lang === "ENG" ? readingAccuracy : null,
       selectedForAverage: true
     });
     await StoryResult.updateMany(

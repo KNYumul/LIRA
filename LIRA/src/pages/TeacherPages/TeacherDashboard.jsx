@@ -12,9 +12,11 @@ import { liraAlert, showError, showWarning } from "../../utils/alerts";
 import { extractCsvLastName, findCsvNameColumn } from "../../utils/csvNames";
 import { storySlides } from "../../utils/storySlides";
 import { splitScannedStory } from "../../utils/scannedStory";
+import StoryHeatmap from "../../components/StoryHeatmap";
 import ScanImageList from "../../components/ScanImageList";
 import { readPdfPages, ocrLanguages } from "../../utils/pdfOcr";
 import { detectStoryLanguage } from "../../utils/storyLanguage";
+import { storyFeedbackIssues } from "../../utils/storyFeedback";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -301,6 +303,11 @@ function formatStudentName(value) {
   return name ? `${name.charAt(0).toLocaleUpperCase()}${name.slice(1)}` : "";
 }
 
+function averageReadingAccuracy(results) {
+  const assessed = results.filter((result) => result.selectedForAverage && result.readingAccuracy != null);
+  return assessed.length ? Math.round(assessed.reduce((sum, result) => sum + result.readingAccuracy, 0) / assessed.length) : null;
+}
+
 function learnerToStudent(learner) {
   const [birthYear = "", birthMonth = "", birthDay = ""] = (learner.birthdate || "").split("-");
   const result = learner.latestStoryResult;
@@ -308,7 +315,9 @@ function learnerToStudent(learner) {
     id: storyResult._id,
     storyId: storyResult.storyId,
     storyTitle: storyResult.storyTitle,
+    readingWordStats: storyResult.readingWordStats || [],
     readingWpm: storyResult.readingWpm ?? null,
+    readingAccuracy: storyResult.readingAccuracy ?? null,
     score: storyResult.score,
     total: storyResult.total,
     percentage: storyResult.total ? Math.round((storyResult.score / storyResult.total) * 100) : 0,
@@ -328,6 +337,7 @@ function learnerToStudent(learner) {
     birthYear,
     wpm: storyResults.find((attempt) => attempt.readingWpm != null)?.readingWpm ?? null,
     accuracy,
+    readingAccuracy: averageReadingAccuracy(storyResults),
     historyDate: result?.createdAt ? new Date(result.createdAt).toLocaleDateString() : "--",
     storyResults,
     hasReadingData: storyResults.length > 0,
@@ -637,10 +647,10 @@ function Dashboard({
 
 
   // ---------------------------------------------------------
-  // WPM heatmap
+  // Chart availability
   // ---------------------------------------------------------
 
-  const heatmapCells = students.slice(0, 28);
+
 
   const hasChartData = students.length > 0;
 
@@ -1292,78 +1302,11 @@ function Dashboard({
 
 
             {/* =================================================
-                WPM HEATMAP
+                STORY WORD HEATMAP
             ================================================= */}
 
-            <section className="dashboard-bottom-card dashboard-heatmap-card">
-
-              <div className="dashboard-heatmap-title">
-                Reading Heatmaps - WPM Growth
-              </div>
-
-
-              {heatmapCells.length > 0 ? (
-
-                <div className="dashboard-heatmap">
-
-                  {heatmapCells.map((student) => {
-
-                    const risk = riskOf(student);
-
-                    return (
-                      <div
-                        key={student.id}
-                        className="dashboard-heatmap-cell"
-                        title={`${student.lastName}: ${
-                          student.wpm == null
-                            ? "No Data"
-                            : `${student.wpm} WPM`
-                        }`}
-                        style={{
-                          background:
-                            riskColor[risk],
-                        }}
-                      >
-
-                        <span>
-                          {student.wpm == null
-                            ? "—"
-                            : student.wpm}
-                        </span>
-
-                      </div>
-                    );
-
-                  })}
-
-                </div>
-
-              ) : (
-
-                <div className="dashboard-empty dashboard-empty-heatmap">
-
-                  <div
-                    className="dashboard-empty-title"
-                    style={{
-                      color: C.text,
-                    }}
-                  >
-                    No reading data yet
-                  </div>
-
-                  <div
-                    style={{
-                      color: C.textMuted,
-                    }}
-                  >
-                    Each learner's tile will light up here as WPM data comes in.
-                  </div>
-
-                </div>
-
-              )}
-
-            </section>
+            <StoryHeatmap students={students} sections={sections} sectionName={sectionName}
+              onSectionChange={onSectionChange} teacherId={currentTeacher?.id} />
 
           </div>
 
@@ -1750,6 +1693,8 @@ function DeleteConfirmModal({ title = "Remove this learner?", subtitle, onCancel
 }
 
 // ---------- Students page ----------
+const STUDENT_COLUMNS = "minmax(0, 1.4fr) minmax(0, 0.7fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr)";
+
 function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
   const risk = riskOf(s);
   const isFullRefresher = risk === "fullRefresher";
@@ -1763,15 +1708,16 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
       <div
         className="grid items-center px-5 py-4 cursor-pointer"
         style={{
-          gridTemplateColumns: "1.4fr 0.8fr 0.8fr 1fr 1fr 0.8fr",
+          gridTemplateColumns: STUDENT_COLUMNS,
           background: isFullRefresher ? C.highRowBg : C.cardBg,
-          color: isFullRefresher ? "#FFFFFF" : C.text,
+          color: "#000",
         }}
         onClick={() => onToggle(s.id)}
       >
         <div className="font-semibold">{s.lastName}</div>
         <div className="font-semibold">{s.wpm == null ? "--" : `${s.wpm} wpm`}</div>
-        <div className="font-semibold">{s.accuracy == null ? "--" : `${s.accuracy}%`}</div>
+        <div className="font-semibold text-center tabular-nums">{s.accuracy == null ? "--" : `${s.accuracy}%`}</div>
+        <div className="font-semibold text-center tabular-nums">{s.readingAccuracy == null ? "--" : `${s.readingAccuracy}%`}</div>
         <div>{s.historyDate}</div>
         <div>
           <span
@@ -1782,42 +1728,65 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
           </span>
         </div>
         <div className="flex items-center gap-3 justify-end" onClick={(e) => e.stopPropagation()}>
-          <button onClick={() => onEdit(s)}><Pencil size={16} color={isFullRefresher ? "#fff" : "#666"} /></button>
+          <button onClick={() => onEdit(s)}><Pencil size={16} color="#000" /></button>
           <button onClick={() => onDelete(s)}><MinusCircle size={18} color="#C0504D" /></button>
           <button onClick={() => onToggle(s.id)}>
-            {s.expanded ? <ChevronUp size={16} color={isFullRefresher ? "#fff" : "#666"} /> : <ChevronDown size={16} color={isFullRefresher ? "#fff" : "#666"} />}
+            {s.expanded ? <ChevronUp size={16} color="#000" /> : <ChevronDown size={16} color="#000" />}
           </button>
         </div>
       </div>
       {s.expanded && (
-        <div className="px-5 py-4 text-sm" style={{ background: isFullRefresher ? C.warningBg : "#F7F3EA", color: isFullRefresher ? "#fff" : C.text }}>
+        <div className="px-5 py-4 text-sm" style={{ background: isFullRefresher ? C.warningBg : "#F7F3EA", color: "#000" }}>
           {!s.storyResults.length ? (
             `No story test score has been recorded for ${s.lastName} yet.`
           ) : (
             <>
               <div className="font-semibold mb-3">
-                Overall story-test average: {s.accuracy == null ? "--" : `${s.accuracy}%`} using one selected attempt per story.
+                Comprehension Score: {s.accuracy == null ? "--" : `${s.accuracy}%`} using one selected attempt per story.
               </div>
-              <div style={{ display: "grid", gap: "8px" }}>
+              <p className="mb-3">Reading Accuracy: {s.readingAccuracy == null ? "--" : `${s.readingAccuracy}%`}. Average spoken-word pronunciation score across selected assessed attempts (English). Unavailable scores appear as --.</p>
+              <div className="overflow-x-auto">
+                <div className="grid gap-2">
+                  <div className="grid items-center py-1 text-xs font-semibold" style={{ gridTemplateColumns: STUDENT_COLUMNS }}>
+                    <span>Story</span>
+                    <span>WPM (est.)</span>
+                    <span className="text-center">Comprehension Score</span>
+                    <span className="text-center">Reading Accuracy</span>
+                    <span style={{ gridColumn: "5 / 7" }}>Completed</span>
+                    <span className="text-center">Selection</span>
+                  </div>
                 {s.storyResults.map((storyResult) => (
                   <div
                     key={storyResult.id}
-                    style={{ display: "grid", gridTemplateColumns: "auto minmax(160px, 1fr) auto auto", gap: "18px", alignItems: "center" }}
+                    className="rounded-lg py-2 px-3"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: STUDENT_COLUMNS,
+                      alignItems: "center",
+                      background: storyResult.selectedForAverage ? C.cream : "transparent",
+                    }}
                   >
+                    <span className="pr-2 break-words">{storyResult.storyTitle}</span>
+                    <span className="tabular-nums">{storyResult.readingWpm ?? "--"}</span>
+                    <strong className="rounded-md px-2 py-1 text-center tabular-nums" style={{ background: storyResult.selectedForAverage ? C.low : "transparent" }}>{storyResult.total > 0 ? `${storyResult.score}/${storyResult.total} (${storyResult.percentage}%)` : "No quiz"}</strong>
+                    <strong className="text-center tabular-nums">{storyResult.readingAccuracy == null ? "--" : `${storyResult.readingAccuracy}%`}</strong>
+                    <span style={{ gridColumn: "5 / 7" }}>{new Date(storyResult.completedAt).toLocaleString()}</span>
                     {storyAttemptCounts.get(String(storyResult.storyId)) > 1 ? (
-                      <input
-                        type="radio"
-                        name={`average-score-${s.id}-${storyResult.storyId}`}
-                        checked={storyResult.selectedForAverage}
-                        onChange={() => onSelectScore(s.id, storyResult.id, storyResult.storyId)}
-                        aria-label={`Use the ${new Date(storyResult.completedAt).toLocaleString()} attempt of ${storyResult.storyTitle} in the average`}
-                      />
+                      <button
+                        type="button"
+                        className="rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer disabled:cursor-default"
+                        style={{ background: storyResult.selectedForAverage ? C.activePill : C.coralDark, color: storyResult.selectedForAverage ? "#000" : "#fff" }}
+                        disabled={storyResult.selectedForAverage}
+                        aria-pressed={Boolean(storyResult.selectedForAverage)}
+                        onClick={() => onSelectScore(s.id, storyResult.id, storyResult.storyId)}
+                        aria-label={`${storyResult.selectedForAverage ? "Selected" : "Select"} ${new Date(storyResult.completedAt).toLocaleString()} attempt of ${storyResult.storyTitle} for the average`}
+                      >
+                        {storyResult.selectedForAverage ? "Selected" : "Select"}
+                      </button>
                     ) : <span aria-hidden="true" />}
-                    <span>{storyResult.storyTitle}</span>
-                    <strong>{storyResult.total > 0 ? `${storyResult.score}/${storyResult.total} (${storyResult.percentage}%)` : "No quiz"}{storyResult.readingWpm != null ? ` | ${storyResult.readingWpm} WPM (estimated)` : ""}</strong>
-                    <span>{new Date(storyResult.completedAt).toLocaleString()}</span>
                   </div>
                 ))}
+              </div>
               </div>
               {isFullRefresher && <div className="mt-3">This learner needs a full refresher. Consider reviewing the stories together and revisiting the missed comprehension skills.</div>}
             </>
@@ -1855,7 +1824,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         const selectedResults = storyResults.filter((result) => result.selectedForAverage);
         const pointsEarned = selectedResults.reduce((sum, result) => sum + result.score, 0);
         const pointsPossible = selectedResults.reduce((sum, result) => sum + result.total, 0);
-        return { ...student, storyResults, accuracy: pointsPossible ? Math.round((pointsEarned / pointsPossible) * 100) : null };
+        return { ...student, storyResults, readingAccuracy: averageReadingAccuracy(storyResults), accuracy: pointsPossible ? Math.round((pointsEarned / pointsPossible) * 100) : null };
       }));
     } catch (requestError) {
       await showError(requestError.message);
@@ -2183,8 +2152,8 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         </button>
       </div>
 
-      <div className="grid px-5 py-2 mt-5 text-xs font-semibold" style={{ gridTemplateColumns: "1.4fr 0.8fr 0.8fr 1fr 1fr 0.8fr", color: C.textMuted }}>
-        <div>Learner</div><div>WPM</div><div>Avg. Score</div><div>Latest Test</div><div>Risk Level</div><div className="text-right">Actions</div>
+      <div className="grid px-5 py-2 mt-5 text-xs font-semibold border border-transparent" style={{ gridTemplateColumns: STUDENT_COLUMNS, color: C.textMuted }}>
+        <div>Learner</div><div>WPM</div><div className="text-center">Comprehension Score</div><div className="text-center">Reading Accuracy</div><div>Latest Test</div><div>Risk Level</div><div className="text-right">Actions</div>
       </div>
 
       {loading && <div className="text-center py-10 text-sm" style={{ color: C.textMuted }}>Loading learners...</div>}
@@ -2220,7 +2189,8 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
               <th>No.</th>
               <th>Learner</th>
               <th>WPM</th>
-              <th>Average Score</th>
+              <th>Comprehension Score</th>
+              <th>Reading Accuracy</th>
               <th>History</th>
               <th>Risk Level</th>
               <th>Action</th>
@@ -2244,6 +2214,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
                   <td>{student.lastName}</td>
                   <td>{student.wpm == null ? "--" : student.wpm}</td>
                   <td>{student.accuracy == null ? "--" : `${student.accuracy}%`}</td>
+                  <td>{student.readingAccuracy == null ? "--" : `${student.readingAccuracy}%`}</td>
                   <td>{student.historyDate}</td>
                   <td>{riskLabel[risk]}</td>
                   <td>{action}</td>
@@ -3074,8 +3045,8 @@ function AddStoryModal({ onCancel, onSubmit, language = "ENG" }) {
           <div className="mt-4 text-sm" style={{ color: C.text }}>
             <p>Add story and question pages. Drag images to arrange the reading order, or use the arrows. Click an image to enlarge it.</p>
             <ScanImageList images={images} setImages={setImages} />
-            <button type="button" className="inline-flex items-center gap-2 rounded-full bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm font-semibold text-white cursor-pointer transition-colors" onClick={() => fileRef.current?.click()}>
-              <Plus size={16} aria-hidden="true" />
+            <button type="button" className="inline-flex items-center gap-1.5 rounded-full bg-[#EDA751] hover:bg-[#DF9844] px-3 py-1.5 text-xs font-semibold text-white cursor-pointer transition-colors" onClick={() => fileRef.current?.click()}>
+              <Plus size={14} aria-hidden="true" />
               Add images
             </button>
             <p className="mt-2 text-xs">Numbered questions with A–D choices are detected automatically. Review the text and select the correct answers before saving.</p>
@@ -3212,7 +3183,7 @@ function AddStoryModal({ onCancel, onSubmit, language = "ENG" }) {
 }
 
 // ---------- Unified In-Place Story & Questions Modal ----------
-function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
+function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions, onCheckStory }) {
   const [activeTab, setActiveTab] = useState("story");
   const [title, setTitle] = useState(story.title);
   const [editingTitle, setEditingTitle] = useState(false);
@@ -3224,6 +3195,8 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
   const [processingCover, setProcessingCover] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [regenerateError, setRegenerateError] = useState("");
+  const [checkingStory, setCheckingStory] = useState(false);
+  const [checkError, setCheckError] = useState("");
 
   const coverInputRef = useRef(null);
   const titleInputRef = useRef(null);
@@ -3303,6 +3276,35 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
       setRegenerateError(error.message || "Could not regenerate the questions.");
     } finally {
       setRegenerating(false);
+    }
+  };
+
+  const checkStory = async () => {
+    setCheckingStory(true);
+    setCheckError("");
+    try {
+      const issues = await onCheckStory({ pages, language: story.lang });
+      const feedback = document.createElement(issues.length ? "ul" : "p");
+      if (issues.length) {
+        Object.assign(feedback.style, { textAlign: "left", listStyleType: "disc", paddingLeft: "1.5rem" });
+        issues.forEach((issue) => {
+          const item = document.createElement("li");
+          item.textContent = issue;
+          item.style.marginBottom = "0.75rem";
+          feedback.appendChild(item);
+        });
+      } else {
+        feedback.textContent = "No spelling or other issues found.";
+      }
+      await liraAlert.fire({
+        title: "AI story review",
+        html: feedback,
+        confirmButtonText: "Back to story",
+      });
+    } catch (error) {
+      setCheckError(error.message || "Could not check the story. Please try again.");
+    } finally {
+      setCheckingStory(false);
     }
   };
 
@@ -3414,10 +3416,21 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
               </div>
               {coverError && <div className="text-xs mt-2" style={{ color: "#C0504D" }}>{coverError}</div>}
               <p className="text-xs mt-2" style={{ color: C.textMuted }}>{story.description}</p>
-              <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center justify-between gap-3 mt-3">
                 <span className="text-sm font-semibold" style={{ color: C.text }}>
                   {pages.length} {usesParagraphs ? "paragraphs" : "pages"}
                 </span>
+                <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={checkStory}
+                  disabled={checkingStory || !pages.some((page) => page.text?.trim())}
+                  className="text-xs px-6 py-2 rounded-full font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: "#fff", border: "1px solid #A9B5AC", color: "#718878" }}
+                >
+                  {checkingStory && <Loader2 size={13} className="animate-spin" />}
+                  {checkingStory ? "Checking..." : "Check with AI"}
+                </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab("questions")}
@@ -3426,7 +3439,9 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions }) {
                 >
                   Manage Questions ({questions.filter((q) => q.question).length}) &rarr;
                 </button>
+                </div>
               </div>
+              {checkError && <p role="alert" className="text-xs mt-2" style={{ color: "#C0504D" }}>{checkError}</p>}
             </div>
 
             <div className="flex-1 overflow-y-auto px-6">
@@ -3716,6 +3731,17 @@ function Stories({ currentTeacher }) {
     return result.questions;
   };
 
+  const checkStory = async ({ pages, language }) => {
+    const response = await fetch(`${storyUrl()}/check`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...teacherHeaders() },
+      body: JSON.stringify({ pages, language }),
+    });
+    if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not check the story."));
+    const result = await response.json();
+    return storyFeedbackIssues(result);
+  };
+
   const confirmDeleteStory = async (storyToDelete) => {
     try {
       const response = await fetch(storyUrl(storyToDelete.id), { method: "DELETE", headers: teacherHeaders() });
@@ -3788,6 +3814,7 @@ function Stories({ currentTeacher }) {
       )}
       {editTarget && (
         <StoryEditModal
+          onCheckStory={checkStory}
           story={editTarget}
           onCancel={() => setEditTarget(null)}
           onSave={saveStory}
