@@ -605,6 +605,7 @@ function StoryMode({ onExit }) {
   const [cardTransition, setCardTransition] = useState('flashcard-active');
 
   const [carouselOffset, setCarouselOffset] = useState(0);
+  const [carouselDirection, setCarouselDirection] = useState('next');
   const recordingRef = useRef(new ReadingRecorder());
   const recognizerRef = useRef(null);
   const recognizedTextRef = useRef('');
@@ -1045,6 +1046,7 @@ function StoryMode({ onExit }) {
 
   const shiftCarousel = (direction) => {
     const maxOffset = Math.max(0, filteredStories.length - 3);
+    setCarouselDirection(direction > 0 ? 'next' : 'prev');
     setCarouselOffset((prev) => Math.min(maxOffset, Math.max(0, prev + direction)));
   };
 
@@ -1110,7 +1112,10 @@ function StoryMode({ onExit }) {
                 </svg>
               </button>
 
-              <div className="sm-cards-track" key={language}>
+              <div
+                className={`sm-cards-track ${carouselDirection === 'next' ? 'sm-slide-from-right' : 'sm-slide-from-left'}`}
+                key={`${language}-${carouselOffset}`}
+              >
                 {visibleStories.map((story) => (
                   <button
                     type="button"

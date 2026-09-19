@@ -25,11 +25,18 @@
 }
 
 .sm-selection-bg {
-  background-image: url('/src/assets/story-mode.jpg');
+  background-image: url('/src/assets/story-section.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-color: var(--cream);
+
+    min-height: 100vh;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  padding-bottom: 80px;
 }
 
 .sm-reading-bg {
@@ -135,15 +142,21 @@
   text-align: center;
 }
 
-/* Story selection / Carousel with Switch Animation */
 .sm-categories {
   position: relative;
   z-index: 2;
+
   display: flex;
   flex-direction: column;
+
   gap: 48px;
+
   max-width: 1200px;
-  margin: 0 auto;
+
+  /* More space underneath the story carousel */
+  margin: 0 auto 100px;
+
+  padding-bottom: 60px;
 }
 
 .sm-category-block {
@@ -227,18 +240,28 @@
   grid-template-columns: repeat(3, minmax(200px, 260px));
   justify-content: center;
   gap: 24px;
-  animation: sm-fade-scale 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  will-change: transform, opacity;
 }
 
-@keyframes sm-fade-scale {
-  0% {
-    opacity: 0;
-    transform: scale(0.95) translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+.sm-cards-track.sm-slide-from-right {
+  animation: sm-slide-from-right 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.sm-cards-track.sm-slide-from-left {
+  animation: sm-slide-from-left 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes sm-slide-from-right {
+  0% { opacity: 0; transform: translateX(55px) scale(0.97); }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes sm-slide-from-left {
+  0% { opacity: 0; transform: translateX(-55px) scale(0.97); }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
 }
 
 .sm-book-card {
@@ -739,4 +762,12 @@
   font-size: 16px;
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(90, 169, 192, 0.35);
+}
+
+
+/* Carousel transition accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .sm-cards-track {
+    animation: none !important;
+  }
 }

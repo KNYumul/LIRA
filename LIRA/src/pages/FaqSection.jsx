@@ -1,207 +1,215 @@
-import React, { useState } from 'react';
-import './FaqSection.css';
-import bunnyIcon from '../assets/icons/bunny.jpg';
-import owlIcon from '../assets/icons/owl.svg';
-import catIcon from '../assets/icons/cat.svg';
-import foxIcon from '../assets/icons/fox.jpg';
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import "./FlashcardDifficulty.css";
+import { getSession } from "../utils/session";
+import bgFlashcards from "../assets/flashcard-difficulty_bg.svg";
 
+const API_URL = import.meta.env.VITE_API_URL || "";
 
-// Category cards shown under the search bar
-const CATEGORIES = [
+const DIFFICULTIES = [
   {
-    id: 'getting-started',
-    icon: bunnyIcon,
-    alt: 'Bunny icon',
-    title: 'Getting Started',
-    subtitle: 'Accounts and Setup',
+    key: "easy",
+    label: "Easy",
+    icon: "/UI_Designs/ANIMALS/B_Koala.png",
+    accent: "blue",
+    description:
+      "Short, familiar words and sentences to build reading confidence.",
   },
   {
-    id: 'for-teachers',
-    icon: owlIcon,
-    alt: 'Owl icon',
-    title: 'For Teachers',
-    subtitle: 'Dashboard and Roster',
+    key: "medium",
+    label: "Medium",
+    icon: "/UI_Designs/ANIMALS/L_Turtle.png",
+    accent: "coral",
+    description:
+      "Longer phrases and sentences for growing readers.",
   },
   {
-    id: 'for-students',
-    icon: catIcon,
-    alt: 'Cat icon',
-    title: 'For Students',
-    subtitle: 'reading and Flashcards',
-  },
-  {
-    id: 'troubleshooting',
-    icon: foxIcon,
-    alt: 'Fox icon',
-    title: 'Troubleshooting',
-    subtitle: 'Mic and Login Issues',
+    key: "hard",
+    label: "Hard",
+    icon: "/UI_Designs/ANIMALS/E_Dinosaur.png",
+    accent: "green",
+    description:
+      "More challenging vocabulary and detailed sentences.",
   },
 ];
 
+export default function FlashcardDifficulty() {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-// FAQ accordion items
-const FAQS = [
-  {
-    id: 'create-teacher-account',
-    question: 'How do I create a teacher account?',
-    answer:
-      'Go to the Login page and select "Sign up as a Teacher." Enter your school email address, create a password, and verify your account through the confirmation link sent to your inbox.',
-  },
-  {
-    id: 'student-accounts',
-    question: 'How do students get their accounts?',
-    answer:
-      "Student accounts aren't self-registered. A teacher uploads a class masterlist (CSV), and LIRA creates an account for each learner using their last name and birthdate as login details.",
-  },
-  {
-    id: 'filipino-availability',
-    question: 'Is LIRA available in Filipino?',
-    answer:
-      'Yes. LIRA supports both English and Filipino reading passages and assessments. Teachers can switch the language setting from the Dashboard at any time.',
-  },
-];
+  const [lang, setLang] = useState(() =>
+    searchParams.get("lang") === "FIL" ? "FIL" : "ENG"
+  );
 
-
-function FaqSection() {
-  const [searchValue, setSearchValue] = useState('');
-  // Index 1 ("student-accounts") starts open to match the reference design
-  const [openIndex, setOpenIndex] = useState(1);
-
-
-  const toggleFaq = (index) => {
-    setOpenIndex((prev) => (prev === index ? -1 : index));
+  const selectLanguage = (language) => {
+    setLang(language);
+    setSearchParams({ lang: language }, { replace: true });
   };
 
+  const [counts, setCounts] = useState({
+    easy: 0,
+    medium: 0,
+    hard: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const learnerId = getSession()?.user?.id;
+
+        const response = await fetch(
+          `${API_URL}/api/flashcards?lang=${lang}`,
+          {
+            headers: {
+              "X-Learner-Id": learnerId || "",
+            },
+          }
+        );
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Could not load flashcards."
+          );
+        }
+
+        if (!cancelled) {
+          setCounts(
+            data.reduce(
+              (result, card) => ({
+                ...result,
+                [card.category]:
+                  result[card.category] + 1,
+              }),
+              {
+                easy: 0,
+                medium: 0,
+                hard: 0,
+              }
+            )
+          );
+        }
+      } catch (loadError) {
+        if (!cancelled) {
+          setError(
+            loadError.message ||
+              "Could not load flashcards."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lang]);
 
   return (
-    <section className="faq-section">
-      <div className="faq-container">
-        <span className="faq-pill">Help Center</span>
+    <div
+      className="fc-page"
+      style={{
+        backgroundImage: `url("${bgFlashcards}")`,
+      }}
+    >
+      <header className="fc-header">
+        <button
+          className="fc-back"
+          onClick={() =>
+            navigate(`/category?lang=${lang}`)
+          }
+          aria-label="Back"
+        >
+          ←
+        </button>
 
+        <h1 className="fc-title">Flashcards</h1>
 
-        <h1 className="faq-heading">How can we help?</h1>
-
-
-        <p className="faq-subheading">
-          Search for a topic, or browse questions from teachers and
-          <br />
-          learners using LIRA.
-        </p>
-
-
-        <div className="faq-search-wrapper">
-          <input
-            type="text"
-            className="faq-search-input"
-            placeholder="Search for a topic..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            aria-label="Search help topics"
-          />
-          <svg
-            className="faq-search-icon"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle
-              cx="11"
-              cy="11"
-              r="7"
-              stroke="currentColor"
-              strokeWidth="2.2"
-            />
-            <line
-              x1="21"
-              y1="21"
-              x2="16.65"
-              y2="16.65"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-            />
-          </svg>
-        </div>
-
-
-        <div className="faq-categories">
-          {CATEGORIES.map((cat) => (
-            <button key={cat.id} className="faq-category-card" type="button">
-              <span className="faq-category-icon-wrap">
-                <img
-                  src={cat.icon}
-                  alt={cat.alt}
-                  className="faq-category-icon"
-                />
-              </span>
-              <span className="faq-category-title">{cat.title}</span>
-              <span className="faq-category-subtitle">{cat.subtitle}</span>
+        <div
+          className="lang-toggle"
+          role="group"
+          aria-label="Language"
+        >
+          {["ENG", "FIL"].map((value) => (
+            <button
+              key={value}
+              className={`lang-toggle__option ${
+                lang === value
+                  ? "lang-toggle__option--active"
+                  : ""
+              }`}
+              onClick={() => selectLanguage(value)}
+            >
+              {value}
             </button>
           ))}
         </div>
+      </header>
 
+      <main className="fc-main">
+        {error && (
+          <p className="fc-library-message">{error}</p>
+        )}
 
-        <div className="faq-accordion">
-          {FAQS.map((item, index) => {
-            const isOpen = openIndex === index;
-            return (
-              <div
-                key={item.id}
-                className={`faq-accordion-item ${isOpen ? 'is-open' : ''}`}
+        <div className="fc-cards">
+          {DIFFICULTIES.map((difficulty) => (
+            <div
+              key={difficulty.key}
+              className={`fc-card fc-card--${difficulty.accent}`}
+            >
+              <img
+                src={difficulty.icon}
+                alt=""
+                className="fc-card__icon"
+              />
+
+              <h2>{difficulty.label}</h2>
+
+              <p>{difficulty.description}</p>
+
+              <p className="fc-card__count">
+                {loading
+                  ? "Loading..."
+                  : `${counts[difficulty.key]} card${
+                      counts[difficulty.key] === 1
+                        ? ""
+                        : "s"
+                    }`}
+              </p>
+
+              <button
+                className="fc-card__start"
+                disabled={
+                  loading ||
+                  counts[difficulty.key] === 0
+                }
+                onClick={() =>
+                  navigate(
+                    `/flashcards/${difficulty.key}?lang=${lang}`
+                  )
+                }
               >
-                <button
-                  type="button"
-                  className="faq-accordion-question"
-                  onClick={() => toggleFaq(index)}
-                  aria-expanded={isOpen}
-                >
-                  <span>{item.question}</span>
-                  <svg
-                    className="faq-chevron"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M6 9l6 6 6-6"
-                      stroke="currentColor"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-                {isOpen && (
-                  <div className="faq-accordion-answer">
-                    <p>{item.answer}</p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                Start{" "}
+                <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          ))}
         </div>
-
-
-        <div className="faq-cta">
-          <h2 className="faq-cta-heading">Still need help?</h2>
-          <p className="faq-cta-subheading">
-            Our support team typically responds within one school day.
-          </p>
-        <a
-        className="faq-cta-button"
-        href="mailto:support.lira3@gmail.com"
-      >
-        Email Support
-      </a>
-        </div>
-      </div>
-    </section>
+      </main>
+    </div>
   );
 }
-
-
-export default FaqSection;
