@@ -2122,11 +2122,37 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files?.[0]); }}
       >
-        <Upload size={20} color="#4A4A4A" />
-        <div className="font-medium mt-2" style={{ color: C.text }}>Drag & Drop your CSV roster here, or click to upload</div>
-        <div className="text-xs mt-1" style={{ color: C.textMuted }}>Columns expected: Last Name (or Full Name / Name), Birthdate, Section. Full names: “Lastname, Firstname Middlename” (quote the CSV field) or “Firstname Middlename Lastname”. For ambiguous compound surnames, use a Last Name column or the comma format.</div>
-        <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
-      </div>
+      <Upload size={20} color="#4A4A4A" />
+
+<div
+  className="font-medium mt-2 text-center"
+  style={{ color: C.text }}
+>
+  Drag & Drop your CSV roster here, or click to upload
+</div>
+
+<div
+  className="text-xs mt-2 text-center w-full"
+  style={{ color: C.textMuted }}
+>
+  <div className="mx-auto max-w-5xl">
+    Columns expected: Last Name (or Full Name / Name), Birthdate, and Section.
+  </div>
+
+  <div className="mx-auto max-w-5xl mt-1">
+    Full names: “Lastname, Firstname Middlename” (quote the CSV field) or “Firstname Middlename Lastname”.  For ambiguous compound surnames, use a Last Name column or the comma format.
+  </div>
+</div>
+
+<input
+  ref={fileRef}
+  type="file"
+  accept=".csv"
+  className="hidden"
+  onChange={(e) => handleFile(e.target.files?.[0])}
+/>
+
+</div>
 
       <div className="flex items-center gap-3 mt-4 flex-wrap">
         {sections.length > 0 && <SectionSelect sections={sections.map((section) => section.name)} selectedSection={sectionName} onChange={onSectionChange} className="rounded-full px-4 py-2" />}
