@@ -3086,19 +3086,32 @@ function AddStoryModal({ onCancel, onSubmit, language = "ENG" }) {
         )}
         {method === "pdf" && !scanning && (
           <div
-            className="mt-4 rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-sm"
-            style={{
-              color: file ? "#287A42" : C.textMuted,
-              background: file ? "#EAF7EE" : "rgba(255,255,255,0.55)",
-              border: `1.5px solid ${file ? "#7ABB8D" : C.cardBorder}`,
-            }}
-          >
-            {file && <CheckCircle2 size={18} color="#3D995A" className="shrink-0" />}
-            <span className="min-w-0">
-              {file && <strong>Selected: </strong>}
-              <span className={file ? "font-medium break-all" : ""}>{file ? file.name : "Choose a file to continue…"}</span>
-            </span>
-          </div>
+  className="mt-4 flex items-center justify-center gap-2 text-sm"
+  style={{
+    color: file ? "#287A42" : C.textMuted,
+    padding: "8px 0",
+    background: "transparent",
+    border: "none",
+    borderRadius: "0",
+    boxShadow: "none",
+  }}
+>
+  {file && (
+    <CheckCircle2
+      size={18}
+      color="#3D995A"
+      className="shrink-0"
+    />
+  )}
+
+  <span className="min-w-0">
+    {file && <strong>Selected: </strong>}
+
+    <span className={file ? "font-medium break-all" : ""}>
+      {file ? file.name : "Choose a file to continue…"}
+    </span>
+  </span>
+</div>
         )}
         {method === "ai" && (
           <div className="mt-4 rounded-2xl p-4 grid grid-cols-2 gap-3" style={{ background: "#fff", border: `1px solid ${C.cardBorder}` }}>
