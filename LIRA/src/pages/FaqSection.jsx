@@ -1,396 +1,176 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import "./FlashcardDifficulty.css";
-import { getSession } from "../utils/session";
-import bgFlashcards from "../assets/flashcard-difficulty_bg.svg";
-import React, { useState } from 'react';
-import './FaqSection.css';
+import { useState } from "react";
+import "./FaqSection.css";
 
-import bunnyIcon from '../assets/icons/bunny.jpg';
-import owlIcon from '../assets/icons/owl.svg';
-import catIcon from '../assets/icons/cat.svg';
-import foxIcon from '../assets/icons/fox.jpg';
+import bunnyIcon from "../assets/icons/bunny.jpg";
+import owlIcon from "../assets/icons/owl.svg";
+import catIcon from "../assets/icons/cat.svg";
+import foxIcon from "../assets/icons/fox.jpg";
 
-const API_URL = import.meta.env.VITE_API_URL || "";
-
-const DIFFICULTIES = [
-
-// Category cards
 const CATEGORIES = [
   {
-    key: "easy",
-    label: "Easy",
-    icon: "/UI_Designs/ANIMALS/B_Koala.png",
-    accent: "blue",
-    description:
-      "Short, familiar words and sentences to build reading confidence.",
-  },
-  {
-    key: "medium",
-    label: "Medium",
-    icon: "/UI_Designs/ANIMALS/L_Turtle.png",
-    accent: "coral",
-    description:
-      "Longer phrases and sentences for growing readers.",
-  },
-  {
-    key: "hard",
-    label: "Hard",
-    icon: "/UI_Designs/ANIMALS/E_Dinosaur.png",
-    accent: "green",
-    description:
-      "More challenging vocabulary and detailed sentences.",
-    id: 'for-students',
+    id: "for-students",
     icon: catIcon,
-    alt: 'Cat icon',
-    title: 'For Students',
-    subtitle: 'Reading and Flashcards',
+    alt: "Cat icon",
+    title: "For Students",
+    subtitle: "Reading and Flashcards",
   },
-];
-
-export default function FlashcardDifficulty() {
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const [lang, setLang] = useState(() =>
-    searchParams.get("lang") === "FIL" ? "FIL" : "ENG"
-  );
-
-  const selectLanguage = (language) => {
-    setLang(language);
-    setSearchParams({ lang: language }, { replace: true });
-  };
-
-  const [counts, setCounts] = useState({
-    easy: 0,
-    medium: 0,
-    hard: 0,
-  });
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      setLoading(true);
-      setError("");
-
-      try {
-        const learnerId = getSession()?.user?.id;
-
-        const response = await fetch(
-          `${API_URL}/api/flashcards?lang=${lang}`,
-          {
-            headers: {
-              "X-Learner-Id": learnerId || "",
-            },
-          }
-        );
-
-        const data = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-          throw new Error(
-            data.message || "Could not load flashcards."
-          );
-        }
-
-        if (!cancelled) {
-          setCounts(
-            data.reduce(
-              (result, card) => ({
-                ...result,
-                [card.category]:
-                  result[card.category] + 1,
-              }),
-              {
-                easy: 0,
-                medium: 0,
-                hard: 0,
-              }
-            )
-          );
-        }
-      } catch (loadError) {
-        if (!cancelled) {
-          setError(
-            loadError.message ||
-              "Could not load flashcards."
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [lang]);
   {
-    id: 'troubleshooting',
+    id: "for-teachers",
+    icon: bunnyIcon,
+    alt: "Bunny icon",
+    title: "For Teachers",
+    subtitle: "Class Setup and Reports",
+  },
+  {
+    id: "troubleshooting",
+    icon: owlIcon,
+    alt: "Owl icon",
+    title: "Troubleshooting",
+    subtitle: "Mic and Login Issues",
+  },
+  {
+    id: "support",
     icon: foxIcon,
-    alt: 'Fox icon',
-    title: 'Troubleshooting',
-    subtitle: 'Mic and Login Issues',
+    alt: "Fox icon",
+    title: "Support",
+    subtitle: "Help and Contact",
   },
 ];
 
-
-// FAQ accordion items
 const FAQS = [
   {
-    id: 'create-teacher-account',
-    question: 'How do I create a teacher account?',
+    id: "create-teacher-account",
+    question: "How do I create a teacher account?",
     answer:
       'Go to the Login page and select "Sign up as a Teacher." Enter your school email address, create a password, and verify your account through the confirmation link sent to your inbox.',
   },
   {
-    id: 'student-accounts',
-    question: 'How do students get their accounts?',
+    id: "student-accounts",
+    question: "How do students get their accounts?",
     answer:
       "Student accounts aren't self-registered. A teacher uploads a class masterlist (CSV), and LIRA creates an account for each learner using their last name and birthdate as login details.",
   },
   {
-    id: 'filipino-availability',
-    question: 'Is LIRA available in Filipino?',
+    id: "filipino-availability",
+    question: "Is LIRA available in Filipino?",
     answer:
-      'Yes. LIRA supports both English and Filipino reading activities. Students can choose between English and Filipino when using Flashcards and Stories Mode.',
+      "Yes. LIRA supports both English and Filipino reading activities. Students can choose between English and Filipino when using Flashcards and Stories Mode.",
   },
   {
-    id: 'forgot-password',
-    question: 'What should I do if I forget my password?',
+    id: "forgot-password",
+    question: "What should I do if I forget my password?",
     answer:
       'Select "Forgot Password" on the Login page and enter the email address connected to your account. Follow the instructions sent to your email to create a new password.',
   },
   {
-    id: 'change-password',
-    question: 'How do I change my password?',
+    id: "change-password",
+    question: "How do I change my password?",
     answer:
-      'Teachers can change their password from their Profile settings. The new password must meet the required password rules, including at least one uppercase letter, one number, and one special character.',
+      "Teachers can change their password from their Profile settings. The new password must meet the required password rules, including at least one uppercase letter, one number, and one special character.",
   },
   {
-    id: 'upload-masterlist',
-    question: 'How do I add students to my class?',
+    id: "upload-masterlist",
+    question: "How do I add students to my class?",
     answer:
-      'Teachers can add students by uploading a class masterlist in CSV format from the Dashboard. Make sure the required student information is complete and properly formatted before uploading.',
+      "Teachers can add students by uploading a class masterlist in CSV format from the Dashboard. Make sure the required student information is complete and properly formatted before uploading.",
   },
   {
-    id: 'student-login',
-    question: 'How do students log in to LIRA?',
+    id: "student-login",
+    question: "How do students log in to LIRA?",
     answer:
-      'Students can log in using the account details created for them after their teacher uploads the class masterlist. They should enter their required login information on the student login page.',
+      "Students can log in using the account details created for them after their teacher uploads the class masterlist. They should enter their required login information on the student login page.",
   },
   {
-    id: 'reading-assessment',
-    question: 'How do students take a reading assessment?',
+    id: "reading-assessment",
+    question: "How do students take a reading assessment?",
     answer:
-      'After logging in, students can open their assigned reading assessment and follow the instructions shown on the screen. They may be asked to read words or passages aloud using their device microphone.',
+      "After logging in, students can open their assigned reading assessment and follow the instructions shown on the screen. They may be asked to read words or passages aloud using their device microphone.",
   },
   {
-    id: 'microphone-not-working',
-    question: 'What should I do if the microphone is not working?',
+    id: "microphone-not-working",
+    question: "What should I do if the microphone is not working?",
     answer:
-      'Check that microphone permission is enabled for LIRA in your browser. You can also check your device microphone settings, refresh the page, and try the activity again.',
+      "Check that microphone permission is enabled for LIRA in your browser. You can also check your device microphone settings, refresh the page, and try the activity again.",
   },
   {
-    id: 'microphone-permission',
-    question: 'Why does LIRA need microphone permission?',
+    id: "microphone-permission",
+    question: "Why does LIRA need microphone permission?",
     answer:
-      'LIRA uses microphone access during reading activities that require students to read aloud. Microphone access should be enabled when it is needed for an assessment or reading activity.',
-  },
-    {
-  id: 'flashcards-stories',
-  question: 'How do Flashcards and Stories Mode work?',
-  answer:
-    'Students can use Flashcards Mode to practice reading and recognizing words by selecting a difficulty level, while Stories Mode allows them to practice reading through passages. In both modes, students can freely choose between English and Filipino and switch languages whenever they want.',
-},
-  {
-  id: 'switch-language-anytime',
-  question: 'Can I switch languages anytime while practicing?',
-  answer:
-    'No. Students choose either English or Filipino before starting Flashcards or Stories Mode. To change the language, they need to exit the current activity and select a different language before starting again.',
-},
-  {
-  id: 'flashcards-stories-purpose',
-  question: 'What are Flashcards Mode and Stories Mode for?',
-  answer:
-    'Flashcards Mode helps students practice reading and recognizing words based on their selected difficulty level, while Stories Mode helps students practice reading through short stories and passages. Students can choose either English or Filipino before starting.',
-},
-  {
-    id: 'view-results',
-    question: 'Where can teachers view student results?',
-    answer:
-      'Teachers can view learner results and reading performance from the teacher Dashboard. Select the appropriate class or learner to see the available assessment information.',
+      "LIRA uses microphone access during reading activities that require students to read aloud. Microphone access should be enabled when it is needed for an assessment or reading activity.",
   },
   {
-    id: 'update-profile',
-    question: 'Can I update my teacher profile?',
+    id: "flashcards-stories",
+    question: "How do Flashcards and Stories Mode work?",
     answer:
-      'Yes. Teachers can update their profile information from the Profile section, including their name, title, password, and other available account information.',
+      "Students can use Flashcards Mode to practice reading and recognizing words by selecting a difficulty level, while Stories Mode allows them to practice reading through passages. In both modes, students can freely choose between English and Filipino and switch languages whenever they want.",
   },
   {
-    id: 'browser-refresh',
-    question: 'What should I do if a page is not loading properly?',
+    id: "switch-language-anytime",
+    question: "Can I switch languages anytime while practicing?",
     answer:
-      'Try refreshing the page and checking your internet connection. If the problem continues, close and reopen the browser or try logging in again.',
+      "No. Students choose either English or Filipino before starting Flashcards or Stories Mode. To change the language, they need to exit the current activity and select a different language before starting again.",
   },
-
   {
-    id: 'support',
-    question: 'How can I contact LIRA support?',
+    id: "flashcards-stories-purpose",
+    question: "What are Flashcards Mode and Stories Mode for?",
+    answer:
+      "Flashcards Mode helps students practice reading and recognizing words based on their selected difficulty level, while Stories Mode helps students practice reading through short stories and passages. Students can choose either English or Filipino before starting.",
+  },
+  {
+    id: "view-results",
+    question: "Where can teachers view student results?",
+    answer:
+      "Teachers can view learner results and reading performance from the teacher Dashboard. Select the appropriate class or learner to see the available assessment information.",
+  },
+  {
+    id: "update-profile",
+    question: "Can I update my teacher profile?",
+    answer:
+      "Yes. Teachers can update their profile information from the Profile section, including their name, title, password, and other available account information.",
+  },
+  {
+    id: "browser-refresh",
+    question: "What should I do if a page is not loading properly?",
+    answer:
+      "Try refreshing the page and checking your internet connection. If the problem continues, close and reopen the browser or try logging in again.",
+  },
+  {
+    id: "support",
+    question: "How can I contact LIRA support?",
     answer:
       'If you still need help, use the "Email Support" button at the bottom of this page to contact the LIRA support team.',
   },
 ];
 
-
 function FaqSection() {
-  const [searchValue, setSearchValue] = useState('');
-  const [openFaqId, setOpenFaqId] = useState('student-accounts');
+  const [searchValue, setSearchValue] = useState("");
+  const [openFaqId, setOpenFaqId] = useState("student-accounts");
 
-
-  // Search text
   const searchTerm = searchValue.trim().toLowerCase();
 
+  const filteredFaqs = searchTerm
+    ? FAQS.filter(
+        (item) =>
+          item.question.toLowerCase().includes(searchTerm) ||
+          item.answer.toLowerCase().includes(searchTerm)
+      )
+    : FAQS.slice(0, 3);
 
-  // Search ONLY the FAQs
-// Show only 5 FAQs by default
-// When searching, search through ALL FAQs
-const filteredFaqs = searchTerm
-  ? FAQS.filter((item) => {
-      return (
-        item.question.toLowerCase().includes(searchTerm) ||
-        item.answer.toLowerCase().includes(searchTerm)
-      );
-    })
-  : FAQS.slice(0, 3);
-
-
-  // Open / close FAQ
   const toggleFaq = (id) => {
-    setOpenFaqId((currentId) =>
-      currentId === id ? null : id
-    );
+    setOpenFaqId((currentId) => (currentId === id ? null : id));
   };
 
-
-  // Search input
   const handleSearch = (e) => {
     setSearchValue(e.target.value);
     setOpenFaqId(null);
   };
 
-
   return (
-    <div
-      className="fc-page"
-      style={{
-        backgroundImage: `url("${bgFlashcards}")`,
-      }}
-    >
-      <header className="fc-header">
-        <button
-          className="fc-back"
-          onClick={() =>
-            navigate(`/category?lang=${lang}`)
-          }
-          aria-label="Back"
-        >
-          ←
-        </button>
-
-        <h1 className="fc-title">Flashcards</h1>
-
-        <div
-          className="lang-toggle"
-          role="group"
-          aria-label="Language"
-        >
-          {["ENG", "FIL"].map((value) => (
-            <button
-              key={value}
-              className={`lang-toggle__option ${
-                lang === value
-                  ? "lang-toggle__option--active"
-                  : ""
-              }`}
-              onClick={() => selectLanguage(value)}
-            >
-              {value}
-            </button>
-          ))}
-        </div>
-      </header>
-
-      <main className="fc-main">
-        {error && (
-          <p className="fc-library-message">{error}</p>
-        )}
-
-        <div className="fc-cards">
-          {DIFFICULTIES.map((difficulty) => (
-            <div
-              key={difficulty.key}
-              className={`fc-card fc-card--${difficulty.accent}`}
-            >
-              <img
-                src={difficulty.icon}
-                alt=""
-                className="fc-card__icon"
-              />
-
-              <h2>{difficulty.label}</h2>
-
-              <p>{difficulty.description}</p>
-
-              <p className="fc-card__count">
-                {loading
-                  ? "Loading..."
-                  : `${counts[difficulty.key]} card${
-                      counts[difficulty.key] === 1
-                        ? ""
-                        : "s"
-                    }`}
-              </p>
-
-              <button
-                className="fc-card__start"
-                disabled={
-                  loading ||
-                  counts[difficulty.key] === 0
-                }
-                onClick={() =>
-                  navigate(
-                    `/flashcards/${difficulty.key}?lang=${lang}`
-                  )
-                }
-              >
-                Start{" "}
-                <span aria-hidden="true">→</span>
-              </button>
-            </div>
-          ))}
     <section className="faq-section">
       <div className="faq-container">
+        <span className="faq-pill">Help Center</span>
 
-        {/* Help Center */}
-        <span className="faq-pill">
-          Help Center
-        </span>
-
-
-        {/* Heading */}
-        <h1 className="faq-heading">
-          How can we help?
-        </h1>
-
+        <h1 className="faq-heading">How can we help?</h1>
 
         <p className="faq-subheading">
           Search for a topic, or browse questions from teachers and
@@ -398,10 +178,7 @@ const filteredFaqs = searchTerm
           learners using LIRA.
         </p>
 
-
-        {/* Search Bar */}
         <div className="faq-search-wrapper">
-
           <input
             type="text"
             className="faq-search-input"
@@ -426,7 +203,6 @@ const filteredFaqs = searchTerm
               stroke="currentColor"
               strokeWidth="2.2"
             />
-
             <line
               x1="21"
               y1="21"
@@ -437,65 +213,44 @@ const filteredFaqs = searchTerm
               strokeLinecap="round"
             />
           </svg>
-
         </div>
 
-{/* Category Cards - hide while searching */}
-{!searchTerm && (
-  <div className="faq-categories">
-    {CATEGORIES.map((cat) => (
-      <div
-        key={cat.id}
-        className="faq-category-card"
-      >
-        <span className="faq-category-icon-wrap">
-          <img
-            src={cat.icon}
-            alt={cat.alt}
-            className="faq-category-icon"
-          />
-        </span>
+        {!searchTerm && (
+          <div className="faq-categories">
+            {CATEGORIES.map((cat) => (
+              <div key={cat.id} className="faq-category-card">
+                <span className="faq-category-icon-wrap">
+                  <img
+                    src={cat.icon}
+                    alt={cat.alt}
+                    className="faq-category-icon"
+                  />
+                </span>
 
-        <span className="faq-category-title">
-          {cat.title}
-        </span>
+                <span className="faq-category-title">{cat.title}</span>
+                <span className="faq-category-subtitle">{cat.subtitle}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
-        <span className="faq-category-subtitle">
-          {cat.subtitle}
-        </span>
-      </div>
-    ))}
-  </div>
-)}
-
-
-        {/* FAQ Accordion */}
         <div className="faq-accordion">
-
           {filteredFaqs.length > 0 ? (
-
             filteredFaqs.map((item) => {
-
               const isOpen = openFaqId === item.id;
 
               return (
                 <div
                   key={item.id}
-                  className={`faq-accordion-item ${
-                    isOpen ? 'is-open' : ''
-                  }`}
+                  className={`faq-accordion-item ${isOpen ? "is-open" : ""}`}
                 >
-
                   <button
                     type="button"
                     className="faq-accordion-question"
                     onClick={() => toggleFaq(item.id)}
                     aria-expanded={isOpen}
                   >
-
-                    <span>
-                      {item.question}
-                    </span>
+                    <span>{item.question}</span>
 
                     <svg
                       className="faq-chevron"
@@ -513,64 +268,40 @@ const filteredFaqs = searchTerm
                         strokeLinejoin="round"
                       />
                     </svg>
-
                   </button>
-
 
                   {isOpen && (
                     <div className="faq-accordion-answer">
                       <p>{item.answer}</p>
                     </div>
                   )}
-
                 </div>
               );
             })
-
           ) : (
-
             <div className="faq-no-results">
-
               <h3>No results found</h3>
-
               <p>
-                We couldn't find anything for "{searchValue}".
-                Try searching for another FAQ topic.
+                We couldn't find anything for "{searchValue}". Try searching for
+                another FAQ topic.
               </p>
-
             </div>
-
           )}
-
         </div>
-      </main>
-    </div>
 
-
-        {/* Email Support */}
         <div className="faq-cta">
-
-          <h2 className="faq-cta-heading">
-            Still need help?
-          </h2>
-
+          <h2 className="faq-cta-heading">Still need help?</h2>
           <p className="faq-cta-subheading">
             Our support team typically responds within one school day.
           </p>
 
-          <a
-            className="faq-cta-button"
-            href="mailto:support.lira3@gmail.com"
-          >
+          <a className="faq-cta-button" href="mailto:support.lira3@gmail.com">
             Email Support
           </a>
-
         </div>
-
       </div>
     </section>
   );
 }
-
 
 export default FaqSection;
