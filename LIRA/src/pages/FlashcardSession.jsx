@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import "./FlashcardSession.css";
-import CompletionScreen from "../components/CompletionScreen";
+import CompletionScreenNormal from "../components/CompletionScreenNormal";
 import FlashcardReader from "../components/FlashcardReader";
 import { getSession } from "../utils/session";
 
@@ -40,7 +40,7 @@ export default function FlashcardSession() {
     return () => { cancelled = true; };
   }, [difficulty, lang]);
 
-  if (finished) return <CompletionScreen onBack={() => navigate(`/flashcards?lang=${lang}`)} backLabel="Back to Flashcards" />;
+  if (finished) return <CompletionScreenNormal onBack={() => navigate(`/flashcards?lang=${lang}`)} backLabel="Back to Flashcards" />;
 
   return <div className="fs-page" style={{ backgroundImage: `url(${bgSession})` }}>
     <header className="fs-header"><button className="fs-back" onClick={() => navigate(`/flashcards?lang=${lang}`)} aria-label="Back">←</button><h1 className="fs-title">{label} · {languageLabel}</h1></header>

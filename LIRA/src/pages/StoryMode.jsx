@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import './StoryMode.css';
 import CompletionScreen from '../components/CompletionScreen';
+import CompletionScreenNormal from '../components/CompletionScreenNormal';
 import { getSession } from '../utils/session';
 import { INACTIVITY_PAUSE_EVENT, isInactivityPaused } from '../utils/inactivityPause';
 import { liraAlert } from '../utils/alerts';
@@ -585,6 +586,7 @@ function StoryMode({ onExit }) {
   const [storiesLoading, setStoriesLoading] = useState(true);
   const [storiesError, setStoriesError] = useState('');
   const [completedStoryIds, setCompletedStoryIds] = useState(() => new Set());
+  const [showCompletionSurvey, setShowCompletionSurvey] = useState(false);
   const [view, setView] = useState('selection'); // 'selection' | 'reading' | 'quiz'
   const [language, setLanguage] = useState(() => searchParams.get('lang') === 'FIL' ? 'FIL' : 'ENG'); // 'ENG' | 'FIL'
   const [activeStory, setActiveStory] = useState(null);
@@ -904,6 +906,8 @@ function StoryMode({ onExit }) {
   };
 
   const openStory = (story) => {
+    // Keep this attempt's choice stable when saving updates the completion history.
+    setShowCompletionSurvey(completedStoryIds.size === 0);
     recordingRef.current.stop();
     recordingRef.current = new ReadingRecorder();
     readingTimerRef.current = { elapsed: 0, startedAt: null };
@@ -1247,11 +1251,12 @@ function StoryMode({ onExit }) {
     const total = storyQuiz.length;
 
     if (total === 0 || quizDone) {
+      const Completion = showCompletionSurvey ? CompletionScreen : CompletionScreenNormal;
       return (
-        <CompletionScreen onBack={backToSelection} backLabel="Back to Stories">
+        <Completion onBack={backToSelection} backLabel="Back to Stories">
           {savingScore && <p>Saving reading result...</p>}
           {scoreError && <p className="completion-error">{scoreError} Your teacher will not see this attempt yet.</p>}
-        </CompletionScreen>
+        </Completion>
       );
     }
 
