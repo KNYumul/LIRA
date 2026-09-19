@@ -1,606 +1,1186 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Quicksand:wght@500;600;700&family=Baloo+2:wght@600;700&display=swap");
 
 
-/* =========================================
-   FAQ PAGE
-========================================= */
+/* ========================================
+   PAGE
+======================================== */
 
-.faq-section {
-  --cream: #f7f0de;
-  --coral: #dd8874;
-  --coral-dark: #c97a67;
-  --mint-pill: #d7e6cf;
-  --mint-border: #bcdcc0;
-  --text-dark: #3f3f3f;
-  --text-muted: #6b6b6b;
-  --text-light: #ffffff;
+.fs-page {
+  --ink: #3f3f3f;
+  --ink-soft: #777777;
+
+  position: relative;
 
   width: 100%;
   min-height: 100vh;
 
-  padding: 90px 24px 100px;
+  padding: 32px 48px 60px;
 
-  font-family: 'Poppins', sans-serif;
-  font-weight: 300;
+  font-family:
+    "Poppins",
+    "Segoe UI",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+
   color: var(--ink);
 
   background-color: #eaf4ee;
 
-  background-image: url('../assets/faq-background.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;
-  background-color: var(--cream);
 
-  display: flex;
-  justify-content: center;
+  overflow-x: hidden;
 
   box-sizing: border-box;
 }
 
 
-/* =========================================
-   MAIN CONTAINER
-========================================= */
+.fs-page * {
+  box-sizing: border-box;
+}
 
-.faq-container {
+
+/* ========================================
+   HEADER
+======================================== */
+
+.fs-header {
   width: 100%;
-  max-width: 900px;
 
   display: flex;
-  flex-direction: column;
   align-items: center;
 
-  text-align: center;
-}
+  gap: 18px;
 
-
-/* =========================================
-   HELP CENTER PILL
-========================================= */
-
-.faq-pill {
-  display: inline-block;
-
-  background-color: var(--mint-pill);
-  color: var(--text-dark);
-
-  font-weight: 600;
-  font-size: 14px;
-
-  padding: 10px 22px;
-
-  border-radius: 999px;
-
-  margin-bottom: 28px;
-}
-
-
-/* =========================================
-   HEADING
-========================================= */
-
-.faq-heading {
-  font-family: 'Quicksand', sans-serif;
-  font-weight: 800;
-
-  font-size: 56px;
-  line-height: 1.15;
-
-  color: var(--text-dark);
-
-  margin: 0 0 20px;
-}
-
-
-/* =========================================
-   SUBHEADING
-========================================= */
-
-.faq-subheading {
-  font-weight: 300;
-
-  font-size: 18px;
-  line-height: 1.6;
-
-  color: var(--text-muted);
-
-  max-width: 620px;
-
-  margin: 0 0 40px;
-}
-
-
-/* =========================================
-   SEARCH BAR
-========================================= */
-
-.faq-search-wrapper {
   position: relative;
+  z-index: 5;
 
-  width: 100%;
-  max-width: 780px;
-
-  margin-bottom: 48px;
+  margin-bottom: 50px;
 }
 
 
-.faq-search-input {
-  width: 100%;
+/* ========================================
+   BACK BUTTON
+======================================== */
 
-  padding: 20px 60px 20px 28px;
+.fs-back {
+  width: 44px;
+  height: 44px;
 
-  border-radius: 999px;
-  border: 1.5px solid var(--mint-border);
+  flex-shrink: 0;
 
-  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  font-family: 'Poppins', sans-serif;
-  font-weight: 300;
-  font-size: 16px;
+  padding: 0;
 
-  color: var(--text-dark);
+  border: none;
+  border-radius: 50%;
 
-  background-color: #ffffff;
+  background: #ffffff;
 
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+  color: var(--ink);
 
-  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 1.1rem;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 4px 12px
+    rgba(0, 0, 0, 0.07);
 
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.18s ease,
+    background-color 0.18s ease;
 }
 
 
-.faq-search-input:focus {
-  border-color: var(--coral);
+.fs-back:hover {
+  background: #f7f7f7;
 
-  box-shadow: 0 6px 24px rgba(221, 136, 116, 0.2);
+  transform: translateX(-2px);
 }
 
 
-.faq-search-input::placeholder {
-  color: #b9b9b9;
-  font-weight: 300;
+/* ========================================
+   TITLE
+======================================== */
+
+.fs-title {
+  margin: 0;
+
+  font-family:
+    "Quicksand",
+    sans-serif;
+
+  font-size: 1.6rem;
+
+  font-weight: 700;
+
+  color: var(--ink);
 }
 
 
-.faq-search-icon {
+/* ========================================
+   MAIN
+======================================== */
+
+.fs-main {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-direction: column;
+
+  padding: 10px 20px 80px;
+}
+
+
+/* ========================================
+   MESSAGE
+======================================== */
+
+.fs-message {
+  padding: 22px 30px;
+
+  border-radius: 18px;
+
+  background: rgba(
+    255,
+    255,
+    255,
+    0.88
+  );
+
+  color: var(--ink-soft);
+
+  font-size: 0.95rem;
+
+  text-align: center;
+
+  box-shadow:
+    0 8px 24px
+    rgba(0, 0, 0, 0.05);
+}
+
+
+.fs-message--error {
+  color: #a04444;
+}
+
+
+/* ========================================
+   CARD STACK
+======================================== */
+
+.fs-card-stack {
+  position: relative;
+
+  width: min(650px, 92vw);
+
+  margin: 0 auto;
+}
+
+
+/* ========================================
+   CARD BEHIND
+======================================== */
+
+.fs-card-shadow {
   position: absolute;
 
-  right: 24px;
-  top: 50%;
+  top: 14px;
+  left: 14px;
 
-  transform: translateY(-50%);
+  width: 100%;
+  height: 100%;
 
-  color: var(--coral);
+  border-radius: 30px;
+
+  background: rgba(
+    255,
+    255,
+    255,
+    0.55
+  );
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.8);
+
+  transform: rotate(2deg);
+
+  box-shadow:
+    0 12px 30px
+    rgba(0, 0, 0, 0.04);
 
   pointer-events: none;
 }
 
 
-/* =========================================
-   CATEGORY CARDS
-========================================= */
+/* ========================================
+   MAIN FLASHCARD
+======================================== */
 
-.faq-categories {
+.fs-card {
+  position: relative;
+
   width: 100%;
 
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-height: 440px;
 
-  gap: 20px;
-
-  margin-bottom: 48px;
-}
-
-
-/* DISPLAY CARD - NOT A BUTTON */
-.faq-category-card {
-  background-color: var(--coral);
-
-  border-radius: 22px;
-
-  padding: 18px 16px 20px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  gap: 10px;
-
-  color: var(--text-light);
-  text-align: center;
-
-  box-sizing: border-box;
-
-  min-height: 160px;
-
-  /* No button behavior */
-  cursor: default;
-}
-
-
-/* No hover / click effect */
-.faq-category-card:hover {
-  transform: none;
-  background-color: var(--coral);
-}
-
-
-.faq-category-icon-wrap {
-  display: flex;
-
-  align-items: flex-end;
-  justify-content: center;
-
-  height: 64px;
-
-  margin-bottom: 10px;
-}
-
-
-.faq-category-icon {
-  max-height: 64px;
-  max-width: 72px;
-
-  width: 100px;
-  height: 100px;
-
-  object-fit: contain;
-
-  display: block;
-}
-
-
-.faq-category-title {
-  font-family: 'Quicksand', sans-serif;
-
-  font-weight: 700;
-
-  margin: 0;
-  flex: 1;
-}
-
-
-.faq-category-subtitle {
-  font-family: 'Poppins', sans-serif;
-
-  font-weight: 300;
-  font-size: 13px;
-
-  opacity: 0.9;
-}
-
-
-/* =========================================
-   FAQ ACCORDION
-========================================= */
-
-.faq-accordion {
-  width: 100%;
-  max-width: 900px;
+  padding: 28px 34px 30px;
 
   display: flex;
   flex-direction: column;
 
-  gap: 16px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.98),
+      rgba(253, 246, 238, 0.98)
+    );
 
-  margin-bottom: 56px;
-}
+  border-radius: 30px;
 
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.9);
 
-.faq-accordion-item {
-  width: 100%;
-
-  background-color: #ffffff;
-
-  border: 1.5px solid var(--mint-border);
-  border-radius: 18px;
-
-  text-align: left;
+  box-shadow:
+    0 16px 40px
+    rgba(0, 0, 0, 0.08);
 
   overflow: hidden;
 
-  transition: box-shadow 0.2s ease;
+  isolation: isolate;
 }
 
 
-.faq-accordion-item.is-open {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+/* ========================================
+   DIFFICULTY ACCENT
+======================================== */
+
+.fs-card--easy {
+  border-top:
+    5px solid #8fc8e8;
 }
 
 
-/* FAQ Question */
+.fs-card--medium {
+  border-top:
+    5px solid #e8918c;
+}
 
-.faq-accordion-question {
+
+.fs-card--hard {
+  border-top:
+    5px solid #7fa87f;
+}
+
+
+/* ========================================
+   KEEP CONTENT ABOVE DECORATIONS
+======================================== */
+
+.fs-card__top,
+.fs-card > *:not(.fs-card-decorations) {
+  position: relative;
+
+  z-index: 2;
+}
+
+
+/* ========================================
+   CARD TOP
+======================================== */
+
+.fs-card__top {
   width: 100%;
 
-  background: none;
-  border: none;
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-start;
+
+  margin-bottom: 12px;
+}
+
+
+/* ========================================
+   CARD NUMBER
+======================================== */
+
+.fs-card__number {
+  width: 38px;
+  height: 38px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #f3eee6;
+
+  font-family:
+    "Baloo 2",
+    "Quicksand",
+    sans-serif;
+
+  font-size: 1rem;
+
+  font-weight: 700;
+
+  color: var(--ink);
+
+  box-shadow:
+    0 3px 8px
+    rgba(0, 0, 0, 0.04);
+}
+
+
+/* EASY NUMBER */
+
+.fs-card--easy
+.fs-card__number {
+  background: #dceff8;
+}
+
+
+/* MEDIUM NUMBER */
+
+.fs-card--medium
+.fs-card__number {
+  background: #f8dfdc;
+}
+
+
+/* HARD NUMBER */
+
+.fs-card--hard
+.fs-card__number {
+  background: #e0edda;
+}
+
+
+/* ========================================
+   NAVIGATION
+======================================== */
+
+.fs-navigation {
+  width: 100%;
 
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
 
-  padding: 26px 30px;
+  gap: 14px;
 
-  font-family: 'Quicksand', sans-serif;
-  font-weight: 700;
-  font-size: 18px;
+  margin-top: auto;
 
-  color: var(--text-dark);
-
-  text-align: left;
-
-  cursor: pointer;
+  padding-top: 25px;
 }
 
 
-.faq-accordion-question span {
-  flex: 1;
-  padding-right: 16px;
-}
-
-
-/* Chevron */
-
-.faq-chevron {
-  flex-shrink: 0;
-
-  margin-left: 16px;
-
-  color: var(--text-dark);
-
-  transition: transform 0.2s ease;
-}
-
-
-.faq-accordion-item.is-open .faq-chevron {
-  transform: rotate(180deg);
-}
-
-
-/* FAQ Answer */
-
-.faq-accordion-answer {
-  padding: 0 30px 26px;
-
-  font-family: 'Poppins', sans-serif;
-  font-weight: 300;
-
-  color: var(--text-muted);
-
-  font-size: 16px;
-  line-height: 1.7;
-}
-
-
-.faq-accordion-answer p {
-  margin: 0;
-}
-
-
-/* =========================================
-   NO SEARCH RESULTS
-========================================= */
-
-.faq-no-results {
-  width: 100%;
-
-  background-color: #ffffff;
-
-  border: 1.5px solid var(--mint-border);
-  border-radius: 18px;
-
-  padding: 40px 30px;
-
-  text-align: center;
-
-  box-sizing: border-box;
-}
-
-
-.faq-no-results h3 {
-  font-family: 'Quicksand', sans-serif;
-
-  font-size: 20px;
-  font-weight: 700;
-
-  color: var(--text-dark);
-
-  margin: 0 0 8px;
-}
-
-
-.faq-no-results p {
-  font-family: 'Poppins', sans-serif;
-
-  font-size: 14px;
-  font-weight: 300;
-
-  color: var(--text-muted);
-
-  margin: 0;
-}
-
-
-/* =========================================
-   EMAIL SUPPORT CTA
-========================================= */
-
-.faq-cta {
-  width: 75%;
-  max-width: 1180px;
-
-  border-radius: 32px;
-
-  padding: 64px 40px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  text-align: center;
-
-  background-image:
-    linear-gradient(
-      120deg,
-      rgba(169, 205, 172, 0.88),
-      rgba(233, 239, 201, 0.88)
-    ),
-    url('../assets/email-support.jpg');
-
-  background-size: cover;
-  background-position: center;
-
-  box-sizing: border-box;
-}
-
-
-.faq-cta-heading {
-  font-family: 'Quicksand', sans-serif;
-
-  font-weight: 800;
-  font-size: 38px;
-
-  color: var(--text-dark);
-
-  margin: 0 0 14px;
-}
-
-
-.faq-cta-subheading {
-  font-weight: 300;
-  font-size: 17px;
-
-  color: var(--text-dark);
-
-  opacity: 0.85;
-
-  margin: 0 0 30px;
-}
-
-
-.faq-cta-button {
-  display: inline-block;
-
-  background-color: #6f8f6f;
-  color: #ffffff;
-
-  padding: 16px 34px;
+.fs-navigation button {
+  border: none;
 
   border-radius: 999px;
 
+  padding: 10px 22px;
+
+  font-family:
+    "Poppins",
+    sans-serif;
+
+  font-size: 0.85rem;
+
   font-weight: 600;
-  font-size: 15px;
 
-  font-family: 'Poppins', sans-serif;
+  color: var(--ink);
 
-  text-decoration: none;
+  background: #e8e8e8;
 
   cursor: pointer;
 
   transition:
-    background-color 0.18s ease,
-    transform 0.18s ease;
+    transform 0.18s ease,
+    filter 0.18s ease,
+    opacity 0.18s ease;
 }
 
 
-.faq-cta-button:hover {
-  background-color: #5f7d5f;
+.fs-navigation button:last-child {
+  background: #f2c48c;
+}
+
+
+.fs-navigation button:hover:not(:disabled) {
   transform: translateY(-2px);
+
+  filter: brightness(0.97);
 }
 
 
-/* =========================================
-   TABLET
-========================================= */
+.fs-navigation button:disabled {
+  opacity: 0.4;
 
-@media (max-width: 900px) {
+  cursor: not-allowed;
+}
 
-  .faq-categories {
-    grid-template-columns: 1fr;
+
+/* ========================================
+   DECORATION CONTAINER
+======================================== */
+
+.fs-card-decorations {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 0;
+
+  overflow: hidden;
+
+  border-radius: inherit;
+
+  pointer-events: none;
+}
+
+
+/* ========================================
+   ALL DECORATIONS
+======================================== */
+
+.fs-deco {
+  position: absolute;
+
+  display: block;
+
+  user-select: none;
+
+  pointer-events: none;
+
+  opacity: 0.32;
+}
+
+
+/* ========================================
+   STAR — TOP LEFT
+======================================== */
+
+.fs-deco--star1 {
+  top: 42px;
+  left: 52px;
+
+  font-size: 22px;
+
+  color: #e8bc65;
+
+  animation:
+    fsStarFloat
+    3.5s
+    ease-in-out
+    infinite;
+}
+
+
+/* ========================================
+   STAR — TOP RIGHT
+======================================== */
+
+.fs-deco--star2 {
+  top: 68px;
+  right: 52px;
+
+  font-size: 27px;
+
+  color: #e99b93;
+
+  animation:
+    fsStarSpin
+    5s
+    ease-in-out
+    infinite;
+}
+
+
+/* ========================================
+   SPARKLE — LEFT
+======================================== */
+
+.fs-deco--sparkle {
+  top: 145px;
+  left: 68px;
+
+  font-size: 21px;
+
+  color: #82aa8b;
+
+  animation:
+    fsSparkle
+    2.6s
+    ease-in-out
+    infinite;
+}
+
+
+/* ========================================
+   SPARKLE — RIGHT
+======================================== */
+
+.fs-deco--sparkle2 {
+  top: 180px;
+  right: 76px;
+
+  font-size: 17px;
+
+  color: #e8bc65;
+
+  animation:
+    fsSparkleTwo
+    3.2s
+    ease-in-out
+    infinite;
+}
+
+
+/* ========================================
+   BUBBLE 1
+======================================== */
+
+.fs-deco--bubble1 {
+  width: 23px;
+  height: 23px;
+
+  right: 60px;
+  bottom: 125px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      143,
+      200,
+      232,
+      0.3
+    );
+
+  animation:
+    fsBubbleFloat
+    4s
+    ease-in-out
+    infinite;
+}
+
+
+/* ========================================
+   BUBBLE 2
+======================================== */
+
+.fs-deco--bubble2 {
+  width: 14px;
+  height: 14px;
+
+  left: 52px;
+  bottom: 105px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      232,
+      145,
+      140,
+      0.3
+    );
+
+  animation:
+    fsBubbleFloatTwo
+    3.2s
+    ease-in-out
+    infinite;
+}
+
+
+/* ========================================
+   BUBBLE 3
+======================================== */
+
+.fs-deco--bubble3 {
+  width: 10px;
+  height: 10px;
+
+  right: 115px;
+  top: 140px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      127,
+      168,
+      127,
+      0.35
+    );
+
+  animation:
+    fsBubbleFloat
+    3.8s
+    ease-in-out
+    infinite;
+}
+
+
+/* ========================================
+   BUBBLE 4
+======================================== */
+
+.fs-deco--bubble4 {
+  width: 7px;
+  height: 7px;
+
+  left: 115px;
+  top: 100px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      232,
+      145,
+      140,
+      0.35
+    );
+
+  animation:
+    fsBubbleFloatTwo
+    4.3s
+    ease-in-out
+    infinite;
+}
+
+
+/* ========================================
+   HEART
+======================================== */
+
+.fs-deco--heart {
+  right: 42px;
+  bottom: 65px;
+
+  font-size: 18px;
+
+  color: #e99c96;
+
+  animation:
+    fsHeartBeat
+    2.6s
+    ease-in-out
+    infinite;
+}
+
+
+/* ========================================
+   FLOWER
+======================================== */
+
+.fs-deco--flower {
+  left: 38px;
+  bottom: 55px;
+
+  font-size: 24px;
+
+  color: #91b58b;
+
+  animation:
+    fsFlowerSway
+    4s
+    ease-in-out
+    infinite;
+}
+
+
+/* ========================================
+   STAR FLOAT ANIMATION
+======================================== */
+
+@keyframes fsStarFloat {
+
+  0%,
+  100% {
+    transform:
+      translateY(0)
+      rotate(-5deg);
   }
 
-  .faq-heading {
-    font-size: 42px;
-  }
-
-  .faq-cta {
-    width: 85%;
+  50% {
+    transform:
+      translateY(-9px)
+      rotate(8deg);
   }
 }
 
 
-/* =========================================
+/* ========================================
+   STAR SPIN
+======================================== */
+
+@keyframes fsStarSpin {
+
+  0%,
+  100% {
+    transform:
+      translateY(0)
+      rotate(0deg)
+      scale(1);
+  }
+
+  50% {
+    transform:
+      translateY(-7px)
+      rotate(25deg)
+      scale(1.14);
+  }
+}
+
+
+/* ========================================
+   SPARKLE
+======================================== */
+
+@keyframes fsSparkle {
+
+  0%,
+  100% {
+    opacity: 0.18;
+
+    transform:
+      scale(0.8)
+      rotate(0deg);
+  }
+
+  50% {
+    opacity: 0.65;
+
+    transform:
+      scale(1.3)
+      rotate(18deg);
+  }
+}
+
+
+/* ========================================
+   SECOND SPARKLE
+======================================== */
+
+@keyframes fsSparkleTwo {
+
+  0%,
+  100% {
+    opacity: 0.2;
+
+    transform:
+      translateY(0)
+      scale(0.85)
+      rotate(0deg);
+  }
+
+  50% {
+    opacity: 0.55;
+
+    transform:
+      translateY(-5px)
+      scale(1.2)
+      rotate(-20deg);
+  }
+}
+
+
+/* ========================================
+   BUBBLE FLOAT
+======================================== */
+
+@keyframes fsBubbleFloat {
+
+  0%,
+  100% {
+    transform:
+      translateY(0)
+      translateX(0)
+      scale(1);
+  }
+
+  35% {
+    transform:
+      translateY(-10px)
+      translateX(3px)
+      scale(1.08);
+  }
+
+  70% {
+    transform:
+      translateY(-4px)
+      translateX(-3px)
+      scale(0.95);
+  }
+}
+
+
+/* ========================================
+   SECOND BUBBLE MOVEMENT
+======================================== */
+
+@keyframes fsBubbleFloatTwo {
+
+  0%,
+  100% {
+    transform:
+      translateY(0)
+      translateX(0);
+  }
+
+  40% {
+    transform:
+      translateY(-7px)
+      translateX(-4px);
+  }
+
+  75% {
+    transform:
+      translateY(-3px)
+      translateX(4px);
+  }
+}
+
+
+/* ========================================
+   HEART BEAT
+======================================== */
+
+@keyframes fsHeartBeat {
+
+  0%,
+  45%,
+  100% {
+    transform: scale(1);
+  }
+
+  55% {
+    transform: scale(1.22);
+  }
+
+  65% {
+    transform: scale(1);
+  }
+
+  75% {
+    transform: scale(1.12);
+  }
+}
+
+
+/* ========================================
+   FLOWER SWAY
+======================================== */
+
+@keyframes fsFlowerSway {
+
+  0%,
+  100% {
+    transform:
+      translateY(0)
+      rotate(-8deg);
+  }
+
+  50% {
+    transform:
+      translateY(-5px)
+      rotate(9deg);
+  }
+}
+
+
+/* ========================================
+   EASY DECORATION COLORS
+======================================== */
+
+.fs-card--easy
+.fs-deco--star1,
+.fs-card--easy
+.fs-deco--sparkle,
+.fs-card--easy
+.fs-deco--sparkle2 {
+  color: #76b4d5;
+}
+
+
+.fs-card--easy
+.fs-deco--bubble1 {
+  background:
+    rgba(
+      118,
+      180,
+      213,
+      0.28
+    );
+}
+
+
+.fs-card--easy
+.fs-deco--bubble2 {
+  background:
+    rgba(
+      157,
+      216,
+      231,
+      0.3
+    );
+}
+
+
+/* ========================================
+   MEDIUM DECORATION COLORS
+======================================== */
+
+.fs-card--medium
+.fs-deco--star1,
+.fs-card--medium
+.fs-deco--heart,
+.fs-card--medium
+.fs-deco--sparkle2 {
+  color: #df918b;
+}
+
+
+.fs-card--medium
+.fs-deco--bubble1 {
+  background:
+    rgba(
+      223,
+      145,
+      139,
+      0.25
+    );
+}
+
+
+.fs-card--medium
+.fs-deco--bubble3 {
+  background:
+    rgba(
+      242,
+      196,
+      140,
+      0.3
+    );
+}
+
+
+/* ========================================
+   HARD DECORATION COLORS
+======================================== */
+
+.fs-card--hard
+.fs-deco--star1,
+.fs-card--hard
+.fs-deco--flower,
+.fs-card--hard
+.fs-deco--sparkle,
+.fs-card--hard
+.fs-deco--sparkle2 {
+  color: #76a176;
+}
+
+
+.fs-card--hard
+.fs-deco--bubble1 {
+  background:
+    rgba(
+      127,
+      168,
+      127,
+      0.28
+    );
+}
+
+
+.fs-card--hard
+.fs-deco--bubble2 {
+  background:
+    rgba(
+      167,
+      195,
+      146,
+      0.3
+    );
+}
+
+
+/* ========================================
+   SUBTLE CENTER AREA
+
+   Makes decorations less distracting
+   around the flashcard word.
+======================================== */
+
+.fs-card-decorations {
+  -webkit-mask-image:
+    radial-gradient(
+      circle at center,
+      rgba(0, 0, 0, 0.25) 0%,
+      rgba(0, 0, 0, 0.55) 38%,
+      #000 70%
+    );
+
+  mask-image:
+    radial-gradient(
+      circle at center,
+      rgba(0, 0, 0, 0.25) 0%,
+      rgba(0, 0, 0, 0.55) 38%,
+      #000 70%
+    );
+}
+
+
+/* ========================================
    MOBILE
-========================================= */
+======================================== */
 
-@media (max-width: 560px) {
+@media (max-width: 700px) {
 
-  .faq-section {
-    padding: 60px 16px 70px;
-    background-attachment: scroll;
+  .fs-page {
+    padding:
+      24px
+      18px
+      40px;
   }
 
-  .faq-heading {
-    font-size: 32px;
+
+  .fs-header {
+    margin-bottom: 35px;
   }
 
-  .faq-subheading {
-    font-size: 15px;
+
+  .fs-back {
+    width: 40px;
+    height: 40px;
   }
 
-  .faq-subheading br {
-    display: none;
+
+  .fs-title {
+    font-size: 1.3rem;
   }
 
-  .faq-search-input {
-    padding: 17px 55px 17px 22px;
-    font-size: 14px;
+
+  .fs-main {
+    padding:
+      5px
+      5px
+      60px;
   }
 
-  .faq-search-icon {
-    right: 20px;
+
+  .fs-card-stack {
+    width: 100%;
   }
 
-  .faq-categories {
-    grid-template-columns: 1fr;
+
+  .fs-card {
+    min-height: 420px;
+
+    padding:
+      24px
+      22px
+      25px;
+
+    border-radius: 24px;
   }
 
-  .faq-category-card {
-    padding: 24px 20px 28px;
+
+  .fs-card-shadow {
+    top: 9px;
+    left: 7px;
+
+    border-radius: 24px;
   }
 
-  .faq-accordion-question {
-    padding: 22px 20px;
-    font-size: 16px;
+
+  .fs-navigation button {
+    padding:
+      9px
+      18px;
+
+    font-size: 0.8rem;
   }
 
-  .faq-accordion-answer {
-    padding: 0 20px 22px;
-    font-size: 14px;
+
+  /* Keep decorations farther from
+     content on smaller screens */
+
+  .fs-deco--star1 {
+    left: 25px;
   }
 
-  .faq-cta {
-    width: 90%;
-    padding: 44px 24px;
+
+  .fs-deco--star2 {
+    right: 25px;
   }
 
-  .faq-cta-heading {
-    font-size: 28px;
+
+  .fs-deco--sparkle {
+    left: 30px;
   }
 
-  .faq-cta-subheading {
-    font-size: 15px;
+
+  .fs-deco--sparkle2 {
+    right: 30px;
   }
 
-  .faq-cta-button {
-    padding: 14px 28px;
-    font-size: 14px;
+
+  .fs-deco--heart {
+    right: 25px;
+  }
+
+
+  .fs-deco--flower {
+    left: 25px;
+  }
+}
+
+
+/* ========================================
+   REDUCED MOTION ACCESSIBILITY
+======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .fs-deco {
+    animation: none !important;
+  }
+
+
+  .fs-back,
+  .fs-navigation button {
+    transition: none !important;
+  }
+
+
+  .fs-back:hover,
+  .fs-navigation
+  button:hover:not(:disabled) {
+    transform: none;
   }
 }

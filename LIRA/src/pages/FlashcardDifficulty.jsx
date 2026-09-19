@@ -159,7 +159,6 @@ export default function FlashcardDifficulty() {
 
       </header>
 
-
       {/* MAIN */}
       <main className="fc-main">
 

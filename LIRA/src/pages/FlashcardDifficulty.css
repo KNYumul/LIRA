@@ -598,3 +598,276 @@
     align-self: flex-end;
   }
 }
+
+/* ========================================
+   CUTE ANIMAL ICON ANIMATIONS
+======================================== */
+
+.fc-card__icon {
+  transform-origin: center bottom;
+
+  transition:
+    transform 0.3s ease,
+    filter 0.3s ease;
+}
+
+
+/* ========================================
+   EASY — KOALA
+   Gentle sleepy floating + sway
+======================================== */
+
+.fc-card--blue .fc-card__icon {
+  animation: fcKoalaIdle 3.8s ease-in-out infinite;
+}
+
+@keyframes fcKoalaIdle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  30% {
+    transform: translateY(-3px) rotate(-3deg);
+  }
+
+  60% {
+    transform: translateY(-5px) rotate(2deg);
+  }
+
+  80% {
+    transform: translateY(-2px) rotate(1deg);
+  }
+}
+
+
+/* ========================================
+   MEDIUM — TURTLE
+   Tiny walking / bobbing movement
+======================================== */
+
+.fc-card--coral .fc-card__icon {
+  animation: fcTurtleIdle 3.2s ease-in-out infinite;
+}
+
+@keyframes fcTurtleIdle {
+  0%,
+  100% {
+    transform: translateX(0) translateY(0) rotate(0deg);
+  }
+
+  25% {
+    transform: translateX(-3px) translateY(-2px) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateX(2px) translateY(0) rotate(1deg);
+  }
+
+  75% {
+    transform: translateX(4px) translateY(-2px) rotate(2deg);
+  }
+}
+
+
+/* ========================================
+   HARD — DINOSAUR
+   Playful little bounce
+======================================== */
+
+.fc-card--green .fc-card__icon {
+  animation: fcDinoIdle 3s ease-in-out infinite;
+}
+
+@keyframes fcDinoIdle {
+  0%,
+  65%,
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+
+  75% {
+    transform: translateY(-7px) rotate(-3deg) scale(1.03);
+  }
+
+  84% {
+    transform: translateY(0) rotate(2deg) scaleX(1.06) scaleY(0.95);
+  }
+
+  91% {
+    transform: translateY(-2px) rotate(0deg) scale(1.01);
+  }
+}
+
+
+/* ========================================
+   OPTIONAL CARD HOVER
+   Very small lift so the page still
+   feels clean and not too "button-like"
+======================================== */
+
+.fc-card {
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.fc-card:hover {
+  transform: translateY(-4px);
+
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+
+/* ========================================
+   KOALA HOVER
+   Cute sleepy wiggle
+======================================== */
+
+.fc-card--blue:hover .fc-card__icon {
+  animation: fcKoalaHello 0.75s ease;
+}
+
+@keyframes fcKoalaHello {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+
+  20% {
+    transform: translateY(-3px) rotate(-7deg) scale(1.05);
+  }
+
+  40% {
+    transform: translateY(-5px) rotate(7deg) scale(1.08);
+  }
+
+  60% {
+    transform: translateY(-4px) rotate(-5deg) scale(1.06);
+  }
+
+  80% {
+    transform: translateY(-2px) rotate(3deg) scale(1.03);
+  }
+
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+
+/* ========================================
+   TURTLE HOVER
+   Happy little walk
+======================================== */
+
+.fc-card--coral:hover .fc-card__icon {
+  animation: fcTurtleHappy 0.8s ease;
+}
+
+@keyframes fcTurtleHappy {
+  0% {
+    transform: translateX(0) translateY(0) rotate(0deg);
+  }
+
+  20% {
+    transform: translateX(-5px) translateY(-3px) rotate(-4deg);
+  }
+
+  40% {
+    transform: translateX(3px) translateY(0) rotate(3deg);
+  }
+
+  60% {
+    transform: translateX(-2px) translateY(-3px) rotate(-3deg);
+  }
+
+  80% {
+    transform: translateX(4px) translateY(0) rotate(2deg);
+  }
+
+  100% {
+    transform: translateX(0) translateY(0) rotate(0deg);
+  }
+}
+
+
+/* ========================================
+   DINOSAUR HOVER
+   Excited jump + wiggle
+======================================== */
+
+.fc-card--green:hover .fc-card__icon {
+  animation: fcDinoHappy 0.7s ease;
+}
+
+@keyframes fcDinoHappy {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+
+  25% {
+    transform: translateY(-9px) rotate(-6deg) scale(1.07);
+  }
+
+  50% {
+    transform: translateY(-12px) rotate(6deg) scale(1.1);
+  }
+
+  70% {
+    transform: translateY(1px) rotate(-2deg)
+      scaleX(1.08) scaleY(0.94);
+  }
+
+  85% {
+    transform: translateY(-4px) rotate(2deg) scale(1.04);
+  }
+
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+
+/* ========================================
+   START BUTTON — TINY ARROW MOVEMENT
+======================================== */
+
+.fc-card__start span {
+  display: inline-block;
+
+  transition: transform 0.2s ease;
+}
+
+.fc-card__start:hover:not(:disabled) span {
+  transform: translateX(3px);
+}
+
+
+/* ========================================
+   ACCESSIBILITY
+======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .fc-card__icon {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .fc-card {
+    transition: none !important;
+  }
+
+  .fc-card:hover {
+    transform: none;
+  }
+
+  .fc-card__start span {
+    transition: none !important;
+  }
+
+  .fc-card__start:hover span {
+    transform: none;
+  }
+}

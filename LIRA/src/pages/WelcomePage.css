@@ -419,3 +419,234 @@
     flex-wrap: wrap;
   }
 }
+
+/* =========================================================
+   CUTE ANIMAL ANIMATIONS
+   ========================================================= */
+
+/* ---------- HERO MASCOTS ---------- */
+
+/* Fox: gentle happy bounce */
+.lira-hero__mascot--left {
+  animation: foxCuteBounce 3.2s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+/* Owl: soft floating + tiny tilt */
+.lira-hero__mascot--right {
+  animation: owlCuteFloat 4s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+@keyframes foxCuteBounce {
+  0%,
+  100% {
+    transform: translateY(-50%) translateY(0) rotate(0deg);
+  }
+
+  40% {
+    transform: translateY(-50%) translateY(-10px) rotate(-2deg);
+  }
+
+  60% {
+    transform: translateY(-50%) translateY(-10px) rotate(2deg);
+  }
+}
+
+@keyframes owlCuteFloat {
+  0%,
+  100% {
+    transform: translateY(-50%) translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-50%) translateY(-12px) rotate(2deg);
+  }
+}
+
+
+/* ---------- FEATURE CARD ANIMALS ---------- */
+
+.feature-card__icon {
+  transition:
+    transform 0.35s ease,
+    filter 0.35s ease;
+  transform-origin: center bottom;
+}
+
+
+/* Bear: tiny breathing / bouncing animation */
+.feature-card:nth-child(1) .feature-card__icon {
+  animation: bearIdle 3s ease-in-out infinite;
+}
+
+@keyframes bearIdle {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-5px) scale(1.04);
+  }
+}
+
+
+/* Frog: cute little hop */
+.feature-card:nth-child(2) .feature-card__icon {
+  animation: frogHop 2.8s ease-in-out infinite;
+}
+
+@keyframes frogHop {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  80% {
+    transform: translateY(-7px) scale(1.03);
+  }
+
+  88% {
+    transform: translateY(0) scaleX(1.06) scaleY(0.95);
+  }
+}
+
+
+/* Deer: gentle side-to-side head-like tilt */
+.feature-card:nth-child(3) .feature-card__icon {
+  animation: deerSway 3.5s ease-in-out infinite;
+}
+
+@keyframes deerSway {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  35% {
+    transform: translateY(-3px) rotate(-4deg);
+  }
+
+  70% {
+    transform: translateY(-3px) rotate(4deg);
+  }
+}
+
+
+/* ---------- CUTE HOVER REACTION ---------- */
+
+/* Lift the entire card slightly */
+.feature-card {
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(74, 122, 90, 0.12);
+  border-color: #c5d8ad;
+}
+
+
+/* Bear reacts on hover */
+.feature-card:nth-child(1):hover .feature-card__icon {
+  animation: bearHello 0.6s ease;
+}
+
+@keyframes bearHello {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  25% {
+    transform: rotate(-8deg) scale(1.12);
+  }
+
+  50% {
+    transform: rotate(8deg) scale(1.12);
+  }
+
+  75% {
+    transform: rotate(-4deg) scale(1.08);
+  }
+
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+
+/* Frog reacts with a bigger hop */
+.feature-card:nth-child(2):hover .feature-card__icon {
+  animation: frogHappyHop 0.65s ease;
+}
+
+@keyframes frogHappyHop {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+
+  40% {
+    transform: translateY(-13px) scale(1.12);
+  }
+
+  70% {
+    transform: translateY(2px) scaleX(1.1) scaleY(0.92);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* Deer reacts with a cute wiggle */
+.feature-card:nth-child(3):hover .feature-card__icon {
+  animation: deerHello 0.7s ease;
+}
+
+@keyframes deerHello {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  20% {
+    transform: rotate(-7deg) scale(1.08);
+  }
+
+  40% {
+    transform: rotate(7deg) scale(1.1);
+  }
+
+  60% {
+    transform: rotate(-5deg) scale(1.08);
+  }
+
+  80% {
+    transform: rotate(3deg) scale(1.05);
+  }
+
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+
+/* ---------- ACCESSIBILITY ---------- */
+
+/* Stops animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .lira-hero__mascot,
+  .feature-card__icon {
+    animation: none !important;
+  }
+
+  .feature-card,
+  .feature-card__icon {
+    transition: none !important;
+  }
+}
