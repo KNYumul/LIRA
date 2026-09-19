@@ -5,6 +5,7 @@ const Section = require("../models/Section");
 const { hashPassword } = require("../utils/password");
 
 const { issueSession } = require("../utils/recordingSession");
+const { sendVerification } = require("../utils/emailVerification");
 const router = express.Router();
 const oauthStates = new Map();
 const loginSessions = new Map();
@@ -101,11 +102,14 @@ router.get("/google/callback", async (req, res) => {
         firstName: profile.given_name || profile.name || fallbackName,
         lastName: profile.family_name || "Teacher",
         email,
+        active: false,
+        activationPending: true,
         passwordHash: await hashPassword(randomCode())
       });
-    } else {
-      if (!teacher.active) return redirectError(res, "This teacher account is inactive. Please contact the administrator.");
+      const delivery = await sendVerification(teacher);
+      return redirectError(res, delivery.message);
     }
+    if (!teacher.active) return redirectError(res, "Your account is not active. Please contact IT support or check your email for the activation link.");
 
     const sections = await Section.find({ teacherId: teacher._id }).distinct("name");
     const sessionCode = randomCode();
@@ -119,6 +123,8 @@ router.get("/google/callback", async (req, res) => {
         section: teacher.section,
         sections,
         active: teacher.active,
+        emailVerified: teacher.emailVerified,
+        emailVerifiedAt: teacher.emailVerifiedAt,
         createdAt: teacher.createdAt,
         role: "teacher"
       }
@@ -133,6 +139,8 @@ router.get("/google/callback", async (req, res) => {
 router.get("/google/session", async (req, res) => {
   const session = takeFresh(loginSessions, String(req.query.code || ""));
   if (!session) return res.status(400).json({ message: "The Google login session expired or was already used." });
+  const teacher = await Teacher.findOne({ _id: session.teacher.id, email: session.teacher.email, active: true });
+  if (!teacher) return res.status(403).json({ message: "This account is inactive or needs email verification. Please contact IT support." });
   res.json({ message: "Google login successful.", teacher: session.teacher, token: await issueSession(session.teacher.id, "teacher") });
 });
 

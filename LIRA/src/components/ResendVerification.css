@@ -1,0 +1,14 @@
+.verification-resend { margin-top: 25px; text-align: left; }
+.verification-resend__label { display: block; color: #63574e; font-size: 12px; font-weight: 600; }
+.verification-resend__field { display: flex; align-items: center; gap: 11px; margin-top: 8px; padding: 0 15px; border: 1px solid #e5dfd7; border-radius: 13px; background: white; color: #a29a8e; }
+.verification-resend__field:focus-within { border-color: #a4b39a; box-shadow: 0 0 0 3px #a4b39a26; }
+.verification-resend__field svg { flex-shrink: 0; }
+.verification-resend__field input { width: 100%; min-width: 0; height: 50px; padding: 0; border: 0; outline: none; background: transparent; color: #51483f; font: inherit; font-size: 13px; font-weight: 400; }
+.verification-resend__button { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; min-height: 50px; margin-top: 16px; padding: 12px 16px; border: 0; border-radius: 13px; background: #bd685f; box-shadow: 0 4px 12px #d9827829; color: white; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 150ms, box-shadow 150ms; }
+.verification-resend__button:hover:not(:disabled) { background: #aa5a52; box-shadow: 0 5px 16px #d9827840; }
+.verification-resend__button:focus-visible { outline: 3px solid #a4b39a; outline-offset: 3px; }
+.verification-resend__button:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+.verification-resend__hint { margin: 14px 6px 0; color: #84786e; font-size: 11px; line-height: 1.7; text-align: center; }
+.verification-resend__status { margin: 14px 0 0; padding: 12px; border-radius: 10px; background: #f4efe6; color: #706150; font-size: 12px; line-height: 1.7; }
+.verification-resend__status:empty { display: none; }
+@media (prefers-reduced-motion: reduce) { .verification-resend__button { transition: none; } }
