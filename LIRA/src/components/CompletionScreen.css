@@ -1,165 +1,1203 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700;800&display=swap");
+
+/* =========================================================
+   PAGE
+========================================================= */
+
 .completion-page {
   position: relative;
+
   min-height: 100vh;
   min-height: 100dvh;
+
   width: 100%;
-  overflow: hidden;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background-image: url('/completion-backdrop.svg');
+
+  background-image: url("/completion-backdrop.svg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  padding: 25px 0 45px;
+
+  box-sizing: border-box;
+
+  color: #3f3f3f;
 }
 
-/* ---------- decorative frosted-glass squares ---------- */
+.completion-page *,
+.completion-page *::before,
+.completion-page *::after {
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   DECORATIVE SQUARES
+========================================================= */
+
 .completion-decor-square {
-  position: absolute;
+  position: fixed;
+
   width: clamp(70px, 6.2vw, 118px);
   height: clamp(70px, 6.2vw, 118px);
+
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.55);
-  box-shadow: 0 8px 24px rgba(120, 110, 90, 0.08);
+
+  background: rgba(255, 255, 255, 0.5);
+
+  box-shadow:
+    0 8px 24px rgba(120, 110, 90, 0.06);
+
   pointer-events: none;
+
+  z-index: 0;
 }
 
 .completion-decor-square--tl {
-  top: 1.5%;
-  left: 4.5%;
-}
-.completion-decor-square--tr {
-  top: 1.5%;
-  right: 3%;
-}
-.completion-decor-square--tr2 {
-  top: 1.5%;
-  right: -2.5%;
-  opacity: 0.7;
-}
-.completion-decor-square--ml {
-  top: 56%;
-  left: -1.5%;
-  opacity: 0.7;
-}
-.completion-decor-square--mr {
-  top: 49%;
-  right: -3%;
-}
-.completion-decor-square--bl {
-  top: 87%;
-  left: 5.5%;
-}
-.completion-decor-square--br {
-  top: 87%;
-  right: 3%;
-}
-.completion-decor-square--br2 {
-  top: 87%;
-  right: -2.5%;
-  opacity: 0.7;
+  top: 2%;
+  left: 9%;
+
+  transform: rotate(7deg);
 }
 
-/* ---------- back button ---------- */
-.completion-back-button {
-  position: absolute;
+.completion-decor-square--tr {
+  top: 2%;
+  right: 8%;
+
+  transform: rotate(-7deg);
+}
+
+.completion-decor-square--tr2 {
   top: 8%;
-  left: 6%;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: #ffffff;
+  right: -3%;
+
+  opacity: 0.6;
+
+  transform: rotate(9deg);
+}
+
+.completion-decor-square--ml {
+  top: 48%;
+  left: -2%;
+
+  opacity: 0.65;
+
+  transform: rotate(10deg);
+}
+
+.completion-decor-square--mr {
+  top: 53%;
+  right: -2%;
+
+  transform: rotate(-10deg);
+}
+
+.completion-decor-square--bl {
+  bottom: 7%;
+  left: 4%;
+
+  transform: rotate(-8deg);
+}
+
+.completion-decor-square--br {
+  bottom: 8%;
+  right: 4%;
+
+  transform: rotate(8deg);
+}
+
+.completion-decor-square--br2 {
+  bottom: 1%;
+  right: -3%;
+
+  opacity: 0.6;
+}
+
+
+/* =========================================================
+   BACK BUTTON
+========================================================= */
+
+.completion-back-button {
+  position: fixed;
+
+  top: 30px;
+  left: 4%;
+
+  z-index: 10;
+
+  width: 52px;
+  height: 52px;
+
+  padding: 0;
+
   border: none;
-  font-size: 1.1rem;
-  color: #3f3f3f;
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: #555555;
+
+  font-family: "Poppins", sans-serif;
+  font-size: 1.55rem;
+  font-weight: 400;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
-  transition: background 0.15s ease;
+
+  box-shadow:
+    0 5px 15px rgba(72, 67, 60, 0.1);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
 }
 
 .completion-back-button:hover {
-  background: #f4f4f4;
+  transform: translateY(-2px);
+
+  background: #fffdf9;
+
+  box-shadow:
+    0 7px 18px rgba(72, 67, 60, 0.14);
 }
 
 .completion-back-button:active {
-  transform: translateY(0);
+  transform: scale(0.95);
 }
 
-/* ---------- main content ---------- */
+.completion-back-button:focus-visible {
+  outline: 3px solid #82bfa9;
+  outline-offset: 4px;
+}
+
+
+/* =========================================================
+   MAIN CONTENT
+========================================================= */
+
 .completion-content {
   position: relative;
-  z-index: 1;
+
+  z-index: 2;
+
+  width: min(100% - 40px, 1050px);
+
+  margin: 0 auto;
+
   display: flex;
   flex-direction: column;
   align-items: center;
+
   text-align: center;
-  padding: 0 24px;
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 900px;
 }
+
+
+/* =========================================================
+   CELEBRATION
+========================================================= */
+
+.completion-celebration {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  margin-bottom: 14px;
+}
+
+
+/* =========================================================
+   HERO IMAGE
+========================================================= */
 
 .completion-hero-image {
-  width: min(68vw, 420px);
+  display: block;
+
+  width: min(45vw, 390px);
   max-width: 100%;
+
   height: auto;
-  max-height: min(42dvh, 360px);
+
+  max-height: 235px;
+
   object-fit: contain;
-  margin-bottom: 0;
+
+  margin: 0 auto -4px;
+
   user-select: none;
+
+  pointer-events: none;
 }
+
+
+/* =========================================================
+   MAIN TITLE
+   QUICKSAND
+========================================================= */
 
 .completion-title {
-  font-family: 'Baloo 2', 'Nunito', sans-serif;
-  font-weight: 700;
-  font-size: clamp(28px, 3.2vw, 38px);
-  line-height: 1.15;
-  color: #3b3f45;
-  margin: 8px 0 10px;
+  font-family: "Quicksand", sans-serif;
+
+  font-size: clamp(38px, 4.4vw, 58px);
+  font-weight: 800;
+
+  line-height: 1;
+
+  color: #424242;
+
+  margin: 4px 0 6px;
+
+  letter-spacing: -1px;
 }
 
+
+/* =========================================================
+   ASSESSMENT TITLE
+   QUICKSAND
+========================================================= */
+
+.completion-assessment-title {
+  font-family: "Quicksand", sans-serif;
+
+  font-size: clamp(19px, 2vw, 25px);
+  font-weight: 700;
+
+  line-height: 1.25;
+
+  color: #55514f;
+
+  margin: 0 0 5px;
+}
+
+
+/* =========================================================
+   DESCRIPTION
+   POPPINS
+========================================================= */
+
 .completion-subtitle {
-  font-family: 'Nunito', sans-serif;
+  font-family: "Poppins", sans-serif;
+
+  font-size: clamp(12px, 1.1vw, 15px);
   font-weight: 400;
-  font-size: clamp(14px, 1.3vw, 17px);
+
   line-height: 1.5;
-  color: #6b7280;
-  max-width: 620px;
+
+  color: #77716e;
+
+  max-width: 600px;
+
   margin: 0;
 }
 
-/* ---------- responsive ---------- */
-@media (max-width: 640px) {
-  .completion-back-button {
-    top: 5%;
-    left: 5%;
+
+/* =========================================================
+   SURVEY CARD
+========================================================= */
+
+.completion-survey-card {
+  width: min(100%, 960px);
+
+  margin-top: 8px;
+
+  padding: 14px 18px 18px;
+
+  border-radius: 26px;
+
+  background: rgba(255, 255, 255, 0.92);
+
+  border: 1px solid rgba(255, 255, 255, 0.96);
+
+  box-shadow:
+    0 12px 35px rgba(94, 87, 75, 0.09);
+
+  backdrop-filter: blur(6px);
+}
+
+
+/* =========================================================
+   SURVEY HEADER
+========================================================= */
+
+.completion-survey-header {
+  min-height: 62px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  text-align: left;
+
+  padding: 9px 18px;
+
+  margin-bottom: 9px;
+
+  border-radius: 19px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #d9f1f4,
+      #ccebf0,
+      #d9f1f4
+    );
+}
+
+.completion-survey-header h2 {
+  font-family: "Quicksand", sans-serif;
+
+  font-size: clamp(21px, 2vw, 27px);
+  font-weight: 800;
+
+  line-height: 1.1;
+
+  color: #327e8b;
+
+  margin: 0 0 2px;
+}
+
+.completion-survey-header p {
+  font-family: "Poppins", sans-serif;
+
+  font-size: 12px;
+  font-weight: 400;
+
+  color: #62858a;
+
+  margin: 0;
+}
+
+
+/* =========================================================
+   SURVEY PROGRESS
+========================================================= */
+
+.completion-survey-progress {
+  flex-shrink: 0;
+
+  min-width: 58px;
+
+  padding: 7px 11px;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.72);
+
+  color: #42818c;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   RATING GUIDE
+========================================================= */
+
+.completion-rating-guide {
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+
+  gap: 5px;
+
+  margin-bottom: 9px;
+}
+
+.completion-rating-guide span {
+  min-height: 34px;
+
+  padding: 5px 6px;
+
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  background: #fff8eb;
+
+  color: #817565;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.completion-rating-guide strong {
+  width: 21px;
+  height: 21px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffc55f;
+
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   QUESTIONS LIST
+========================================================= */
+
+.completion-response-list {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+
+/* =========================================================
+   QUESTION ROW
+========================================================= */
+
+.completion-response-row {
+  width: 100%;
+
+  min-height: 44px;
+
+  display: grid;
+
+  grid-template-columns:
+    44px
+    minmax(0, 1fr)
+    190px;
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 4px 13px 4px 7px;
+
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(250, 250, 250, 0.96),
+      rgba(247, 247, 247, 0.92)
+    );
+
+  border: 1px solid #eeeeee;
+
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.completion-response-row:hover {
+  background: #ffffff;
+
+  transform: translateX(2px);
+}
+
+.completion-response-row--answered {
+  border-color: #e4ebdf;
+
+  background:
+    linear-gradient(
+      90deg,
+      #ffffff,
+      #fbfdf9
+    );
+}
+
+
+/* =========================================================
+   QUESTION NUMBER
+========================================================= */
+
+.completion-question-number {
+  width: 34px;
+  height: 34px;
+
+  border-radius: 50%;
+
+  justify-self: center;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  color: #ffffff;
+
+  box-shadow:
+    inset 0 -2px 0 rgba(0, 0, 0, 0.04);
+}
+
+
+/* BLUE */
+
+.completion-question-number--1 {
+  background: #7ec9da;
+}
+
+
+/* CORAL */
+
+.completion-question-number--2 {
+  background: #f49395;
+}
+
+
+/* YELLOW */
+
+.completion-question-number--3 {
+  background: #f3c560;
+}
+
+
+/* GREEN */
+
+.completion-question-number--4 {
+  background: #8acb91;
+}
+
+
+/* PURPLE */
+
+.completion-question-number--5 {
+  background: #ad8ae7;
+}
+
+
+/* =========================================================
+   QUESTION TEXT
+   POPPINS
+========================================================= */
+
+.completion-question-text {
+  min-width: 0;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: clamp(11px, 1vw, 14px);
+  font-weight: 400;
+
+  line-height: 1.35;
+
+  color: #3f5069;
+
+  text-align: left;
+
+  margin: 0;
+}
+
+
+/* =========================================================
+   INTERACTIVE STARS
+========================================================= */
+
+.completion-stars {
+  display: flex;
+
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 3px;
+
+  white-space: nowrap;
+}
+
+
+/* Each star is a button */
+
+.completion-star {
+  appearance: none;
+  -webkit-appearance: none;
+
+  width: 32px;
+  height: 32px;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: #d2d3d4;
+
+  font-family: Arial, sans-serif;
+
+  font-size: 27px;
+
+  line-height: 1;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  border-radius: 50%;
+
+  transition:
+    color 0.13s ease,
+    transform 0.13s ease,
+    background-color 0.13s ease;
+}
+
+.completion-star:hover {
+  transform: scale(1.2);
+}
+
+.completion-star--filled {
+  color: #ffb82e;
+
+  text-shadow:
+    0 2px 3px rgba(215, 147, 20, 0.14);
+}
+
+.completion-star:focus-visible {
+  outline: 2px solid #e9a72c;
+
+  outline-offset: 1px;
+
+  background: #fff7df;
+}
+
+.completion-star:disabled {
+  cursor: default;
+}
+
+.completion-star:disabled:hover {
+  transform: none;
+}
+
+
+/* =========================================================
+   SUBMIT AREA
+========================================================= */
+
+.completion-submit-area {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  margin-top: 14px;
+}
+
+
+/* =========================================================
+   SUBMIT HINT
+========================================================= */
+
+.completion-submit-hint {
+  font-family: "Poppins", sans-serif;
+
+  font-size: 11px;
+  font-weight: 400;
+
+  color: #91867e;
+
+  margin: 0 0 7px;
+}
+
+
+/* =========================================================
+   SUBMIT BUTTON
+========================================================= */
+
+.completion-submit-button {
+  min-width: 205px;
+  min-height: 48px;
+
+  padding: 10px 25px;
+
+  border: none;
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffc267,
+      #ffad4b
+    );
+
+  color: #4a3b32;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 7px 17px rgba(221, 151, 60, 0.19);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.completion-submit-button:not(:disabled):hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 10px 21px rgba(221, 151, 60, 0.25);
+}
+
+.completion-submit-button:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+.completion-submit-button:disabled {
+  opacity: 0.42;
+
+  cursor: not-allowed;
+
+  box-shadow: none;
+}
+
+.completion-submit-button:focus-visible {
+  outline: 3px solid #44836b;
+
+  outline-offset: 3px;
+}
+
+
+/* =========================================================
+   SUCCESS MESSAGE
+========================================================= */
+
+.completion-success-message {
+  width: min(100%, 560px);
+
+  margin: 14px auto 0;
+
+  padding: 12px 18px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  text-align: left;
+
+  border-radius: 17px;
+
+  background: #eef8e9;
+
+  border: 1px solid #cfe6c4;
+}
+
+.completion-success-icon {
+  width: 36px;
+  height: 36px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #83bd76;
+
+  color: #ffffff;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.completion-success-message h3 {
+  font-family: "Quicksand", sans-serif;
+
+  font-size: 17px;
+  font-weight: 700;
+
+  color: #56794d;
+
+  margin: 0 0 2px;
+}
+
+.completion-success-message p {
+  font-family: "Poppins", sans-serif;
+
+  font-size: 11px;
+  font-weight: 400;
+
+  line-height: 1.4;
+
+  color: #71816b;
+
+  margin: 0;
+}
+
+
+/* =========================================================
+   EXISTING STATUS / ERROR
+========================================================= */
+
+.completion-status {
+  margin-top: 10px;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 13px;
+
+  line-height: 1.4;
+
+  color: #6b7280;
+}
+
+.completion-status p {
+  margin: 4px 0;
+}
+
+.completion-error {
+  color: #b94b47;
+}
+
+
+/* =========================================================
+   BACK TO HOME BUTTON
+========================================================= */
+
+.completion-home-button {
+  min-width: 260px;
+  min-height: 55px;
+
+  margin-top: 15px;
+
+  padding: 11px 28px;
+
+  border: none;
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffc267,
+      #ffad4b
+    );
+
+  color: #40352f;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 11px;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 8px 20px rgba(221, 151, 60, 0.2);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.completion-home-button:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 11px 24px rgba(221, 151, 60, 0.27);
+}
+
+.completion-home-button:active {
+  transform: scale(0.98);
+}
+
+.completion-home-button:focus-visible {
+  outline: 3px solid #44836b;
+
+  outline-offset: 4px;
+}
+
+.completion-home-icon {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  color: #4d4039;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 850px) {
+  .completion-content {
+    width: calc(100% - 30px);
   }
 
-  .completion-hero-image {
-    width: min(78vw, 340px);
+  .completion-response-row {
+    grid-template-columns:
+      40px
+      minmax(0, 1fr)
+      170px;
+  }
+
+  .completion-star {
+    width: 29px;
+    height: 29px;
+
+    font-size: 24px;
+  }
+
+  .completion-rating-guide span {
+    flex-direction: column;
+
+    gap: 2px;
+
+    font-size: 8px;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 650px) {
+  .completion-page {
+    padding:
+      80px
+      0
+      35px;
+
+    background-attachment: scroll;
   }
 
   .completion-decor-square {
     display: none;
   }
+
+  .completion-back-button {
+    position: absolute;
+
+    top: 18px;
+    left: 18px;
+
+    width: 46px;
+    height: 46px;
+  }
+
+  .completion-hero-image {
+    width: min(80vw, 320px);
+
+    max-height: 210px;
+  }
+
+  .completion-title {
+    font-size: 38px;
+  }
+
+  .completion-assessment-title {
+    font-size: 19px;
+  }
+
+  .completion-subtitle {
+    font-size: 12px;
+
+    padding: 0 10px;
+  }
+
+  .completion-survey-card {
+    margin-top: 13px;
+
+    padding:
+      10px
+      9px
+      14px;
+
+    border-radius: 20px;
+  }
+
+  .completion-survey-header {
+    padding: 8px 12px;
+
+    border-radius: 15px;
+  }
+
+  .completion-survey-header h2 {
+    font-size: 20px;
+  }
+
+  .completion-rating-guide {
+    grid-template-columns: 1fr;
+
+    gap: 3px;
+  }
+
+  .completion-rating-guide span {
+    min-height: 27px;
+
+    flex-direction: row;
+
+    justify-content: flex-start;
+
+    padding-left: 10px;
+
+    font-size: 9px;
+  }
+
+  .completion-response-row {
+    grid-template-columns:
+      38px
+      minmax(0, 1fr);
+
+    grid-template-areas:
+      "number question"
+      ". stars";
+
+    gap:
+      4px
+      6px;
+
+    padding:
+      7px
+      9px;
+
+    min-height: 68px;
+  }
+
+  .completion-question-number {
+    grid-area: number;
+
+    width: 31px;
+    height: 31px;
+
+    font-size: 12px;
+  }
+
+  .completion-question-text {
+    grid-area: question;
+
+    font-size: 11px;
+  }
+
+  .completion-stars {
+    grid-area: stars;
+
+    justify-content: flex-start;
+
+    gap: 2px;
+  }
+
+  .completion-star {
+    width: 31px;
+    height: 31px;
+
+    font-size: 25px;
+  }
 }
 
-.completion-page { box-sizing: border-box; padding: 72px 0 24px; }
-.completion-back-button { z-index: 2; }
-.completion-back-button:focus-visible { outline: 3px solid #44836b; outline-offset: 4px; }
-.completion-status { margin-top: 10px;
-  font-size: 14px;
-  line-height: 1.4; color: #6b7280; }
-.completion-error { color: #B94B47; }
 
-.completion-status p { margin: 4px 0; }
-@media (max-height: 600px) {
-  .completion-page { padding: 16px 0; }
-  .completion-hero-image { max-height: max(64px, calc(100dvh - 260px)); }
-  .completion-back-button { top: 12px; left: 12px; width: 44px; height: 44px; }
-  .completion-title { font-size: 28px; margin: 4px 0 8px; }
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 400px) {
+  .completion-survey-header {
+    align-items: flex-start;
+  }
+
+  .completion-survey-header h2 {
+    font-size: 18px;
+  }
+
+  .completion-survey-header p {
+    font-size: 10px;
+  }
+
+  .completion-survey-progress {
+    min-width: 50px;
+
+    font-size: 11px;
+  }
+
+  .completion-star {
+    width: 28px;
+    height: 28px;
+
+    font-size: 23px;
+  }
+
+  .completion-submit-button,
+  .completion-home-button {
+    width: 90%;
+
+    min-width: 0;
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .completion-back-button,
+  .completion-response-row,
+  .completion-star,
+  .completion-submit-button,
+  .completion-home-button {
+    transition: none;
+  }
 }
