@@ -1,0 +1,482 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700&display=swap");
+
+.survey-results-page {
+  width: 100%;
+  min-height: 100vh;
+  background: #fff5ec;
+  padding: 48px 52px 60px;
+  font-family: "Poppins", sans-serif;
+  color: #352a25;
+  box-sizing: border-box;
+}
+
+.survey-results-page *,
+.survey-results-page *::before,
+.survey-results-page *::after {
+  box-sizing: border-box;
+}
+
+.survey-results-container {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+/* ================================
+   HEADER
+================================ */
+
+.survey-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.survey-page-header h1 {
+  margin: 0 0 5px;
+  font-family: "Quicksand", sans-serif;
+  font-size: 35px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #302823;
+}
+
+.survey-page-header p {
+  margin: 0;
+  color: #9c8175;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+/* ================================
+   SUMMARY CARDS
+================================ */
+
+.survey-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 26px;
+}
+
+.survey-summary-card {
+  min-height: 145px;
+  background: #ffffff;
+  border: 1px solid #f0dfd4;
+  border-radius: 22px;
+  padding: 25px 26px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  box-shadow:
+    0 4px 12px rgba(106, 74, 54, 0.03),
+    0 10px 25px rgba(106, 74, 54, 0.025);
+}
+
+.summary-icon {
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  border-radius: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 25px;
+  font-weight: 700;
+}
+
+.summary-icon.blue {
+  color: #35899b;
+  background: #d8f0f4;
+}
+
+.summary-icon.yellow {
+  color: #dc9c27;
+  background: #fff0c8;
+}
+
+.summary-icon.green {
+  color: #559c60;
+  background: #ddf1d8;
+}
+
+.summary-label {
+  display: block;
+  margin-bottom: 2px;
+  color: #9d8176;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.survey-summary-card h2 {
+  margin: 0 0 2px;
+  color: #382e29;
+  font-family: "Quicksand", sans-serif;
+  font-size: 27px;
+  font-weight: 700;
+}
+
+.survey-summary-card p {
+  margin: 0;
+  color: #a28c83;
+  font-size: 12px;
+}
+
+/* ================================
+   MAIN RESULTS CARD
+================================ */
+
+.survey-results-card {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #f0dfd4;
+  border-radius: 23px;
+  padding: 27px 28px 30px;
+
+  box-shadow:
+    0 4px 12px rgba(106, 74, 54, 0.03),
+    0 12px 28px rgba(106, 74, 54, 0.025);
+}
+
+.survey-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  margin-bottom: 21px;
+}
+
+.survey-card-top h2 {
+  margin: 0 0 3px;
+  color: #3b302a;
+  font-family: "Quicksand", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.survey-card-top p {
+  margin: 0;
+  color: #a28c83;
+  font-size: 13px;
+}
+
+/* ================================
+   SEARCH
+================================ */
+
+.survey-search-box {
+  width: 315px;
+  height: 48px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 16px;
+  background: #ffffff;
+  border: 1px solid #ead8cd;
+  border-radius: 25px;
+}
+
+.search-icon {
+  margin-right: 9px;
+  color: #ec7775;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.survey-search-box input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+
+  font-family: "Poppins", sans-serif;
+  font-size: 13px;
+  color: #4c403a;
+}
+
+.survey-search-box input::placeholder {
+  color: #c0aaa0;
+}
+
+/* ================================
+   RATING LEGEND
+================================ */
+
+.survey-rating-legend {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+
+  margin-bottom: 19px;
+  padding: 11px;
+
+  background: #fff9ee;
+  border-radius: 14px;
+}
+
+.survey-rating-legend > div {
+  min-height: 37px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  background: #fff4df;
+  border-radius: 10px;
+
+  color: #8d776d;
+  font-size: 10px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.legend-number {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f6bc57;
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ================================
+   TABLE
+================================ */
+
+.survey-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.survey-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 11px;
+}
+
+.survey-table thead th {
+  padding: 0 18px 5px;
+  color: #987c70;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.survey-table tbody td {
+  padding: 13px 18px;
+  background: #fffdfb;
+  border-top: 1px solid #eee3dc;
+  border-bottom: 1px solid #eee3dc;
+
+  color: #594a43;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.survey-table tbody td:first-child {
+  border-left: 1px solid #eee3dc;
+  border-radius: 15px 0 0 15px;
+}
+
+.survey-table tbody td:last-child {
+  border-right: 1px solid #eee3dc;
+  border-radius: 0 15px 15px 0;
+}
+
+.survey-table tbody tr {
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.survey-table tbody tr:hover td {
+  background: #fffaf6;
+}
+
+.number-column {
+  width: 75px;
+}
+
+.responses-column {
+  width: 130px;
+}
+
+.average-column {
+  width: 245px;
+}
+
+/* ================================
+   QUESTION NUMBER
+================================ */
+
+.question-number {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.question-number.q1,
+.question-number.q6 {
+  background: #73c3d7;
+}
+
+.question-number.q2,
+.question-number.q7 {
+  background: #ee8d91;
+}
+
+.question-number.q3,
+.question-number.q8 {
+  background: #f2bd52;
+}
+
+.question-number.q4,
+.question-number.q9 {
+  background: #83c68d;
+}
+
+.question-number.q5,
+.question-number.q10 {
+  background: #9d7be2;
+}
+
+.question-text {
+  line-height: 1.45;
+}
+
+/* ================================
+   RESPONSE COUNT
+================================ */
+
+.response-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 48px;
+  height: 29px;
+  padding: 0 12px;
+
+  background: #f5eee9;
+  border-radius: 20px;
+
+  color: #806b61;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ================================
+   RATING
+================================ */
+
+.rating-result {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.rating-number {
+  min-width: 35px;
+  color: #433630;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.survey-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.star {
+  color: #dedede;
+  font-size: 17px;
+  line-height: 1;
+}
+
+.star.filled {
+  color: #ffae32;
+}
+
+/* ================================
+   EMPTY RESULT
+================================ */
+
+.survey-empty {
+  width: 100%;
+  padding: 35px;
+  text-align: center;
+  color: #aa9388;
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+
+@media (max-width: 1100px) {
+  .survey-results-page {
+    padding: 35px 30px;
+  }
+
+  .survey-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .survey-rating-legend {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 750px) {
+  .survey-results-page {
+    padding: 25px 18px;
+  }
+
+  .survey-page-header h1 {
+    font-size: 29px;
+  }
+
+  .survey-card-top {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .survey-search-box {
+    width: 100%;
+  }
+
+  .survey-rating-legend {
+    grid-template-columns: 1fr;
+  }
+
+  .survey-results-card {
+    padding: 20px 16px;
+  }
+
+  .survey-table {
+    min-width: 850px;
+  }
+}
