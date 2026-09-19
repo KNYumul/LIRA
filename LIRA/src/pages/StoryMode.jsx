@@ -1226,17 +1226,6 @@ function StoryMode({ onExit }) {
             <span className="sm-page-fold" aria-hidden="true" />
           </div>
 
-          <button
-            type="button"
-            className="sm-next-page-btn"
-            onClick={() => goNextPage()}
-            disabled={isFlipping}
-            aria-label={pageIndex < storyPages.length - 1 ? 'Next page' : 'Take the quiz'}
-          >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-              <path d="M9 5l7 7-7 7" stroke="#3F3F3F" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
         </div>
         <span className="sm-next-page-label">
           {pageIndex + 1}/{storyPages.length}
