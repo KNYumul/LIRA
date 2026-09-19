@@ -1,25 +1,53 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700;800&display=swap");
+
+/* =========================================================
+   PAGE
+========================================================= */
 
 .dash-page {
   --ink: #3a3a3a;
-  --ink-soft: #6b6b6b;
+  --ink-soft: #756f6d;
+
   --coral: #e8908a;
-  --coral-dark: #de7c76;
-  --peach: #fbe9dc;
-  --green-text: #4a7a5a;
+  --coral-dark: #d97c76;
+  --coral-soft: #f8d5cf;
+
+  --peach: #f6c7a5;
+  --peach-soft: #fff0e3;
+
+  --cream: #fffaf5;
+
+  --green: #a9c993;
+  --green-dark: #71865f;
+  --green-soft: #e8f0dc;
+
+  --yellow: #f1c879;
+  --yellow-soft: #fff0c9;
 
   position: relative;
+
   min-height: 100vh;
   width: 100%;
-  font-family: "Poppins", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  font-family:
+    "Poppins",
+    "Segoe UI",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+
   font-weight: 300;
   color: var(--ink);
+
   background-color: #fbe4d8;
+
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
+
   overflow: hidden;
+
   box-sizing: border-box;
 }
 
@@ -27,112 +55,923 @@
   box-sizing: border-box;
 }
 
-/* ============ Main ============ */
+
+/* =========================================================
+   MAIN
+========================================================= */
+
 .dash-main {
   position: relative;
   z-index: 2;
+
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 60px 60px 120px;
+
+  padding: 34px 60px 110px;
 }
+
+
+/* =========================================================
+   HEADING
+========================================================= */
+
+.dash-heading {
+  position: relative;
+
+  text-align: center;
+
+  margin-bottom: 26px;
+
+  animation: dashFadeDown 0.5s ease both;
+}
+
+.dash-heading h1 {
+  font-family: "Quicksand", sans-serif;
+
+  font-size: 1.8rem;
+  font-weight: 800;
+
+  color: #484341;
+
+  margin: 0 0 5px;
+
+  letter-spacing: -0.4px;
+}
+
+.dash-heading p {
+  margin: 0;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 0.88rem;
+  font-weight: 400;
+
+  color: #817876;
+}
+
+
+/* =========================================================
+   HEADING DECORATIONS
+========================================================= */
+
+.dash-heading__sparkle {
+  position: absolute;
+
+  pointer-events: none;
+  user-select: none;
+
+  color: var(--coral);
+}
+
+.dash-heading__sparkle--one {
+  left: -31px;
+  top: -1px;
+
+  font-size: 17px;
+
+  transform: rotate(-12deg);
+}
+
+.dash-heading__sparkle--two {
+  right: -29px;
+  top: 22px;
+
+  font-size: 12px;
+
+  color: #eab06e;
+}
+
+
+/* =========================================================
+   LANGUAGE TOGGLE
+   Kept in case you enable it again.
+========================================================= */
 
 .lang-toggle {
   display: inline-flex;
-  background: #fff;
+
+  background: #ffffff;
+
   border-radius: 999px;
-  padding: 8px;
+
+  padding: 6px;
+
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
-  margin-bottom: 40px;
+
+  margin-bottom: 30px;
 }
 
 .lang-toggle__option {
   border: none;
+
   background: none;
+
   cursor: pointer;
+
   font-family: "Poppins", sans-serif;
+
   font-weight: 600;
-  font-size: 1rem;
-  padding: 8px 32px;
+  font-size: 0.9rem;
+
+  padding: 7px 26px;
+
   border-radius: 999px;
+
   color: var(--ink-soft);
-  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .lang-toggle__option--active {
   background: #f2c48c;
+
   color: var(--ink);
 }
 
+
+/* =========================================================
+   CARDS CONTAINER
+========================================================= */
+
 .dash-cards {
   display: flex;
+
   gap: 28px;
+
   flex-wrap: wrap;
+
   justify-content: center;
+  align-items: stretch;
+
+  width: 100%;
 }
+
+
+/* =========================================================
+   CARD
+========================================================= */
 
 .dash-card {
-  background: #fff;
-  border: 2.5px solid #bfe0bf;
-  border-radius: 24px;
-  width: 400px;
-  height: 300px;
-  padding: 30px;
+  position: relative;
+
+  width: 350px;
+  height: 315px;
+
+  padding: 22px 25px 20px;
+
+  border-radius: 28px;
+
   display: flex;
   flex-direction: column;
-  align-items: center;       /* Centers horizontally */
-  justify-content: center;   /* Centers vertically */
+  align-items: center;
+
   text-align: center;
+
+  font-family: "Poppins", sans-serif;
+
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  overflow: hidden;
+
+  outline: none;
+
+  isolation: isolate;
+
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+
+  animation: dashCardAppear 0.55s ease both;
 }
+
+.dash-card:nth-child(2) {
+  animation-delay: 0.07s;
+}
+
+
+/* =========================================================
+   FLASHCARDS CARD
+========================================================= */
+
+.dash-card--flashcards {
+  background:
+    linear-gradient(
+      145deg,
+      #fffdf9 0%,
+      #fffaf4 60%,
+      #f8eee4 100%
+    );
+
+  border: 3px solid #b9d4a9;
+
+  box-shadow:
+    0 8px 0 #d9e5ce,
+    0 15px 27px rgba(110, 91, 76, 0.1);
+}
+
+
+/* =========================================================
+   STORY MODE CARD
+========================================================= */
+
+.dash-card--story {
+  background:
+    linear-gradient(
+      145deg,
+      #fffdf9 0%,
+      #fff9f3 60%,
+      #fbe9dd 100%
+    );
+
+  border: 3px solid #efb4a7;
+
+  box-shadow:
+    0 8px 0 #f3d1c8,
+    0 15px 27px rgba(110, 91, 76, 0.1);
+}
+
+
+/* =========================================================
+   CARD HOVER
+========================================================= */
 
 .dash-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-7px);
 }
+
+.dash-card--flashcards:hover {
+  border-color: #9fc28c;
+
+  box-shadow:
+    0 10px 0 #d2e1c6,
+    0 21px 32px rgba(101, 125, 88, 0.16);
+}
+
+.dash-card--story:hover {
+  border-color: #e99b91;
+
+  box-shadow:
+    0 10px 0 #f0cbc2,
+    0 21px 32px rgba(183, 108, 99, 0.15);
+}
+
+.dash-card:active {
+  transform: translateY(-1px) scale(0.985);
+}
+
+
+/* =========================================================
+   BACKGROUND CIRCLES
+========================================================= */
+
+.dash-card__shape {
+  position: absolute;
+
+  display: block;
+
+  border-radius: 50%;
+
+  pointer-events: none;
+
+  z-index: -1;
+}
+
+.dash-card__shape--one {
+  width: 145px;
+  height: 145px;
+
+  top: -80px;
+  right: -52px;
+}
+
+.dash-card__shape--two {
+  width: 90px;
+  height: 90px;
+
+  bottom: -50px;
+  left: -28px;
+}
+
+
+/* Flashcards circles */
+
+.dash-card--flashcards .dash-card__shape--one {
+  background: #e7efdc;
+}
+
+.dash-card--flashcards .dash-card__shape--two {
+  background: #f8d8c8;
+}
+
+
+/* Story circles */
+
+.dash-card--story .dash-card__shape--one {
+  background: #f9ddd4;
+}
+
+.dash-card--story .dash-card__shape--two {
+  background: #ffebc9;
+}
+
+
+/* =========================================================
+   STARS
+========================================================= */
+
+.dash-card__star {
+  position: absolute;
+
+  pointer-events: none;
+  user-select: none;
+
+  line-height: 1;
+
+  transition: transform 0.25s ease;
+}
+
+.dash-card__star--one {
+  top: 29px;
+  left: 31px;
+
+  font-size: 17px;
+
+  transform: rotate(-12deg);
+}
+
+.dash-card__star--two {
+  top: 55px;
+  right: 34px;
+
+  font-size: 11px;
+}
+
+
+/* Flashcards stars */
+
+.dash-card--flashcards .dash-card__star--one {
+  color: #9fc18c;
+}
+
+.dash-card--flashcards .dash-card__star--two {
+  color: #eda995;
+}
+
+
+/* Story stars */
+
+.dash-card--story .dash-card__star--one {
+  color: #e99b91;
+}
+
+.dash-card--story .dash-card__star--two {
+  color: #e8b66c;
+}
+
+.dash-card:hover .dash-card__star--one {
+  transform: rotate(8deg) scale(1.15);
+}
+
+.dash-card:hover .dash-card__star--two {
+  transform: rotate(-10deg) scale(1.15);
+}
+
+
+/* =========================================================
+   ANIMAL CIRCLE
+========================================================= */
+
+.dash-card__icon-wrap {
+  position: relative;
+
+  width: 105px;
+  height: 105px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  margin-bottom: 10px;
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+
+/* Penguin circle */
+
+.dash-card--flashcards .dash-card__icon-wrap {
+  background: #edf4e5;
+
+  border: 2.5px dashed #aacb98;
+
+  box-shadow:
+    inset 0 0 0 6px rgba(255, 255, 255, 0.5),
+    0 6px 14px rgba(93, 123, 80, 0.1);
+}
+
+
+/* Cat circle */
+
+.dash-card--story .dash-card__icon-wrap {
+  background: #fff0da;
+
+  border: 2.5px dashed #eab878;
+
+  box-shadow:
+    inset 0 0 0 6px rgba(255, 255, 255, 0.5),
+    0 6px 14px rgba(166, 113, 59, 0.1);
+}
+
+
+.dash-card:hover .dash-card__icon-wrap {
+  transform: translateY(-2px) rotate(-2deg);
+}
+
+
+/* =========================================================
+   ANIMAL IMAGE
+========================================================= */
 
 .dash-card__icon {
-  width: 80px;
-  height: 80px;
+  width: 74px;
+  height: 74px;
+
   object-fit: contain;
-  margin-bottom: 16px;
+
+  margin: 0;
+
+  position: relative;
+
+  z-index: 2;
+
+  transition: transform 0.25s ease;
 }
 
-/* Card Title: Quicksand */
+.dash-card:hover .dash-card__icon {
+  transform: scale(1.07);
+}
+
+
+/* =========================================================
+   LITTLE DOTS
+========================================================= */
+
+.dash-card__mini-dot {
+  position: absolute;
+
+  display: block;
+
+  border-radius: 50%;
+}
+
+.dash-card__mini-dot--one {
+  width: 8px;
+  height: 8px;
+
+  left: -6px;
+  top: 25px;
+}
+
+.dash-card__mini-dot--two {
+  width: 6px;
+  height: 6px;
+
+  right: -3px;
+  bottom: 22px;
+}
+
+.dash-card--flashcards .dash-card__mini-dot--one {
+  background: #9fc18c;
+}
+
+.dash-card--flashcards .dash-card__mini-dot--two {
+  background: #efad9a;
+}
+
+.dash-card--story .dash-card__mini-dot--one {
+  background: #e99b91;
+}
+
+.dash-card--story .dash-card__mini-dot--two {
+  background: #e8b66c;
+}
+
+
+/* =========================================================
+   CARD CONTENT
+========================================================= */
+
+.dash-card__content {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+/* =========================================================
+   SMALL LABEL
+========================================================= */
+
+.dash-card__label {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 3px 10px;
+
+  margin-bottom: 5px;
+
+  border-radius: 999px;
+
+  font-size: 0.58rem;
+  font-weight: 700;
+
+  letter-spacing: 0.9px;
+}
+
+.dash-card--flashcards .dash-card__label {
+  color: #668158;
+
+  background: #e8f0df;
+}
+
+.dash-card--story .dash-card__label {
+  color: #b36f68;
+
+  background: #f9dfd9;
+}
+
+
+/* =========================================================
+   TITLE
+========================================================= */
+
 .dash-card h2 {
   font-family: "Quicksand", sans-serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0 0 10px;
+
+  font-size: 1.45rem;
+  font-weight: 800;
+
+  color: #44413f;
+
+  line-height: 1.2;
+
+  margin: 0 0 4px;
 }
 
-/* Card Description: Poppins Thin */
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
 .dash-card p {
   font-family: "Poppins", sans-serif;
+
+  font-size: 0.82rem;
   font-weight: 300;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: var(--ink-soft);
+
+  line-height: 1.4;
+
+  color: #756f6d;
+
   margin: 0;
+
+  /* Gives room for the bottom-right action */
+  padding-bottom: 34px;
 }
 
-/* ============ Frog mascot ============ */
+
+/* =========================================================
+   ACTION BUTTON
+   Positioned on the RIGHT side of each card
+========================================================= */
+
+.dash-card__action {
+  position: absolute;
+
+  right: 20px;
+  bottom: 18px;
+
+  z-index: 5;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  min-width: 130px;
+
+  padding: 7px 14px;
+
+  border-radius: 999px;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 0.7rem;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  transition:
+    transform 0.2s ease,
+    gap 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+/* Flashcards action */
+
+.dash-card--flashcards .dash-card__action {
+  color: #647f57;
+
+  background: #e5efdd;
+
+  border: 1px solid #d0e1c5;
+
+  box-shadow:
+    0 3px 8px rgba(100, 127, 87, 0.08);
+}
+
+
+/* Story action */
+
+.dash-card--story .dash-card__action {
+  color: #ad6c65;
+
+  background: #f9ded8;
+
+  border: 1px solid #f0c9c1;
+
+  box-shadow:
+    0 3px 8px rgba(173, 108, 101, 0.08);
+}
+
+
+/* Action hover */
+
+.dash-card:hover .dash-card__action {
+  gap: 11px;
+
+  transform: translateX(-2px) scale(1.03);
+}
+
+
+/* =========================================================
+   ACTION ARROW
+========================================================= */
+
+.dash-card__arrow {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  font-size: 0.95rem;
+  font-weight: 700;
+
+  line-height: 1;
+
+  transition: transform 0.2s ease;
+}
+
+.dash-card:hover .dash-card__arrow {
+  transform: translateX(3px);
+}
+
+
+/* =========================================================
+   KEYBOARD FOCUS
+========================================================= */
+
+.dash-card:focus-visible {
+  outline: 4px solid rgba(232, 144, 138, 0.28);
+
+  outline-offset: 5px;
+}
+
+
+/* =========================================================
+   FROG
+========================================================= */
+
 .dash-frog {
   position: absolute;
-  bottom: 0;
+
+  bottom: -3px;
   right: 5%;
+
   width: 160px;
+
   z-index: 1;
+
+  pointer-events: none;
+
+  animation: frogFloat 3.5s ease-in-out infinite;
 }
 
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes dashFadeDown {
+  from {
+    opacity: 0;
+
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+}
+
+@keyframes dashCardAppear {
+  from {
+    opacity: 0;
+
+    transform: translateY(15px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes frogFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+  .dash-main {
+    padding: 32px 30px 120px;
+  }
+
+  .dash-cards {
+    gap: 22px;
+  }
+
+  .dash-card {
+    width: 325px;
+    height: 305px;
+  }
+
+  .dash-frog {
+    width: 135px;
+
+    right: 2%;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
 @media (max-width: 700px) {
+  .dash-page {
+    overflow-y: auto;
+
+    background-attachment: scroll;
+  }
+
+  .dash-main {
+    padding: 28px 18px 145px;
+  }
+
+  .dash-heading {
+    margin-bottom: 23px;
+  }
+
+  .dash-heading__sparkle {
+    display: none;
+  }
+
   .dash-cards {
     flex-direction: column;
+
     align-items: center;
+
+    gap: 25px;
+  }
+
+  .dash-card {
+    width: min(100%, 350px);
+    height: 310px;
+  }
+
+  .dash-card__action {
+    right: 18px;
+    bottom: 17px;
   }
 
   .dash-frog {
     width: 110px;
+
+    right: 8px;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 430px) {
+  .dash-heading h1 {
+    font-size: 1.45rem;
+  }
+
+  .dash-heading p {
+    font-size: 0.8rem;
+  }
+
+  .dash-card {
+    width: 100%;
+    height: 300px;
+
+    padding: 20px;
+  }
+
+  .dash-card__icon-wrap {
+    width: 98px;
+    height: 98px;
+  }
+
+  .dash-card__icon {
+    width: 69px;
+    height: 69px;
+  }
+
+  .dash-card h2 {
+    font-size: 1.35rem;
+  }
+
+  .dash-card p {
+    font-size: 0.78rem;
+  }
+
+  .dash-card__action {
+    right: 16px;
+    bottom: 15px;
+
+    min-width: 120px;
+
+    padding: 6px 12px;
+
+    font-size: 0.66rem;
+  }
+
+  .dash-frog {
+    width: 100px;
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-card,
+  .dash-card__icon,
+  .dash-card__icon-wrap,
+  .dash-card__action,
+  .dash-card__arrow,
+  .dash-card__star,
+  .dash-frog,
+  .dash-heading {
+    animation: none;
+
+    transition: none;
   }
 }

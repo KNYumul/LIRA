@@ -94,7 +94,7 @@ function LoginPage() {
   }, [navigate]);
 
   const todayString = new Date().toISOString().split("T")[0];
-  const depedEmailRegex = /^[a-zA-Z0-9._%+-]+@deped\.gov\.ph$/i;
+const depedEmailRegex = /^[a-zA-Z0-90-9._%+-]+@deped\.gov\.ph$/i;
 
   // Real-time invalid domain detection once user inputs '@'
   const isEmailDomainInvalid = email.includes("@") && !depedEmailRegex.test(email);
@@ -135,12 +135,15 @@ function LoginPage() {
   };
 
   // Email handler: block numbers and limit to 75 characters
-  const handleEmailChange = (e) => {
-    const lettersAndSymbolsOnly = e.target.value.replace(/[0-9]/g, "");
-    if (lettersAndSymbolsOnly.length <= 75) {
-      setEmail(lettersAndSymbolsOnly);
-    }
-  };
+// Email handler: allow letters, numbers, and email symbols
+// Limit email to 75 characters
+const handleEmailChange = (e) => {
+  const value = e.target.value;
+
+  if (value.length <= 75) {
+    setEmail(value);
+  }
+};
 
   // Password handler: hard-cap at 50 characters
   const handlePasswordChange = (e) => {

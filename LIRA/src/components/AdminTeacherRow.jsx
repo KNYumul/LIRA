@@ -22,7 +22,6 @@ export default function AdminTeacherRow({ teacher, onEdit, onDelete }) {
         <button className="icon-btn delete" title="Deactivate / Remove" onClick={() => onDelete(teacher.id)}>
           <MinusIcon />
         </button>
-        <span className="row-caret"><ChevronDownIcon /></span>
       </div>
     </div>
   )

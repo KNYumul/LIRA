@@ -2122,11 +2122,37 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files?.[0]); }}
       >
-        <Upload size={20} color="#4A4A4A" />
-        <div className="font-medium mt-2" style={{ color: C.text }}>Drag & Drop your CSV roster here, or click to upload</div>
-        <div className="text-xs mt-1" style={{ color: C.textMuted }}>Columns expected: Last Name (or Full Name / Name), Birthdate, Section. Full names: “Lastname, Firstname Middlename” (quote the CSV field) or “Firstname Middlename Lastname”. For ambiguous compound surnames, use a Last Name column or the comma format.</div>
-        <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
-      </div>
+      <Upload size={20} color="#4A4A4A" />
+
+<div
+  className="font-medium mt-2 text-center"
+  style={{ color: C.text }}
+>
+  Drag & Drop your CSV roster here, or click to upload
+</div>
+
+<div
+  className="text-xs mt-2 text-center w-full"
+  style={{ color: C.textMuted }}
+>
+  <div className="mx-auto max-w-5xl">
+    Columns expected: Last Name (or Full Name / Name), Birthdate, and Section.
+  </div>
+
+  <div className="mx-auto max-w-5xl mt-1">
+    Full names: “Lastname, Firstname Middlename” (quote the CSV field) or “Firstname Middlename Lastname”.  For ambiguous compound surnames, use a Last Name column or the comma format.
+  </div>
+</div>
+
+<input
+  ref={fileRef}
+  type="file"
+  accept=".csv"
+  className="hidden"
+  onChange={(e) => handleFile(e.target.files?.[0])}
+/>
+
+</div>
 
       <div className="flex items-center gap-3 mt-4 flex-wrap">
         {sections.length > 0 && <SectionSelect sections={sections.map((section) => section.name)} selectedSection={sectionName} onChange={onSectionChange} className="rounded-full px-4 py-2" />}
@@ -3060,19 +3086,32 @@ function AddStoryModal({ onCancel, onSubmit, language = "ENG" }) {
         )}
         {method === "pdf" && !scanning && (
           <div
-            className="mt-4 rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-sm"
-            style={{
-              color: file ? "#287A42" : C.textMuted,
-              background: file ? "#EAF7EE" : "rgba(255,255,255,0.55)",
-              border: `1.5px solid ${file ? "#7ABB8D" : C.cardBorder}`,
-            }}
-          >
-            {file && <CheckCircle2 size={18} color="#3D995A" className="shrink-0" />}
-            <span className="min-w-0">
-              {file && <strong>Selected: </strong>}
-              <span className={file ? "font-medium break-all" : ""}>{file ? file.name : "Choose a file to continue…"}</span>
-            </span>
-          </div>
+  className="mt-4 flex items-center justify-center gap-2 text-sm"
+  style={{
+    color: file ? "#287A42" : C.textMuted,
+    padding: "8px 0",
+    background: "transparent",
+    border: "none",
+    borderRadius: "0",
+    boxShadow: "none",
+  }}
+>
+  {file && (
+    <CheckCircle2
+      size={18}
+      color="#3D995A"
+      className="shrink-0"
+    />
+  )}
+
+  <span className="min-w-0">
+    {file && <strong>Selected: </strong>}
+
+    <span className={file ? "font-medium break-all" : ""}>
+      {file ? file.name : "Choose a file to continue…"}
+    </span>
+  </span>
+</div>
         )}
         {method === "ai" && (
           <div className="mt-4 rounded-2xl p-4 grid grid-cols-2 gap-3" style={{ background: "#fff", border: `1px solid ${C.cardBorder}` }}>

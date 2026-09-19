@@ -1,159 +1,492 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700;800&display=swap");
+
+/* =========================================
+   FOOTER
+========================================= */
 
 .lira-footer {
+  width: 100%;
+  box-sizing: border-box;
+
   background: #fffaf1;
   border-top: 1px solid #000000;
-  color: #9d9b98;
+
+  padding: 38px 30px 30px;
+
   font-family: "Poppins", sans-serif;
-  font-weight: 300;
-  padding: 54px 40px 36px;
+  color: #9d9b98;
+
+  overflow: hidden;
 }
 
-.lira-footer__grid,
-.lira-footer__legal {
+
+/* =========================================
+   MAIN CONTAINER
+========================================= */
+
+.lira-footer__container {
   width: 100%;
-  max-width: 1650px;
+  max-width: 1500px;
+
   margin: 0 auto;
+
+  display: grid;
+
+  /* LEFT SIDE + RIGHT SIDE */
+  grid-template-columns: minmax(480px, 1.8fr) minmax(620px, 2.2fr);
+
+  gap: 80px;
+
+  align-items: start;
+
+  box-sizing: border-box;
 }
 
-.lira-footer__grid {
+
+/* =========================================
+   LEFT SIDE
+========================================= */
+
+.lira-footer__left {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* =========================================
+   LOGO + DESCRIPTION
+========================================= */
+
+.lira-footer__intro {
   display: grid;
-  grid-template-columns: minmax(450px, 2.75fr) repeat(3, minmax(155px, 1fr));
-  gap: 56px;
+
+  grid-template-columns: 95px minmax(0, 1fr);
+
+  gap: 24px;
+
   align-items: start;
 }
 
-.lira-footer__intro {
-  display: flex;
-  align-items: flex-start;
-  gap: 30px;
+
+.lira-footer__logo-link {
+  display: block;
+
+  width: 95px;
+
+  text-decoration: none;
 }
+
 
 .lira-footer__logo {
   display: block;
-  width: 100px;
-  height: 100px;
+
+  width: 95px;
+  height: 95px;
+
   object-fit: contain;
 }
 
-.lira-footer__intro p {
-  max-width: 440px;
-  margin: 12px 0 0;
+
+.lira-footer__description {
+  max-width: 520px;
+
+  margin: 14px 0 0;
+
   color: #6f6e6d;
+
   font-family: "Poppins", sans-serif;
-  font-weight: 300;
-  font-size: 1rem;
-  line-height: 1.42;
+
+  font-size: 14px;
+  font-weight: 400;
+
+  line-height: 1.45;
 }
 
-.lira-footer__intro strong {
-  font-weight: 600;
+
+.lira-footer__description strong {
+  font-weight: 700;
 }
+
+
+/* =========================================
+   LEFT DIVIDER
+========================================= */
+
+.lira-footer__divider {
+  width: 100%;
+  height: 1px;
+
+  margin-top: 25px;
+
+  background: #aaa69f;
+}
+
+
+/* =========================================
+   COPYRIGHT
+========================================= */
+
+.lira-footer__legal {
+  display: flex;
+  flex-direction: column;
+
+  gap: 1px;
+
+  margin-top: 18px;
+
+  color: #9d9b98;
+
+  font-family: "Poppins", sans-serif;
+
+  font-size: 10.5px;
+  font-weight: 300;
+
+  line-height: 1.4;
+}
+
+
+/* =========================================
+   RIGHT SIDE
+========================================= */
+
+.lira-footer__right {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(130px, 0.85fr)
+    minmax(180px, 1fr)
+    minmax(220px, 1.15fr);
+
+  gap: 55px;
+
+  align-items: start;
+}
+
+
+/* =========================================
+   COLUMNS
+========================================= */
 
 .lira-footer__column {
   display: flex;
   flex-direction: column;
+
   align-items: flex-start;
+
+  min-width: 0;
+
   color: #aaa7a2;
+
   font-style: normal;
 }
 
-/* Footer Section Headings: Quicksand */
+
+/* =========================================
+   HEADINGS
+========================================= */
+
 .lira-footer__column h2 {
-  margin: 0 0 27px;
+  margin: 0 0 24px;
+
   color: #999794;
+
   font-family: "Quicksand", sans-serif;
-  font-size: 1.35rem;
+
+  font-size: 19px;
   font-weight: 700;
+
   line-height: 1;
 }
+
+
+/* =========================================
+   LINKS + TEXT
+========================================= */
 
 .lira-footer__column a,
 .lira-footer__column span {
   color: inherit;
+
   font-family: "Poppins", sans-serif;
+
+  font-size: 15px;
   font-weight: 300;
-  font-size: 1rem;
-  line-height: 1.48;
+
+  line-height: 1.55;
+
   text-decoration: none;
-  transition: color 0.15s ease;
 }
+
 
 .lira-footer__column a:hover,
 .lira-footer__column a:focus-visible {
   color: #6d995d;
+
   text-decoration: underline;
+
   text-underline-offset: 3px;
 }
 
+
+/* =========================================
+   CONTACT
+========================================= */
+
+.lira-footer__contact {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/*
+  Allow long email/address text to fit
+  instead of overflowing outside screen.
+*/
+
+.lira-footer__contact a,
+.lira-footer__contact span {
+  max-width: 100%;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* =========================================
+   ADMIN PORTAL
+========================================= */
+
 .lira-footer__portal {
   align-self: flex-end;
-  margin-top: 25px;
+
+  margin-top: 20px;
+
+  color: #999794 !important;
+
+  font-family: "Quicksand", sans-serif !important;
+
+  font-weight: 700 !important;
+
+  white-space: nowrap;
 }
 
-.lira-footer__legal {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  max-width: 580px;
-  margin: 27px 0 0;
-  padding-top: 22px;
-  border-top: 1px solid #7b7975;
-  color: #9d9b98;
-  font-family: "Poppins", sans-serif;
-  font-weight: 300;
-  font-size: 0.73rem;
-  line-height: 1.3;
-}
 
-@media (max-width: 1050px) {
-  .lira-footer__grid {
-    grid-template-columns: minmax(300px, 2fr) repeat(2, minmax(150px, 1fr));
+/* =========================================
+   LARGE LAPTOP
+========================================= */
+
+@media (max-width: 1350px) {
+
+  .lira-footer__container {
+    grid-template-columns:
+      minmax(430px, 1.5fr)
+      minmax(570px, 2fr);
+
+    gap: 55px;
   }
 
-  .lira-footer__contact {
-    grid-column: 2;
+
+  .lira-footer__right {
+    gap: 35px;
   }
 }
+
+
+/* =========================================
+   SMALL LAPTOP
+========================================= */
+
+@media (max-width: 1150px) {
+
+  .lira-footer__container {
+    grid-template-columns:
+      minmax(380px, 1.2fr)
+      minmax(520px, 1.8fr);
+
+    gap: 40px;
+  }
+
+
+  .lira-footer__right {
+    grid-template-columns:
+      minmax(120px, 0.8fr)
+      minmax(160px, 1fr)
+      minmax(190px, 1.1fr);
+
+    gap: 25px;
+  }
+
+
+  .lira-footer__column a,
+  .lira-footer__column span {
+    font-size: 13.5px;
+  }
+
+
+  .lira-footer__description {
+    font-size: 13px;
+  }
+}
+
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 950px) {
+
+  .lira-footer {
+    padding: 34px 30px 28px;
+  }
+
+
+  .lira-footer__container {
+    display: block;
+  }
+
+
+  .lira-footer__left {
+    max-width: 600px;
+  }
+
+
+  .lira-footer__right {
+    margin-top: 38px;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 35px;
+  }
+
+
+  .lira-footer__column a,
+  .lira-footer__column span {
+    font-size: 14px;
+  }
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
 
 @media (max-width: 700px) {
+
   .lira-footer {
-    padding: 38px 24px 28px;
+    padding: 28px 24px 25px;
   }
 
-  .lira-footer__grid {
-    grid-template-columns: 1fr;
-    gap: 30px;
-  }
 
   .lira-footer__intro {
-    gap: 20px;
+    grid-template-columns: 75px minmax(0, 1fr);
+
+    gap: 18px;
   }
+
+
+  .lira-footer__logo-link {
+    width: 75px;
+  }
+
 
   .lira-footer__logo {
-    width: 76px;
-    height: 76px;
+    width: 75px;
+    height: 75px;
   }
 
-  .lira-footer__intro p {
+
+  .lira-footer__description {
     margin-top: 4px;
-    font-size: 0.9rem;
+
+    font-size: 12.5px;
+
+    line-height: 1.45;
   }
 
-  .lira-footer__contact {
-    grid-column: auto;
+
+  .lira-footer__divider {
+    margin-top: 22px;
   }
+
+
+  .lira-footer__legal {
+    margin-top: 15px;
+
+    font-size: 10px;
+  }
+
+
+  .lira-footer__right {
+    margin-top: 32px;
+
+    grid-template-columns: 1fr;
+
+    gap: 26px;
+  }
+
 
   .lira-footer__column h2 {
-    margin-bottom: 12px;
+    margin-bottom: 10px;
+
+    font-size: 18px;
   }
+
+
+  .lira-footer__column a,
+  .lira-footer__column span {
+    font-size: 14px;
+  }
+
 
   .lira-footer__portal {
     align-self: flex-start;
-    margin-top: 12px;
+
+    margin-top: 10px;
+  }
+}
+
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 450px) {
+
+  .lira-footer {
+    padding: 25px 18px 22px;
   }
 
+
+  .lira-footer__intro {
+    grid-template-columns: 65px minmax(0, 1fr);
+
+    gap: 14px;
+  }
+
+
+  .lira-footer__logo-link {
+    width: 65px;
+  }
+
+
+  .lira-footer__logo {
+    width: 65px;
+    height: 65px;
+  }
+
+
+  .lira-footer__description {
+    margin-top: 2px;
+
+    font-size: 11.5px;
+
+    line-height: 1.4;
+  }
+
+
   .lira-footer__legal {
-    margin-top: 30px;
+    font-size: 9px;
   }
 }
