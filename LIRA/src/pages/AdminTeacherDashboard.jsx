@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clearSession } from '../utils/session'
-import { clearSavedPortalPage, getSavedPortalPage, savePortalPage } from '../utils/portalPage'
+import {
+  clearSavedPortalPage,
+  getSavedPortalPage,
+  savePortalPage
+} from '../utils/portalPage'
+
 import AdminSidebar from '../components/AdminSidebar.jsx'
 import AdminDashboard from './AdminPages/AdminDashboard.jsx'
 import AdminTeachersPage from './AdminPages/AdminTeachersPage.jsx'
+import AdminSurveyResults from './AdminPages/AdminResultSurvey.jsx'
 import { liraAlert, showError } from '../utils/alerts.js'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
@@ -19,12 +25,17 @@ function toDashboardTeacher(teacher) {
 
 export default function AdminTeacherDashboard() {
   const navigate = useNavigate()
+
   const [teachers, setTeachers] = useState([])
   const [loadError, setLoadError] = useState('')
-  const [activeNav, setActiveNav] = useState(() => getSavedPortalPage(
-    'liraAdminPortalPage',
-    ['dashboard', 'teachers']
-  ))
+
+  // ADDED "survey" HERE
+  const [activeNav, setActiveNav] = useState(() =>
+    getSavedPortalPage(
+      'liraAdminPortalPage',
+      ['dashboard', 'teachers', 'survey']
+    )
+  )
 
   useEffect(() => {
     savePortalPage('liraAdminPortalPage', activeNav)
@@ -37,19 +48,35 @@ export default function AdminTeacherDashboard() {
       try {
         const response = await fetch(`${API_URL}/api/teachers`)
         const data = await response.json()
-        if (!response.ok) throw new Error(data.message || 'Could not load teacher accounts.')
-        if (!cancelled) setTeachers(data.map(toDashboardTeacher))
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || 'Could not load teacher accounts.'
+          )
+        }
+
+        if (!cancelled) {
+          setTeachers(data.map(toDashboardTeacher))
+        }
       } catch (error) {
-        if (!cancelled) setLoadError(error.message || 'Could not load teacher accounts.')
+        if (!cancelled) {
+          setLoadError(
+            error.message || 'Could not load teacher accounts.'
+          )
+        }
       }
     }
 
     loadTeachers()
-    return () => { cancelled = true }
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   async function handleDelete(id) {
     const teacher = teachers.find(t => t.id === id)
+
     const result = await liraAlert.fire({
       icon: 'warning',
       title: 'Remove teacher?',
@@ -58,49 +85,101 @@ export default function AdminTeacherDashboard() {
       confirmButtonText: 'Remove',
       cancelButtonText: 'Cancel'
     })
+
     if (!result.isConfirmed) return
 
     try {
-      const response = await fetch(`${API_URL}/api/teachers/${id}`, { method: 'DELETE' })
+      const response = await fetch(
+        `${API_URL}/api/teachers/${id}`,
+        {
+          method: 'DELETE'
+        }
+      )
+
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}))
-        throw new Error(data.message || 'Could not delete teacher account.')
+        const data = await response
+          .json()
+          .catch(() => ({}))
+
+        throw new Error(
+          data.message || 'Could not delete teacher account.'
+        )
       }
-      setTeachers(prev => prev.filter(t => t.id !== id))
-      await liraAlert.fire({ icon: 'success', title: 'Teacher removed', timer: 1600, showConfirmButton: false })
+
+      setTeachers(prev =>
+        prev.filter(t => t.id !== id)
+      )
+
+      await liraAlert.fire({
+        icon: 'success',
+        title: 'Teacher removed',
+        timer: 1600,
+        showConfirmButton: false
+      })
     } catch (error) {
       await showError(error.message)
     }
   }
 
   async function handleSaveEdit(id, updates) {
-    const existingTeacher = teachers.find(teacher => teacher.id === id)
-    const nameParts = updates.name.trim().split(/\s+/)
+    const existingTeacher = teachers.find(
+      teacher => teacher.id === id
+    )
+
+    const nameParts = updates.name
+      .trim()
+      .split(/\s+/)
+
     const firstName = nameParts.shift()
-    const lastName = nameParts.join(' ') || existingTeacher.lastName
+
+    const lastName =
+      nameParts.join(' ') || existingTeacher.lastName
 
     try {
-      const response = await fetch(`${API_URL}/api/teachers/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          email: updates.email,
-          active: updates.status === 'Active'
-        })
-      })
+      const response = await fetch(
+        `${API_URL}/api/teachers/${id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            firstName,
+            lastName,
+            email: updates.email,
+            active: updates.status === 'Active'
+          })
+        }
+      )
+
       const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Could not update teacher account.')
-      const updatedTeacher = toDashboardTeacher(data.teacher)
-      setTeachers(prev => prev.map(teacher => teacher.id === id ? updatedTeacher : teacher))
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || 'Could not update teacher account.'
+        )
+      }
+
+      const updatedTeacher =
+        toDashboardTeacher(data.teacher)
+
+      setTeachers(prev =>
+        prev.map(teacher =>
+          teacher.id === id
+            ? updatedTeacher
+            : teacher
+        )
+      )
+
       await liraAlert.fire({
         icon: 'success',
         title: 'Teacher information updated',
-        text: 'The teacher account changes were saved successfully.',
+        text:
+          'The teacher account changes were saved successfully.',
         timer: 1800,
         showConfirmButton: false
       })
+
       return true
     } catch (error) {
       await showError(error.message)
@@ -117,6 +196,7 @@ export default function AdminTeacherDashboard() {
       confirmButtonText: 'Log out',
       cancelButtonText: 'Stay logged in'
     })
+
     if (result.isConfirmed) {
       clearSavedPortalPage('liraAdminPortalPage')
       clearSession()
@@ -126,17 +206,30 @@ export default function AdminTeacherDashboard() {
 
   return (
     <div className="app">
-      <AdminSidebar activeNav={activeNav} onNavChange={setActiveNav} onLogout={handleLogout} />
+      <AdminSidebar
+        activeNav={activeNav}
+        onNavChange={setActiveNav}
+        onLogout={handleLogout}
+      />
 
       <main className="main">
-        {activeNav === 'dashboard' ? (
-          <AdminDashboard teachers={teachers} loadError={loadError} />
-        ) : (
+        {activeNav === 'dashboard' && (
+          <AdminDashboard
+            teachers={teachers}
+            loadError={loadError}
+          />
+        )}
+
+        {activeNav === 'teachers' && (
           <AdminTeachersPage
             teachers={teachers}
             onDelete={handleDelete}
             onSaveEdit={handleSaveEdit}
           />
+        )}
+
+        {activeNav === 'survey' && (
+          <AdminSurveyResults />
         )}
       </main>
     </div>
