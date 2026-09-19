@@ -11,7 +11,7 @@ function separateScanHeading(pageTexts) {
     return words.length >= 2 && words.length <= 14
       && !/[.!?:;]$/.test(line.trim())
       && words.every((word) => /^\p{Lu}/u.test(word) || /^(?:a|an|and|at|by|for|in|of|on|or|the|to|with|ang|at|ay|mga|na|ng|ni|sa)$/i.test(word))
-      && !/^(?:questions|comprehension questions|mga tanong|answer key)$/i.test(line.trim());
+      && !/^(?:questions|comprehension questions|mga tanong|tanong|mga katanungan|katanungan|answer key)$/i.test(line.trim());
   };
   const pages = pageTexts.map((text, pageIndex) => {
     const lines = text.replace(/\r\n?/g, "\n").split("\n");
