@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./LoginPage.css";
 import { saveSession } from "../utils/session";
-import { liraAlert, showError } from "../utils/alerts";
+import { showError } from "../utils/alerts";
+import VerificationPopup from "../components/VerificationPopup";
 
 const fox = "/UI_Designs/ANIMALS/mascot_fox.svg";
 const owl = "/UI_Designs/ANIMALS/mascot_owl.svg";
@@ -24,7 +25,8 @@ async function readApiResponse(response) {
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [portal, setPortal] = useState("student");
+  const [portal, setPortal] = useState(() => new URLSearchParams(window.location.search).get("portal") === "teacher" ? "teacher" : "student");
+  const [verificationPrompt, setVerificationPrompt] = useState(null);
   const [teacherMode, setTeacherMode] = useState("login");
   const [error, setError] = useState("");
 
@@ -92,7 +94,7 @@ function LoginPage() {
   }, [navigate]);
 
   const todayString = new Date().toISOString().split("T")[0];
-  const depedEmailRegex = /^[a-zA-Z._%+-]+@deped\.gov\.ph$/i;
+  const depedEmailRegex = /^[a-zA-Z0-9._%+-]+@deped\.gov\.ph$/i;
 
   // Real-time invalid domain detection once user inputs '@'
   const isEmailDomainInvalid = email.includes("@") && !depedEmailRegex.test(email);
@@ -338,6 +340,10 @@ function LoginPage() {
         }
 
         if (!response.ok) {
+          if (data.code === "ACCOUNT_INACTIVE") {
+            setVerificationPrompt({ email: userEmail, title: "Account inactive", message: data.message, canResend: data.canResend === true });
+            return;
+          }
           setError(data.message || (isSignUp ? "Signup failed." : "Teacher login failed."));
           return;
         }
@@ -357,17 +363,16 @@ function LoginPage() {
         );
 
         if (isSignUp) {
+          setVerificationPrompt({
+            email: userEmail,
+            title: data.emailSent ? "Check your email" : "Account created",
+            message: data.message,
+          });
           setTeacherMode("login");
           setFirstName("");
           setLastName("");
           setPassword("");
           setShowPassword(false);
-          liraAlert.fire({
-            icon: "success",
-            title: "Account created successfully",
-            text: "Please log in with your new account.",
-            confirmButtonText: "Log in",
-          });
           return;
         }
 
@@ -382,6 +387,9 @@ function LoginPage() {
 
   return (
     <main className="login-page">
+      {!isStudent && verificationPrompt !== null && (
+        <VerificationPopup {...verificationPrompt} onClose={() => setVerificationPrompt(null)} />
+      )}
       <section className="login-hero">
         <div className="login-choice" aria-labelledby="login-choice-title">
           <h1 id="login-choice-title">Ready to get started?</h1>
