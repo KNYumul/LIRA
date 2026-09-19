@@ -1,377 +1,330 @@
-import { useEffect, useState } from "react";
-import {
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
-
-import "./FlashcardSession.css";
-
-import CompletionScreen from "../components/CompletionScreen";
-import FlashcardReader from "../components/FlashcardReader";
-import { getSession } from "../utils/session";
-
-const API_URL = import.meta.env.VITE_API_URL || "";
-
-const bgSession =
-  "/UI_Designs/BACKGROUND/backdrop_flashcards.svg";
-
-const LABELS = {
-  easy: "Easy",
-  medium: "Medium",
-  hard: "Hard",
-};
-
-export default function FlashcardSession() {
-  const { difficulty } = useParams();
-
-  const navigate = useNavigate();
-
-  const [searchParams] = useSearchParams();
-
-  const lang =
-    searchParams.get("lang") === "FIL"
-      ? "FIL"
-      : "ENG";
-
-  const [cards, setCards] = useState([]);
-
-  const [index, setIndex] = useState(0);
-
-  const [finished, setFinished] = useState(false);
-
-  const [loading, setLoading] = useState(true);
-
-  const [error, setError] = useState("");
-
-  const current = cards[index];
-
-  const label =
-    LABELS[difficulty] || "Easy";
-
-  const languageLabel =
-    lang === "FIL"
-      ? "Filipino"
-      : "English";
+import { useState } from "react";
+import "./FaqSection.css";
 
 
-  /* ========================================
-     LOAD FLASHCARDS
-  ======================================== */
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      setLoading(true);
-
-      setError("");
-
-      setFinished(false);
-
-      try {
-        const learnerId =
-          getSession()?.user?.id;
-
-        const response = await fetch(
-          `${API_URL}/api/flashcards?category=${encodeURIComponent(
-            difficulty
-          )}&lang=${lang}`,
-          {
-            headers: {
-              "X-Learner-Id":
-                learnerId || "",
-            },
-          }
-        );
-
-        const data = await response
-          .json()
-          .catch(() => ({}));
-
-        if (!response.ok) {
-          throw new Error(
-            data.message ||
-              "Could not load flashcards."
-          );
-        }
-
-        if (!cancelled) {
-          setCards(data);
-
-          setIndex(0);
-        }
-      } catch (loadError) {
-        if (!cancelled) {
-          setError(
-            loadError.message ||
-              "Could not load flashcards."
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [difficulty, lang]);
+import bunnyIcon from "../assets/icons/bunny.jpg";
+import owlIcon from "../assets/icons/owl.svg";
+import catIcon from "../assets/icons/cat.svg";
+import foxIcon from "../assets/icons/fox.jpg";
 
 
-  /* ========================================
-     COMPLETION SCREEN
-  ======================================== */
+const CATEGORIES = [
+  {
+    id: "for-students",
+    icon: catIcon,
+    alt: "Cat icon",
+    title: "For Students",
+    subtitle: "Reading and Flashcards",
+  },
+  {
+    id: "for-teachers",
+    icon: bunnyIcon,
+    alt: "Bunny icon",
+    title: "For Teachers",
+    subtitle: "Class Setup and Reports",
+  },
+  {
+    id: "troubleshooting",
+    icon: owlIcon,
+    alt: "Owl icon",
+    title: "Troubleshooting",
+    subtitle: "Mic and Login Issues",
+  },
+  {
+    id: "support",
+    icon: foxIcon,
+    alt: "Fox icon",
+    title: "Support",
+    subtitle: "Help and Contact",
+  },
+];
 
-  if (finished) {
-    return (
-      <CompletionScreen
-        onBack={() =>
-          navigate(
-            `/flashcards?lang=${lang}`
-          )
-        }
-        backLabel="Back to Flashcards"
-      />
-    );
-  }
+
+const FAQS = [
+  {
+    id: "create-teacher-account",
+    question: "How do I create a teacher account?",
+    answer:
+      'Go to the Login page and select "Sign up as a Teacher." Enter your school email address, create a password, and verify your account through the confirmation link sent to your inbox.',
+  },
+  {
+    id: "student-accounts",
+    question: "How do students get their accounts?",
+    answer:
+      "Student accounts aren't self-registered. A teacher uploads a class masterlist (CSV), and LIRA creates an account for each learner using their last name and birthdate as login details.",
+  },
+  {
+    id: "filipino-availability",
+    question: "Is LIRA available in Filipino?",
+    answer:
+      "Yes. LIRA supports both English and Filipino reading activities. Students can choose between English and Filipino when using Flashcards and Stories Mode.",
+  },
+  {
+    id: "forgot-password",
+    question: "What should I do if I forget my password?",
+    answer:
+      'Select "Forgot Password" on the Login page and enter the email address connected to your account. Follow the instructions sent to your email to create a new password.',
+  },
+  {
+    id: "change-password",
+    question: "How do I change my password?",
+    answer:
+      "Teachers can change their password from their Profile settings. The new password must meet the required password rules, including at least one uppercase letter, one number, and one special character.",
+  },
+  {
+    id: "upload-masterlist",
+    question: "How do I add students to my class?",
+    answer:
+      "Teachers can add students by uploading a class masterlist in CSV format from the Dashboard. Make sure the required student information is complete and properly formatted before uploading.",
+  },
+  {
+    id: "student-login",
+    question: "How do students log in to LIRA?",
+    answer:
+      "Students can log in using the account details created for them after their teacher uploads the class masterlist. They should enter their required login information on the student login page.",
+  },
+  {
+    id: "reading-assessment",
+    question: "How do students take a reading assessment?",
+    answer:
+      "After logging in, students can open their assigned reading assessment and follow the instructions shown on the screen. They may be asked to read words or passages aloud using their device microphone.",
+  },
+  {
+    id: "microphone-not-working",
+    question: "What should I do if the microphone is not working?",
+    answer:
+      "Check that microphone permission is enabled for LIRA in your browser. You can also check your device microphone settings, refresh the page, and try the activity again.",
+  },
+  {
+    id: "microphone-permission",
+    question: "Why does LIRA need microphone permission?",
+    answer:
+      "LIRA uses microphone access during reading activities that require students to read aloud. Microphone access should be enabled when it is needed for an assessment or reading activity.",
+  },
+  {
+    id: "flashcards-stories",
+    question: "How do Flashcards and Stories Mode work?",
+    answer:
+      "Students can use Flashcards Mode to practice reading and recognizing words by selecting a difficulty level, while Stories Mode allows them to practice reading through passages. In both modes, students can freely choose between English and Filipino and switch languages whenever they want.",
+  },
+  {
+    id: "switch-language-anytime",
+    question: "Can I switch languages anytime while practicing?",
+    answer:
+      "No. Students choose either English or Filipino before starting Flashcards or Stories Mode. To change the language, they need to exit the current activity and select a different language before starting again.",
+  },
+  {
+    id: "flashcards-stories-purpose",
+    question: "What are Flashcards Mode and Stories Mode for?",
+    answer:
+      "Flashcards Mode helps students practice reading and recognizing words based on their selected difficulty level, while Stories Mode helps students practice reading through short stories and passages. Students can choose either English or Filipino before starting.",
+  },
+  {
+    id: "view-results",
+    question: "Where can teachers view student results?",
+    answer:
+      "Teachers can view learner results and reading performance from the teacher Dashboard. Select the appropriate class or learner to see the available assessment information.",
+  },
+  {
+    id: "update-profile",
+    question: "Can I update my teacher profile?",
+    answer:
+      "Yes. Teachers can update their profile information from the Profile section, including their name, title, password, and other available account information.",
+  },
+  {
+    id: "browser-refresh",
+    question: "What should I do if a page is not loading properly?",
+    answer:
+      "Try refreshing the page and checking your internet connection. If the problem continues, close and reopen the browser or try logging in again.",
+  },
+  {
+    id: "support",
+    question: "How can I contact LIRA support?",
+    answer:
+      'If you still need help, use the "Email Support" button at the bottom of this page to contact the LIRA support team.',
+  },
+];
 
 
-  /* ========================================
-     PAGE
-  ======================================== */
+function FaqSection() {
+  const [searchValue, setSearchValue] = useState("");
+  const [openFaqId, setOpenFaqId] = useState("student-accounts");
+
+
+  const searchTerm = searchValue.trim().toLowerCase();
+
+
+  const filteredFaqs = searchTerm
+    ? FAQS.filter(
+        (item) =>
+          item.question.toLowerCase().includes(searchTerm) ||
+          item.answer.toLowerCase().includes(searchTerm)
+      )
+    : FAQS.slice(0, 3);
+
+
+  const toggleFaq = (id) => {
+    setOpenFaqId((currentId) => (currentId === id ? null : id));
+  };
+
+
+  const handleSearch = (e) => {
+    setSearchValue(e.target.value);
+    setOpenFaqId(null);
+  };
+
 
   return (
-    <div
-      className="fs-page"
-      style={{
-        backgroundImage: `url(${bgSession})`,
-      }}
-    >
-
-      {/* =====================================
-          HEADER
-      ===================================== */}
-
-      <header className="fs-header">
-
-        <button
-          className="fs-back"
-          onClick={() =>
-            navigate(
-              `/flashcards?lang=${lang}`
-            )
-          }
-          aria-label="Back"
-        >
-          ←
-        </button>
-
-        <h1 className="fs-title">
-          {label} · {languageLabel}
-        </h1>
-
-      </header>
+    <section className="faq-section">
+      <div className="faq-container">
+        <span className="faq-pill">Help Center</span>
 
 
-      {/* =====================================
-          MAIN
-      ===================================== */}
-
-      <main className="fs-main">
-
-        {/* LOADING */}
-
-        {loading && (
-          <div className="fs-message">
-            Loading your teacher&apos;s
-            flashcards...
-          </div>
-        )}
+        <h1 className="faq-heading">How can we help?</h1>
 
 
-        {/* ERROR */}
-
-        {!loading && error && (
-          <div className="fs-message fs-message--error">
-            {error}
-          </div>
-        )}
+        <p className="faq-subheading">
+          Search for a topic, or browse questions from teachers and
+          <br />
+          learners using LIRA.
+        </p>
 
 
-        {/* NO FLASHCARDS */}
-
-        {!loading &&
-          !error &&
-          !current && (
-            <div className="fs-message">
-              Your teacher has not added any{" "}
-              {label.toLowerCase()} {lang}{" "}
-              flashcards yet.
-            </div>
-          )}
+        <div className="faq-search-wrapper">
+          <input
+            type="text"
+            className="faq-search-input"
+            placeholder="Search for a topic..."
+            value={searchValue}
+            onChange={handleSearch}
+            aria-label="Search help topics"
+          />
 
 
-        {/* ===================================
-            FLASHCARD
-        =================================== */}
-
-        {!loading &&
-          !error &&
-          current && (
-            <div className="fs-card-stack">
-
-              {/* CARD BEHIND */}
-
-              <div
-                className="fs-card-shadow"
-                aria-hidden="true"
-              />
-
-
-              {/* MAIN CARD */}
-
-              <div
-                className={`fs-card fs-card--${difficulty}`}
-              >
-
-                {/* ============================
-                    CUTE MOVING DECORATIONS
-                ============================ */}
-
-                <div
-                  className="fs-card-decorations"
-                  aria-hidden="true"
-                >
-
-                  {/* STARS */}
-
-                  <span className="fs-deco fs-deco--star1">
-                    ★
-                  </span>
-
-                  <span className="fs-deco fs-deco--star2">
-                    ✦
-                  </span>
+          <svg
+            className="faq-search-icon"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="11"
+              cy="11"
+              r="7"
+              stroke="currentColor"
+              strokeWidth="2.2"
+            />
+            <line
+              x1="21"
+              y1="21"
+              x2="16.65"
+              y2="16.65"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </div>
 
 
-                  {/* SPARKLES */}
-
-                  <span className="fs-deco fs-deco--sparkle">
-                    ✧
-                  </span>
-
-                  <span className="fs-deco fs-deco--sparkle2">
-                    ✦
-                  </span>
-
-
-                  {/* BUBBLES */}
-
-                  <span className="fs-deco fs-deco--bubble1" />
-
-                  <span className="fs-deco fs-deco--bubble2" />
-
-                  <span className="fs-deco fs-deco--bubble3" />
-
-                  <span className="fs-deco fs-deco--bubble4" />
+        {!searchTerm && (
+          <div className="faq-categories">
+            {CATEGORIES.map((cat) => (
+              <div key={cat.id} className="faq-category-card">
+                <span className="faq-category-icon-wrap">
+                  <img
+                    src={cat.icon}
+                    alt={cat.alt}
+                    className="faq-category-icon"
+                  />
+                </span>
 
 
-                  {/* HEART */}
-
-                  <span className="fs-deco fs-deco--heart">
-                    ♥
-                  </span>
-
-
-                  {/* FLOWER */}
-
-                  <span className="fs-deco fs-deco--flower">
-                    ✿
-                  </span>
-
-                </div>
-
-
-                {/* ============================
-                    CARD NUMBER
-                ============================ */}
-
-                <div className="fs-card__top">
-
-                  <span className="fs-card__number">
-                    {index + 1}
-                  </span>
-
-                </div>
-
-
-                {/* ============================
-                    FLASHCARD READER
-                ============================ */}
-
-                <FlashcardReader
-                  key={`${difficulty}-${lang}-${index}-${
-                    current._id ||
-                    current.id ||
-                    current.content
-                  }`}
-                  text={current.content}
-                  language={lang}
-                />
-
-
-                {/* ============================
-                    NAVIGATION
-                ============================ */}
-
-                <div className="fs-navigation">
-
-                  <button
-                    type="button"
-                    disabled={index === 0}
-                    onClick={() =>
-                      setIndex(
-                        (value) =>
-                          value - 1
-                      )
-                    }
-                  >
-                    Previous
-                  </button>
-
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      index ===
-                      cards.length - 1
-                        ? setFinished(true)
-                        : setIndex(
-                            (value) =>
-                              value + 1
-                          )
-                    }
-                  >
-                    {index ===
-                    cards.length - 1
-                      ? "Finish"
-                      : "Next"}
-                  </button>
-
-                </div>
-
+                <span className="faq-category-title">{cat.title}</span>
+                <span className="faq-category-subtitle">{cat.subtitle}</span>
               </div>
+            ))}
+          </div>
+        )}
 
+
+        <div className="faq-accordion">
+          {filteredFaqs.length > 0 ? (
+            filteredFaqs.map((item) => {
+              const isOpen = openFaqId === item.id;
+
+
+              return (
+                <div
+                  key={item.id}
+                  className={`faq-accordion-item ${isOpen ? "is-open" : ""}`}
+                >
+                  <button
+                    type="button"
+                    className="faq-accordion-question"
+                    onClick={() => toggleFaq(item.id)}
+                    aria-expanded={isOpen}
+                  >
+                    <span>{item.question}</span>
+
+
+                    <svg
+                      className="faq-chevron"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M6 9l6 6 6-6"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+
+
+                  {isOpen && (
+                    <div className="faq-accordion-answer">
+                      <p>{item.answer}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <div className="faq-no-results">
+              <h3>No results found</h3>
+              <p>
+                We couldn't find anything for "{searchValue}". Try searching for
+                another FAQ topic.
+              </p>
             </div>
           )}
+        </div>
 
-      </main>
 
-    </div>
+        <div className="faq-cta">
+          <h2 className="faq-cta-heading">Still need help?</h2>
+          <p className="faq-cta-subheading">
+            Our support team typically responds within one school day.
+          </p>
+
+
+          <a className="faq-cta-button" href="mailto:support.lira3@gmail.com">
+            Email Support
+          </a>
+        </div>
+      </div>
+    </section>
   );
 }
+
+
+export default FaqSection;
+
