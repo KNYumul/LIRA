@@ -12,20 +12,24 @@ function Footer() {
 
         {/* LEFT SIDE */}
         <div className="lira-footer__left">
-
           <div className="lira-footer__intro">
+
+            {/* LOGO */}
             <Link
               to="/"
               className="lira-footer__logo-link"
               aria-label="LIRA home"
             >
-              <img
-                className="lira-footer__logo"
-                src={logo}
-                alt="LIRA"
-              />
+              <div className="lira-footer__logo-crop">
+                <img
+                  className="lira-footer__logo"
+                  src={logo}
+                  alt="LIRA"
+                />
+              </div>
             </Link>
 
+            {/* DESCRIPTION */}
             <p className="lira-footer__description">
               <strong>LIRA</strong> is a multimodal AI framework for early
               literacy risk screening and reading comprehension assessment
@@ -59,10 +63,21 @@ function Footer() {
           >
             <h2>About</h2>
 
-            <Link to="/#about">About LIRA</Link>
-            <Link to="/#how-it-works">How It Works</Link>
-            <Link to="/#flow">The Flow</Link>
-            <Link to="/login">Login</Link>
+            <Link to="/#about">
+              About LIRA
+            </Link>
+
+            <Link to="/#how-it-works">
+              How It Works
+            </Link>
+
+            <Link to="/#flow">
+              The Flow
+            </Link>
+
+            <Link to="/login">
+              Login
+            </Link>
           </nav>
 
           {/* RESOURCES */}
