@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./LoginPage.css";
 import { saveSession } from "../utils/session";
-import { showError } from "../utils/alerts";
+import { liraAlert, showError } from "../utils/alerts";
 
 const fox = "/UI_Designs/ANIMALS/mascot_fox.svg";
 const owl = "/UI_Designs/ANIMALS/mascot_owl.svg";
@@ -27,7 +27,6 @@ function LoginPage() {
   const [portal, setPortal] = useState("student");
   const [teacherMode, setTeacherMode] = useState("login");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   // Student state
   const [studentLastName, setStudentLastName] = useState("");
@@ -152,7 +151,6 @@ function LoginPage() {
   async function submitForm(event) {
     event.preventDefault();
     setError("");
-    setSuccess("");
 
     // ================= STUDENT LOGIN =================
     if (isStudent) {
@@ -364,7 +362,12 @@ function LoginPage() {
           setLastName("");
           setPassword("");
           setShowPassword(false);
-          setSuccess("Account created successfully. Please log in with your new account.");
+          liraAlert.fire({
+            icon: "success",
+            title: "Account created successfully",
+            text: "Please log in with your new account.",
+            confirmButtonText: "Log in",
+          });
           return;
         }
 
@@ -493,7 +496,6 @@ function LoginPage() {
                   type="button"
                   onClick={() => {
                     setError("");
-                    setSuccess("");
                     setTeacherMode("login");
                   }}
                 >
@@ -504,7 +506,6 @@ function LoginPage() {
                   type="button"
                   onClick={() => {
                     setError("");
-                    setSuccess("");
                     setTeacherMode("signup");
                   }}
                 >
@@ -670,11 +671,6 @@ function LoginPage() {
                 <b aria-hidden="true">●</b> Connect through Gmail / Google Workspace
               </button>
             </>
-          )}
-          {success && (
-            <p role="status" style={{ color: "#3E6B31", textAlign: "center", marginTop: "14px" }}>
-              {success}
-            </p>
           )}
         </form>
       </section>
