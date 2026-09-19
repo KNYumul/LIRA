@@ -820,3 +820,249 @@
   }
 }
 
+/* =========================================
+   CUTE CATEGORY ANIMAL ANIMATIONS
+========================================= */
+
+/* Keep animation movement smooth */
+.faq-category-icon {
+  transform-origin: center bottom;
+
+  transition:
+    transform 0.3s ease,
+    filter 0.3s ease;
+}
+
+
+/* =========================================
+   CAT — gentle breathing + tiny sway
+========================================= */
+
+.faq-category-card:nth-child(1) .faq-category-icon {
+  animation: faqCatIdle 3.5s ease-in-out infinite;
+}
+
+@keyframes faqCatIdle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+
+  35% {
+    transform: translateY(-3px) rotate(-2deg) scale(1.02);
+  }
+
+  70% {
+    transform: translateY(-3px) rotate(2deg) scale(1.02);
+  }
+}
+
+
+/* =========================================
+   BUNNY — cute little hop
+========================================= */
+
+.faq-category-card:nth-child(2) .faq-category-icon {
+  animation: faqBunnyHop 3s ease-in-out infinite;
+}
+
+@keyframes faqBunnyHop {
+  0%,
+  65%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  75% {
+    transform: translateY(-8px) scale(1.04);
+  }
+
+  84% {
+    transform: translateY(0) scaleX(1.07) scaleY(0.94);
+  }
+
+  90% {
+    transform: translateY(-2px) scale(1.02);
+  }
+}
+
+
+/* =========================================
+   OWL — soft floating
+========================================= */
+
+.faq-category-card:nth-child(3) .faq-category-icon {
+  animation: faqOwlFloat 4s ease-in-out infinite;
+}
+
+@keyframes faqOwlFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-7px) rotate(3deg);
+  }
+}
+
+
+/* =========================================
+   FOX — playful little bounce
+========================================= */
+
+.faq-category-card:nth-child(4) .faq-category-icon {
+  animation: faqFoxBounce 3.2s ease-in-out infinite;
+}
+
+@keyframes faqFoxBounce {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  40% {
+    transform: translateY(-5px) rotate(-3deg);
+  }
+
+  60% {
+    transform: translateY(-5px) rotate(3deg);
+  }
+}
+
+
+/* =========================================
+   HOVER REACTIONS
+========================================= */
+
+/*
+  Your cards stay DISPLAY CARDS.
+  They do NOT become buttons.
+
+  Only the animal reacts when the user
+  moves their mouse over the card.
+*/
+
+
+/* CAT — happy wiggle */
+.faq-category-card:nth-child(1):hover .faq-category-icon {
+  animation: faqCatHello 0.65s ease;
+}
+
+@keyframes faqCatHello {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  20% {
+    transform: rotate(-7deg) scale(1.08);
+  }
+
+  40% {
+    transform: rotate(7deg) scale(1.1);
+  }
+
+  60% {
+    transform: rotate(-5deg) scale(1.08);
+  }
+
+  80% {
+    transform: rotate(3deg) scale(1.05);
+  }
+
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+
+/* BUNNY — excited jump */
+.faq-category-card:nth-child(2):hover .faq-category-icon {
+  animation: faqBunnyHappy 0.7s ease;
+}
+
+@keyframes faqBunnyHappy {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+
+  35% {
+    transform: translateY(-14px) scale(1.08);
+  }
+
+  60% {
+    transform: translateY(1px) scaleX(1.1) scaleY(0.92);
+  }
+
+  78% {
+    transform: translateY(-5px) scale(1.04);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* OWL — curious tilt */
+.faq-category-card:nth-child(3):hover .faq-category-icon {
+  animation: faqOwlCurious 0.8s ease;
+}
+
+@keyframes faqOwlCurious {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  30% {
+    transform: translateY(-4px) rotate(-8deg) scale(1.07);
+  }
+
+  60% {
+    transform: translateY(-4px) rotate(8deg) scale(1.07);
+  }
+
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+
+/* FOX — playful bounce + wiggle */
+.faq-category-card:nth-child(4):hover .faq-category-icon {
+  animation: faqFoxHappy 0.7s ease;
+}
+
+@keyframes faqFoxHappy {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+
+  25% {
+    transform: translateY(-8px) rotate(-6deg) scale(1.08);
+  }
+
+  50% {
+    transform: translateY(-10px) rotate(6deg) scale(1.1);
+  }
+
+  75% {
+    transform: translateY(-4px) rotate(-3deg) scale(1.05);
+  }
+
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-category-icon {
+    animation: none !important;
+    transition: none !important;
+  }
+}
