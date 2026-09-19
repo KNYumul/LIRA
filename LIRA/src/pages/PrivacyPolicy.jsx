@@ -7,8 +7,8 @@ const SECTIONS = [
     title: "What We Collect",
     content: (
       <p>
-        For teachers: name, DepEd email, and school/section information. For
-        learners: last name and birthdate (from the masterlist your teacher
+        For Teachers: Name, DepEd email, and School/Section information. For
+        learners: Last name, Birthdate, and Section (from the masterlist your teacher
         uploads), and reading activity such as audio captured during
         flashcard and story sessions, accuracy scores, and quiz answers.
       </p>
@@ -65,7 +65,7 @@ const SECTIONS = [
     content: (
       <p>
         Privacy questions or data requests can be sent to
-        privacy@lira-reading.ph.
+        support.lira3@gmail.com
       </p>
     ),
   },

@@ -33,7 +33,7 @@ const SECTIONS = [
         </p>
         <ul>
           <li>
-            Upload content that is harmful, obscene, or inappropriate for
+           Upload content that is harmful, obscene, or inappropriate for
             young learners
           </li>
           <li>
