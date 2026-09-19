@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700;800&display=swap");
 
+
 /* =========================================
    FOOTER
 ========================================= */
@@ -32,8 +33,9 @@
 
   display: grid;
 
-  /* LEFT SIDE + RIGHT SIDE */
-  grid-template-columns: minmax(480px, 1.8fr) minmax(620px, 2.2fr);
+  grid-template-columns:
+    minmax(480px, 1.8fr)
+    minmax(620px, 2.2fr);
 
   gap: 80px;
 
@@ -68,24 +70,57 @@
 }
 
 
+/* =========================================
+   LOGO
+
+   Shows:
+   ✓ Fruit icon
+   ✓ Full LIRA
+
+   Hides:
+   ✗ Small tagline underneath
+========================================= */
+
 .lira-footer__logo-link {
-  display: block;
-
-  width: 95px;
-
-  text-decoration: none;
-}
-
-
-.lira-footer__logo {
   display: block;
 
   width: 95px;
   height: 95px;
 
+  flex-shrink: 0;
+
+  text-decoration: none;
+}
+
+
+.lira-footer__logo-crop {
+  position: relative;
+
+  width: 95px;
+  height: 95px;
+
+  overflow: hidden;
+}
+
+
+.lira-footer__logo {
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  display: block;
+
+  width: 95px;
+  height: auto;
+
   object-fit: contain;
 }
 
+
+/* =========================================
+   DESCRIPTION
+========================================= */
 
 .lira-footer__description {
   max-width: 520px;
@@ -109,14 +144,14 @@
 
 
 /* =========================================
-   LEFT DIVIDER
+   DIVIDER
 ========================================= */
 
 .lira-footer__divider {
   width: 100%;
   height: 1px;
 
-  margin-top: 25px;
+  margin-top: 22px;
 
   background: #aaa69f;
 }
@@ -185,7 +220,7 @@
 
 
 /* =========================================
-   HEADINGS
+   COLUMN HEADINGS
 ========================================= */
 
 .lira-footer__column h2 {
@@ -241,11 +276,6 @@
 }
 
 
-/*
-  Allow long email/address text to fit
-  instead of overflowing outside screen.
-*/
-
 .lira-footer__contact a,
 .lira-footer__contact span {
   max-width: 100%;
@@ -287,7 +317,6 @@
     gap: 55px;
   }
 
-
   .lira-footer__right {
     gap: 35px;
   }
@@ -308,7 +337,6 @@
     gap: 40px;
   }
 
-
   .lira-footer__right {
     grid-template-columns:
       minmax(120px, 0.8fr)
@@ -318,12 +346,10 @@
     gap: 25px;
   }
 
-
   .lira-footer__column a,
   .lira-footer__column span {
     font-size: 13.5px;
   }
-
 
   .lira-footer__description {
     font-size: 13px;
@@ -341,25 +367,22 @@
     padding: 34px 30px 28px;
   }
 
-
   .lira-footer__container {
     display: block;
   }
-
 
   .lira-footer__left {
     max-width: 600px;
   }
 
-
   .lira-footer__right {
     margin-top: 38px;
 
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
 
     gap: 35px;
   }
-
 
   .lira-footer__column a,
   .lira-footer__column span {
@@ -386,16 +409,26 @@
   }
 
 
+  /* LOGO */
+
   .lira-footer__logo-link {
-    width: 75px;
-  }
-
-
-  .lira-footer__logo {
     width: 75px;
     height: 75px;
   }
 
+  .lira-footer__logo-crop {
+    width: 75px;
+    height: 75px;
+
+    overflow: hidden;
+  }
+
+  .lira-footer__logo {
+    width: 75px;
+  }
+
+
+  /* DESCRIPTION */
 
   .lira-footer__description {
     margin-top: 4px;
@@ -406,10 +439,14 @@
   }
 
 
+  /* DIVIDER */
+
   .lira-footer__divider {
-    margin-top: 22px;
+    margin-top: 20px;
   }
 
+
+  /* COPYRIGHT */
 
   .lira-footer__legal {
     margin-top: 15px;
@@ -417,6 +454,8 @@
     font-size: 10px;
   }
 
+
+  /* RIGHT SIDE */
 
   .lira-footer__right {
     margin-top: 32px;
@@ -426,19 +465,16 @@
     gap: 26px;
   }
 
-
   .lira-footer__column h2 {
     margin-bottom: 10px;
 
     font-size: 18px;
   }
 
-
   .lira-footer__column a,
   .lira-footer__column span {
     font-size: 14px;
   }
-
 
   .lira-footer__portal {
     align-self: flex-start;
@@ -458,7 +494,6 @@
     padding: 25px 18px 22px;
   }
 
-
   .lira-footer__intro {
     grid-template-columns: 65px minmax(0, 1fr);
 
@@ -466,16 +501,26 @@
   }
 
 
+  /* LOGO */
+
   .lira-footer__logo-link {
-    width: 65px;
-  }
-
-
-  .lira-footer__logo {
     width: 65px;
     height: 65px;
   }
 
+  .lira-footer__logo-crop {
+    width: 65px;
+    height: 65px;
+
+    overflow: hidden;
+  }
+
+  .lira-footer__logo {
+    width: 65px;
+  }
+
+
+  /* DESCRIPTION */
 
   .lira-footer__description {
     margin-top: 2px;
@@ -485,6 +530,8 @@
     line-height: 1.4;
   }
 
+
+  /* COPYRIGHT */
 
   .lira-footer__legal {
     font-size: 9px;

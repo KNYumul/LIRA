@@ -222,7 +222,12 @@
   transition: transform 140ms ease, opacity 140ms ease;
 }
 
-.portal-submit:hover {
+.portal-submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.portal-submit:hover:not(:disabled) {
   transform: translateY(-1px);
   opacity: 0.95;
 }

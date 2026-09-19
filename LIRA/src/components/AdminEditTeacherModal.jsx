@@ -36,10 +36,7 @@ export default function AdminEditTeacherModal({ teacher, onCancel, onSave }) {
   }
 
   function handleEmailChange(value) {
-    // Remove numbers from email
-    const noNumbers = value.replace(/[0-9]/g, '')
-
-    handleChange('email', noNumbers)
+    handleChange('email', value)
   }
 
   function handleClear() {
@@ -64,8 +61,6 @@ export default function AdminEditTeacherModal({ teacher, onCancel, onSave }) {
       nextErrors.email = 'DepEd email is required'
     } else if (form.email.length > 50) {
       nextErrors.email = 'Email must not exceed 50 characters'
-    } else if (/[0-9]/.test(form.email)) {
-      nextErrors.email = 'Email cannot contain numbers'
     } else if (!/^[^\s@]+@deped\.gov\.ph$/i.test(form.email.trim())) {
       nextErrors.email = 'Enter a valid DepEd email'
     }

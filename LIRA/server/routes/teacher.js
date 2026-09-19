@@ -5,6 +5,7 @@ const { hashPassword, verifyPassword } = require("../utils/password");
 const { loginKey, cooldownStatus, failedLogin, clearFailedLogins, sendCooldown } = require("../utils/loginCooldown");
 
 const { issueSession } = require("../utils/recordingSession");
+const { normalizeEmail, depedEmailAllowed, sendVerification, verifyEmail } = require("../utils/emailVerification");
 const router = express.Router();
 
 function publicTeacher(teacher, sections = []) {
@@ -20,6 +21,8 @@ function publicTeacher(teacher, sections = []) {
     section: teacher.section,
     sections: managedSections,
     active: teacher.active,
+    emailVerified: teacher.emailVerified === true,
+    emailVerifiedAt: teacher.emailVerifiedAt,
     createdAt: teacher.createdAt || teacher._id.getTimestamp(),
     role: "teacher"
   };
@@ -146,9 +149,25 @@ router.put("/:id", async (req, res) => {
       return res.status(400).json({ message: "First name, last name, email, and account status are required." });
     }
 
+    const normalizedEmail = normalizeEmail(email);
+    if (!depedEmailAllowed(normalizedEmail)) return res.status(400).json({ message: "Please use a valid DepEd account (@deped.gov.ph)." });
+    const previous = await Teacher.findById(req.params.id);
+    if (!previous) return res.status(404).json({ message: "Teacher not found." });
+    const changes = { firstName, lastName, email: normalizedEmail, active, activationPending: false };
+    // An explicit admin status decision supersedes outstanding activation links.
+    const unset = { verificationTokenHash: 1, verificationExpiresAt: 1 };
+    if (previous.email !== normalizedEmail) {
+      changes.emailVerified = false;
+      changes.emailVerifiedAt = null;
+      unset.verificationUsedTokenHash = 1;
+    }
+    if (!active || previous.email !== normalizedEmail) {
+      unset.verificationTokenHash = 1;
+      unset.verificationExpiresAt = 1;
+    }
     const teacher = await Teacher.findByIdAndUpdate(
       req.params.id,
-      { firstName, lastName, email: email.trim().toLowerCase(), active },
+      { $set: changes, $unset: unset },
       { new: true, runValidators: true }
     );
     if (!teacher) return res.status(404).json({ message: "Teacher not found." });
@@ -172,7 +191,7 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-router.post("/signup", async (req, res) => {
+router.post("/signup", verificationRateLimit, async (req, res) => {
   try {
     const { firstName, lastName, email, password, school, gradeLevel, section } = req.body;
     if (!firstName || !lastName || !email || !password) {
@@ -182,13 +201,15 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ message: "Password must contain at least 8 characters." });
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
+    if (!depedEmailAllowed(normalizedEmail)) return res.status(400).json({ message: "Please use a valid DepEd account (@deped.gov.ph)." });
     if (await Teacher.exists({ email: normalizedEmail })) {
       return res.status(409).json({ message: "A teacher account already uses this email." });
     }
 
     const teacher = await Teacher.create({
-      firstName, lastName, email: normalizedEmail, passwordHash: await hashPassword(password), school, gradeLevel, section
+      firstName, lastName, email: normalizedEmail, passwordHash: await hashPassword(password), school, gradeLevel, section,
+      active: false, activationPending: true
     });
     if (section?.trim()) {
       await Section.findOneAndUpdate(
@@ -197,10 +218,53 @@ router.post("/signup", async (req, res) => {
         { upsert: true, new: true, runValidators: true }
       );
     }
-    res.status(201).json({ message: "Teacher account created.", teacher: publicTeacher(teacher) });
+    const delivery = await sendVerification(teacher);
+    res.status(201).json({ ...delivery, status: undefined, accountCreated: true, emailSent: delivery.status === 200, teacher: publicTeacher(teacher) });
   } catch (error) {
+    if (error.code === 11000) return res.status(409).json({ message: "A teacher account already uses this email." });
     console.error("Teacher signup failed:", error);
     res.status(500).json({ message: "Could not create the teacher account." });
+  }
+});
+
+// Persistent account limits are enforced in sendVerification; this bounds requests
+// from one IP as well. Reverse proxies must be configured explicitly by deployment.
+const verificationRequests = new Map();
+function verificationRateLimit(req, res, next) {
+  const now = Date.now();
+  for (const [key, entry] of verificationRequests) if (entry.expiresAt <= now) verificationRequests.delete(key);
+  const key = req.ip;
+  const entry = verificationRequests.get(key) || { count: 0, expiresAt: now + 3600000 };
+  if (++entry.count > 20) {
+    const retryAfterSeconds = Math.ceil((entry.expiresAt - now) / 1000);
+    res.set("Retry-After", String(retryAfterSeconds));
+    return res.status(429).json({ message: "Too many verification requests. Please try again later.", retryAfterSeconds });
+  }
+  verificationRequests.set(key, entry);
+  next();
+}
+
+router.post("/resend-verification", verificationRateLimit, async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    if (!depedEmailAllowed(email)) return res.status(400).json({ message: "Please use a valid DepEd account (@deped.gov.ph)." });
+    const teacher = await Teacher.findOne({ email, active: false, activationPending: true });
+    if (!teacher) return res.json({ message: "If this account needs verification, an email will be sent. Otherwise, log in or contact IT support." });
+    const result = await sendVerification(teacher);
+    if (result.retryAfterSeconds) res.set("Retry-After", String(result.retryAfterSeconds));
+    res.status(result.status).json(result);
+  } catch {
+    res.status(500).json({ message: "Could not resend the email. Please try again later." });
+  }
+});
+
+router.post("/verify-email", async (req, res) => {
+  try {
+    res.set("Cache-Control", "no-store");
+    const result = await verifyEmail(req.body.token);
+    res.status(result.status).json(result);
+  } catch {
+    res.status(500).json({ message: "Could not verify your email. Please try again." });
   }
 });
 
@@ -214,12 +278,13 @@ router.post("/login", async (req, res) => {
     if (status.locked) return sendCooldown(res, status.retryAfterSeconds);
 
     const teacher = await Teacher.findOne({ email: email.trim().toLowerCase() }).select("+passwordHash");
-    if (!teacher || !teacher.active || !(await verifyPassword(password, teacher.passwordHash))) {
+    if (!teacher || !(await verifyPassword(password, teacher.passwordHash))) {
       const failure = failedLogin(key);
       if (failure.locked) return sendCooldown(res, failure.retryAfterSeconds);
       return res.status(401).json({ message: `Invalid email or password. ${failure.remainingAttempts} attempt${failure.remainingAttempts === 1 ? "" : "s"} remaining.` });
     }
     clearFailedLogins(key);
+    if (!teacher.active) return res.status(403).json({ code: "ACCOUNT_INACTIVE", canResend: teacher.activationPending === true, message: "Your account is inactive. An admin must activate it, or you can activate it by clicking the verification link sent to your email." });
     res.json({ message: "Login successful.", token: await issueSession(teacher._id, "teacher"), teacher: publicTeacher(teacher) });
   } catch (error) {
     console.error("Teacher login failed:", error);
