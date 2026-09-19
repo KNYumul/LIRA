@@ -1,17 +1,18 @@
-import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import ResendVerification from "../components/ResendVerification";
 import "./LoginPage.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
 export default function VerifyEmailPage() {
+  const navigate = useNavigate();
   const token = useRef(new URLSearchParams(window.location.search).get("token"));
   const started = useRef(false);
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(true);
 
-  async function verify() {
+  const verify = useCallback(async () => {
     setBusy(true);
     try {
       const response = await fetch(`${API_URL}/api/teachers/verify-email`, {
@@ -19,20 +20,25 @@ export default function VerifyEmailPage() {
         body: JSON.stringify({ token: token.current }),
         referrerPolicy: "no-referrer",
       });
-      setResult(await response.json());
+      const data = await response.json();
+      if (response.ok && data.code === "VERIFIED") {
+        navigate("/login?portal=teacher", { replace: true, state: { emailVerified: true } });
+        return;
+      }
+      setResult(data);
     } catch {
       setResult({ code: "NETWORK_ERROR", message: "Unable to reach the server. Please try again." });
     } finally {
       setBusy(false);
     }
-  }
+  }, [navigate]);
 
   useEffect(() => {
     if (started.current) return;
     started.current = true;
     window.history.replaceState({}, document.title, window.location.pathname);
     void verify();
-  }, []);
+  }, [verify]);
 
   const done = result?.code === "VERIFIED" || result?.code === "LINK_USED";
   return (
