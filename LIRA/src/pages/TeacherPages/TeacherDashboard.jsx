@@ -18,6 +18,7 @@ import ScanImageList from "../../components/ScanImageList";
 import { readPdfPages, ocrLanguages } from "../../utils/pdfOcr";
 import { detectStoryLanguage } from "../../utils/storyLanguage";
 import { storyFeedbackIssues } from "../../utils/storyFeedback";
+import { groupStoryAttempts, sortStoryAttempts } from "../../utils/storyAttemptSort";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -1699,6 +1700,32 @@ function DeleteConfirmModal({ title = "Remove this learner?", subtitle, onCancel
 const STUDENT_COLUMNS = "minmax(0, 1.4fr) minmax(0, 0.7fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr)";
 
 function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
+  const [attemptSort, setAttemptSort] = useState({ key: "completedAt", direction: "desc" });
+  const sortedAttempts = useMemo(
+    () => sortStoryAttempts(s.storyResults, attemptSort.key, attemptSort.direction),
+    [s.storyResults, attemptSort],
+  );
+  const attemptGroups = useMemo(
+    () => groupStoryAttempts(sortedAttempts),
+    [sortedAttempts],
+  );
+  const sortHeader = (key, label, centered = false) => {
+    const active = attemptSort.key === key;
+    const nextDirection = active && attemptSort.direction === "asc" ? "desc" : "asc";
+    return (
+      <button
+        type="button"
+        className={`flex items-center gap-1 cursor-pointer rounded focus-visible:outline-2 focus-visible:outline-offset-2 ${centered ? "justify-center text-center" : "text-left"}`}
+        style={key === "completedAt" ? { gridColumn: "5 / 7" } : undefined}
+        onClick={() => setAttemptSort({ key, direction: nextDirection })}
+        aria-label={`${label}${active ? `, sorted ${attemptSort.direction === "asc" ? "ascending" : "descending"}` : ""}. Sort ${nextDirection === "asc" ? "ascending" : "descending"}`}
+        title={`Sort ${nextDirection === "asc" ? "ascending" : "descending"}`}
+      >
+        <span>{label}</span>
+        <span aria-hidden="true">{active ? (attemptSort.direction === "asc" ? "↑" : "↓") : "↕"}</span>
+      </button>
+    );
+  };
   const risk = riskOf(s);
   const isFullRefresher = risk === "fullRefresher";
   const storyAttemptCounts = s.storyResults.reduce((counts, result) => {
@@ -1752,13 +1779,18 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
                 <div className="grid gap-2">
                   <div className="grid items-center py-1 text-xs font-semibold" style={{ gridTemplateColumns: STUDENT_COLUMNS }}>
                     <span>Story</span>
-                    <span>WPM (est.)</span>
-                    <span className="text-center">Comprehension Score</span>
-                    <span className="text-center">Reading Accuracy</span>
-                    <span style={{ gridColumn: "5 / 7" }}>Completed</span>
+                    {sortHeader("readingWpm", "WPM (est.)")}
+                    {sortHeader("percentage", "Comprehension Score", true)}
+                    {sortHeader("readingAccuracy", "Reading Accuracy", true)}
+                    {sortHeader("completedAt", "Completed")}
                     <span className="text-center">Selection</span>
                   </div>
-                {s.storyResults.map((storyResult) => (
+                {attemptGroups.map((group) => (
+                  <React.Fragment key={group.key}>
+                    <h3 className="font-semibold rounded-lg px-3 py-2 mt-2" style={{ background: C.activePill }}>
+                      {group.title} <span className="font-normal">({group.attempts.length} {group.attempts.length === 1 ? "attempt" : "attempts"})</span>
+                    </h3>
+                {group.attempts.map((storyResult) => (
                   <div
                     key={storyResult.id}
                     className="rounded-lg py-2 px-3"
@@ -1791,6 +1823,8 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
                       <TeacherRecording resultId={storyResult.id} count={storyResult.recordingSegmentCount} />
                     </div>
                   </div>
+                ))}
+                  </React.Fragment>
                 ))}
               </div>
               </div>

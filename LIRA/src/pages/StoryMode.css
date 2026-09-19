@@ -345,10 +345,6 @@
     grid-template-columns: 170px minmax(0, 580px) 170px;
   }
 
-  .sm-next-page-btn {
-    justify-self: start;
-  }
-
   .sm-mic-control {
     position: relative;
     height: 84px;
@@ -524,26 +520,6 @@
 
 .sm-reading-retry + .sm-reading-score {
   margin-top: 8px;
-}
-
-.sm-next-page-btn {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-  transition: transform 0.18s ease, background-color 0.18s ease;
-  flex-shrink: 0;
-}
-
-.sm-next-page-btn:hover {
-  transform: translateX(6px);
-  background-color: #ffffff;
 }
 
 .sm-next-page-label {

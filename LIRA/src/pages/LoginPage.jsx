@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./LoginPage.css";
 import { saveSession } from "../utils/session";
-import { showError } from "../utils/alerts";
+import { liraAlert, showError } from "../utils/alerts";
 import VerificationPopup from "../components/VerificationPopup";
 
 const fox = "/UI_Designs/ANIMALS/mascot_fox.svg";
@@ -25,9 +25,13 @@ async function readApiResponse(response) {
 
 function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const verificationNoticeShown = useRef(false);
   const [portal, setPortal] = useState(() => new URLSearchParams(window.location.search).get("portal") === "teacher" ? "teacher" : "student");
   const [verificationPrompt, setVerificationPrompt] = useState(null);
   const [teacherMode, setTeacherMode] = useState("login");
+  const [teacherSubmitting, setTeacherSubmitting] = useState(false);
+  const teacherRequestPending = useRef(false);
   const [error, setError] = useState("");
 
   // Student state
@@ -46,6 +50,18 @@ function LoginPage() {
 
   const isStudent = portal === "student";
   const isSignUp = teacherMode === "signup";
+
+  useEffect(() => {
+    if (!location.state?.emailVerified || verificationNoticeShown.current) return;
+    verificationNoticeShown.current = true;
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+    void liraAlert.fire({
+      icon: "success",
+      title: "Email Verified",
+      text: "Your account is active. You can now log in.",
+      confirmButtonText: "OK",
+    });
+  }, [location, navigate]);
 
   useEffect(() => {
     fetch(`${API_URL}/api/sections/login-options`)
@@ -155,6 +171,7 @@ const handleEmailChange = (e) => {
 
   async function submitForm(event) {
     event.preventDefault();
+    if (teacherRequestPending.current) return;
     setError("");
 
     // ================= STUDENT LOGIN =================
@@ -329,6 +346,8 @@ const handleEmailChange = (e) => {
         payload.lastName = trimmedLastName;
       }
 
+      teacherRequestPending.current = true;
+      setTeacherSubmitting(true);
       try {
         const response = await fetch(`${API_URL}/api/teachers${endpoint}`, {
           method: "POST",
@@ -384,6 +403,9 @@ const handleEmailChange = (e) => {
       } catch (error) {
         console.error("Teacher portal error:", error);
         setError("Unable to connect to the server.");
+      } finally {
+        teacherRequestPending.current = false;
+        setTeacherSubmitting(false);
       }
     }
   }
@@ -403,6 +425,7 @@ const handleEmailChange = (e) => {
           <div className="login-choice__actions">
             <button
               className={!isStudent ? "is-active" : ""}
+              disabled={teacherSubmitting}
               type="button"
               onClick={() => {
                 setError("");
@@ -413,6 +436,7 @@ const handleEmailChange = (e) => {
             </button>
             <button
               className={isStudent ? "is-active" : ""}
+              disabled={teacherSubmitting}
               type="button"
               onClick={() => {
                 setError("");
@@ -504,6 +528,7 @@ const handleEmailChange = (e) => {
               <div className="teacher-tabs" role="tablist" aria-label="Teacher account actions">
                 <button
                   className={!isSignUp ? "is-active" : ""}
+                  disabled={teacherSubmitting}
                   type="button"
                   onClick={() => {
                     setError("");
@@ -514,6 +539,7 @@ const handleEmailChange = (e) => {
                 </button>
                 <button
                   className={isSignUp ? "is-active" : ""}
+                  disabled={teacherSubmitting}
                   type="button"
                   onClick={() => {
                     setError("");
@@ -665,8 +691,8 @@ const handleEmailChange = (e) => {
                   )}
                 </label>
               </div>
-              <button className="portal-submit" type="submit">
-                {isSignUp ? "Sign up" : "Log in"}
+              <button className="portal-submit" type="submit" disabled={teacherSubmitting} aria-busy={teacherSubmitting}>
+                {teacherSubmitting ? (isSignUp ? "Creating account…" : "Logging in…") : (isSignUp ? "Sign up" : "Log in")}
               </button>
               <div className="portal-divider">
                 <span>OR</span>
@@ -674,6 +700,7 @@ const handleEmailChange = (e) => {
               <button
                 className="google-button"
                 type="button"
+                disabled={teacherSubmitting}
                 onClick={() => {
                   sessionStorage.setItem("google_teacher_auth_mode", teacherMode);
                   window.location.assign(`${API_URL}/api/auth/google?role=teacher`);
