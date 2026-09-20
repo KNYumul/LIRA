@@ -5,7 +5,6 @@ const Section = require("../models/Section");
 const { hashPassword } = require("../utils/password");
 
 const { issueSession } = require("../utils/recordingSession");
-const { sendVerification } = require("../utils/emailVerification");
 const router = express.Router();
 const oauthStates = new Map();
 const loginSessions = new Map();
@@ -91,7 +90,7 @@ router.get("/google/callback", async (req, res) => {
     if (!profileResponse.ok) return redirectError(res, "Google profile information could not be loaded.");
     const profile = await profileResponse.json();
     const email = String(profile.email || "").trim().toLowerCase();
-    if (!profile.email_verified || !googleEmailAllowed(email)) {
+    if (profile.email_verified !== true || !googleEmailAllowed(email)) {
       return redirectError(res, "Please use a valid DepEd account (@deped.gov.ph).");
     }
 
@@ -102,14 +101,27 @@ router.get("/google/callback", async (req, res) => {
         firstName: profile.given_name || profile.name || fallbackName,
         lastName: profile.family_name || "Teacher",
         email,
-        active: false,
-        activationPending: true,
+        active: true,
+        activationPending: false,
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
         passwordHash: await hashPassword(randomCode())
       });
-      const delivery = await sendVerification(teacher);
-      return redirectError(res, delivery.message);
+    } else {
+      // Google has verified ownership; only pending activation may be completed.
+      // Keep accounts explicitly disabled by an administrator blocked.
+      teacher = await Teacher.findOneAndUpdate({
+        _id: teacher._id, email,
+        $or: [{ active: true }, { activationPending: true }],
+      }, {
+        $set: {
+          active: true, activationPending: false, emailVerified: true,
+          emailVerifiedAt: teacher.emailVerifiedAt || new Date(),
+        },
+        $unset: { verificationTokenHash: 1, verificationExpiresAt: 1, verificationUsedTokenHash: 1 },
+      }, { new: true });
     }
-    if (!teacher.active) return redirectError(res, "Your account is not active. Please contact IT support or check your email for the activation link.");
+    if (!teacher?.active) return redirectError(res, "Your account is not active. Please contact IT support.");
 
     const sections = await Section.find({ teacherId: teacher._id }).distinct("name");
     const sessionCode = randomCode();
