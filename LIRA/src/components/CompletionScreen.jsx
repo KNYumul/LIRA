@@ -23,6 +23,13 @@ export default function CompletionScreen({
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
+  const handleBackToHome = () => {
+    onBack?.();
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    });
+  };
+
   // Change the rating of one question
   const handleRating = (questionIndex, rating) => {
     if (submitted || submitting) return;
@@ -332,7 +339,7 @@ export default function CompletionScreen({
           <button
             type="button"
             className="completion-home-button"
-            onClick={onBack}
+            onClick={handleBackToHome}
           >
             <span
               className="completion-home-icon"
