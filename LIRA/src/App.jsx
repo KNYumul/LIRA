@@ -7,6 +7,7 @@ import Footer from "./components/Footer";
 import AdminLoginPage from "./pages/Admin-LoginPage";
 import LoginPage from "./pages/LoginPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
+import PasswordResetPage from "./pages/PasswordResetPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import StoryMode from "./pages/StoryMode";
@@ -25,6 +26,8 @@ const PAGE_TITLES = {
   "/help-center": "Help Center",
   "/login": "Login",
   "/verify-email": "Verify Email",
+  "/forgot-password": "Forgot Password",
+  "/reset-password": "Reset Password",
   "/admin/login": "Admin Login",
   "/privacy-policy": "Privacy Policy",
   "/terms-of-use": "Terms of Use",
@@ -101,6 +104,8 @@ function App() {
           <Route path="/help-center" element={<FaqSection />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/forgot-password" element={<PasswordResetPage key="forgot" />} />
+          <Route path="/reset-password" element={<PasswordResetPage key="reset" reset />} />
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-use" element={<TermsOfUse />} />

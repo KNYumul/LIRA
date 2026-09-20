@@ -9,6 +9,29 @@ const router = express.Router();
 const oauthStates = new Map();
 const loginSessions = new Map();
 const TEN_MINUTES = 10 * 60 * 1000;
+const { requestReset, resetPassword } = require("../utils/passwordReset");
+const { loginKey, cooldownStatus, failedLogin } = require("../utils/loginCooldown");
+
+for (const action of ["forgot-password", "reset-password"]) {
+  router.post(`/${action}`, async (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const key = loginKey(req, action);
+    const limit = cooldownStatus(key);
+    if (limit.locked) {
+      res.set("Retry-After", String(limit.retryAfterSeconds));
+      return res.status(429).json({ message: "Too many requests. Please try again in five minutes." });
+    }
+    failedLogin(key);
+    try {
+      const result = action === "forgot-password"
+        ? await requestReset(req.body?.email)
+        : await resetPassword(req.body?.token, req.body?.password);
+      res.status(result.status).json({ message: result.message });
+    } catch {
+      res.status(503).json({ message: "Unable to process your request. Please try again later." });
+    }
+  });
+}
 
 function configured() {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);

@@ -1,6 +1,6 @@
 import RoundedSelect from '../components/RoundedSelect';
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./LoginPage.css";
 import { saveSession } from "../utils/session";
 import { liraAlert, showError } from "../utils/alerts";
@@ -53,13 +53,13 @@ function LoginPage() {
   const isSignUp = teacherMode === "signup";
 
   useEffect(() => {
-    if (!location.state?.emailVerified || verificationNoticeShown.current) return;
+    if ((!location.state?.emailVerified && !location.state?.passwordReset) || verificationNoticeShown.current) return;
     verificationNoticeShown.current = true;
     navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
     void liraAlert.fire({
       icon: "success",
-      title: "Email Verified",
-      text: "Your account is active. You can now log in.",
+      title: location.state?.passwordReset ? "Password updated" : "Email Verified",
+      text: location.state?.passwordReset ? "You can now log in with your new password." : "Your account is active. You can now log in.",
       confirmButtonText: "OK",
     });
   }, [location, navigate]);
@@ -684,6 +684,7 @@ const handleEmailChange = (e) => {
                   )}
                 </label>
               </div>
+              {!isSignUp && <div className="forgot-password-link"><Link to="/forgot-password">Forgot password?</Link></div>}
               <button className="portal-submit" type="submit" disabled={teacherSubmitting} aria-busy={teacherSubmitting}>
                 {teacherSubmitting ? (isSignUp ? "Creating account…" : "Logging in…") : (isSignUp ? "Sign up" : "Log in")}
               </button>

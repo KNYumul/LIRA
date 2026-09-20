@@ -311,6 +311,18 @@
   }
 }
 
+.forgot-password-link {
+  margin-top: 8px;
+  text-align: right;
+}
+
+.forgot-password-link a {
+  font-size: 0.75rem;
+  color: #0066cc;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 @media (max-width: 560px) {
   .login-hero {
     min-height: 580px;

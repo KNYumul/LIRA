@@ -88,4 +88,4 @@ async function verifyEmail(token, now = new Date()) {
   return { status: 400, code: "INVALID_LINK", message: "This link is invalid or was replaced. Please use the latest verification email." };
 }
 
-module.exports = { normalizeEmail, depedEmailAllowed, digest, verificationMessage, sendVerification, verifyEmail };
+module.exports = { normalizeEmail, depedEmailAllowed, digest, verificationMessage, sendVerification, verifyEmail, deliverEmail };
