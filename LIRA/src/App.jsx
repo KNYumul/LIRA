@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation, Outlet } from "react-router-dom";
 import WelcomePage from "./pages/WelcomePage";
 import FaqSection from "./pages/FaqSection";
@@ -83,12 +83,38 @@ function PublicLayout() {
 }
 
 function ProtectedRoute({ role, children }) {
-  try {
-    const session = getSession();
-    return session?.role === role ? children : <Navigate to="/" replace />;
-  } catch {
-    return <Navigate to="/" replace />;
+  const session = getSession();
+  const token = session?.role === role ? session.token : null;
+  const { pathname } = useLocation();
+  const [verification, setVerification] = useState(null);
+
+  useEffect(() => {
+    if (!token) return;
+    const controller = new AbortController();
+    fetch(`${import.meta.env.VITE_API_URL || ""}/api/auth/session?role=${role}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        const data = response.ok ? await response.json() : null;
+        if (!controller.signal.aborted) {
+          setVerification({ token, role, pathname, allowed: data?.role === role });
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setVerification({ token, role, pathname, allowed: false });
+        }
+      });
+    return () => controller.abort();
+  }, [token, role, pathname]);
+
+  if (!token) return <Navigate to="/" replace />;
+  if (verification?.token !== token || verification?.role !== role || verification?.pathname !== pathname) {
+    return <p role="status">Checking session...</p>;
   }
+  return verification.allowed ? children : <Navigate to="/" replace />;
 }
 
 function App() {
@@ -112,12 +138,15 @@ function App() {
         </Route>
 
         {/* ---------- Newly inserted pages (standalone, own header) ---------- */}
-        <Route path="/category" element={<Category />} />
-        <Route path="/story-mode" element={<StoryMode />} />
-        <Route path="/flashcards" element={<FlashcardDifficulty />} />
-        <Route path="/flashcards/:difficulty" element={<FlashcardSession />} />
+        <Route element={<ProtectedRoute role="student"><Outlet /></ProtectedRoute>}>
+          <Route path="/category" element={<Category />} />
+          <Route path="/story-mode" element={<StoryMode />} />
+          <Route path="/flashcards" element={<FlashcardDifficulty />} />
+          <Route path="/flashcards/:difficulty" element={<FlashcardSession />} />
+        </Route>
         <Route path="/teacher" element={<ProtectedRoute role="teacher"><TeacherDashboardPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute role="admin"><AdminPage /></ProtectedRoute>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );

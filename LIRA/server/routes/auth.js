@@ -4,13 +4,28 @@ const Teacher = require("../models/Teacher");
 const Section = require("../models/Section");
 const { hashPassword } = require("../utils/password");
 
-const { issueSession } = require("../utils/recordingSession");
+const { issueSession, recordingSession } = require("../utils/recordingSession");
 const router = express.Router();
 const oauthStates = new Map();
 const loginSessions = new Map();
 const TEN_MINUTES = 10 * 60 * 1000;
 const { requestReset, resetPassword } = require("../utils/passwordReset");
 const { loginKey, cooldownStatus, failedLogin } = require("../utils/loginCooldown");
+
+router.get("/session", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  const role = req.query.role;
+  if (!["student", "teacher", "admin"].includes(role)) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  try {
+    const session = await recordingSession(req, role);
+    if (!session) return res.status(401).json({ message: "Unauthorized" });
+    return res.json({ role: session.role });
+  } catch {
+    return res.status(503).json({ message: "Unable to verify session" });
+  }
+});
 
 for (const action of ["forgot-password", "reset-password"]) {
   router.post(`/${action}`, async (req, res) => {
