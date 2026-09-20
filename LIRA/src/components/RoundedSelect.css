@@ -1,0 +1,15 @@
+.rounded-select { position: relative; flex: 1 1 0; min-width: 0; font-size: 13px; }
+.rounded-select-label { display: block; margin-bottom: 5px; font-weight: 600; }
+.rounded-select-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 36px; padding: 8px 15px; border: 1px solid #baa995; border-radius: 999px; background: white; color: #334b57; text-align: left; box-shadow: 0 2px 5px #7055370d; cursor: pointer; }
+.rounded-select-trigger span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rounded-select-trigger svg { flex-shrink: 0; color: #444; transition: transform 150ms ease; }
+.rounded-select-trigger svg.is-open { transform: rotate(180deg); }
+.rounded-select-trigger:disabled { opacity: .6; cursor: default; }
+.rounded-select-menu { position: absolute; z-index: 30; top: calc(100% + 7px); left: 0; width: 100%; max-height: 240px; overflow-y: auto; padding: 5px; border: 1px solid #eadfce; border-radius: 15px; background: white; box-shadow: 0 8px 20px #634b321a; }
+.rounded-select-option { display: block; width: 100%; padding: 10px 13px; border: 0; border-radius: 10px; background: transparent; color: #334b57; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+.rounded-select-option:hover, .rounded-select-option:focus-visible { background: #f2f6ef; }
+.rounded-select-option[aria-selected="true"] { background: #e7f2e6; color: #3d6547; font-weight: 700; }
+.rounded-select button { font-family: inherit; font-size: inherit; }
+.rounded-select-trigger:focus-visible, .rounded-select-option:focus-visible { outline: 2px solid #82562e; outline-offset: 2px; }
+.rounded-select-hidden, .rounded-select .rounded-select-native { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.rounded-select:has(.rounded-select-menu) { z-index: 40; }

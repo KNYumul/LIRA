@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ChevronDownIcon } from './AdminIcons.jsx'
+import RoundedSelect from './RoundedSelect'
 
 const EMPTY_FORM = { name: '', email: '', status: 'active' }
 
@@ -143,19 +143,9 @@ export default function AdminEditTeacherModal({ teacher, onCancel, onSave }) {
             Status <span className="req">*</span>
           </label>
 
-          <div className="select-wrap">
-            <select
-              value={form.status}
-              onChange={(e) =>
-                handleChange('status', e.target.value)
-              }
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-
-            <ChevronDownIcon />
-          </div>
+          <RoundedSelect label="Status" hideLabel value={form.status}
+            onChange={value => handleChange('status', value)}
+            options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]} />
         </div>
 
         <div className="modal-actions">

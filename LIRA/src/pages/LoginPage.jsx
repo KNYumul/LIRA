@@ -1,3 +1,4 @@
+import RoundedSelect from '../components/RoundedSelect';
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./LoginPage.css";
@@ -502,22 +503,14 @@ const handleEmailChange = (e) => {
                     required
                   />
                 </label>
-                <label>
+                <div className="portal-field">
                   <span className="field-label">
                     Select your Section <em style={{ color: "#d9534f" }}>*</em>
                   </span>
-                  <select
-                    name="section"
-                    value={studentSection}
-                    onChange={(event) => setStudentSection(event.target.value)}
-                    required
-                  >
-                    <option value="">Choose a section</option>
-                    {sectionOptions.map((section) => (
-                      <option key={section} value={section}>{section}</option>
-                    ))}
-                  </select>
-                </label>
+                  <RoundedSelect label="Section" hideLabel name="section" required
+                    value={studentSection} onChange={setStudentSection}
+                    options={[{ value: '', label: 'Choose a section' }, ...sectionOptions.map(section => ({ value: section, label: section }))]} />
+                </div>
               </div>
               <button className="portal-submit" type="submit">
                 Log in

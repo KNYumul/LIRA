@@ -1,67 +1,8 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import RoundedSelect from './RoundedSelect';
 import { normalizedWord } from '../utils/readingTracking';
 import { heatLevel, wordHeatmap } from '../utils/wordHeatmap';
 import './StoryHeatmap.css';
-
-function HeatmapSelect({ label, value, options, onChange, disabled, placeholder }) {
-  const [open, setOpen] = useState(false);
-  const root = useRef(null);
-  const trigger = useRef(null);
-  const id = useId();
-  const expanded = open && !disabled;
-  useEffect(() => {
-    if (!expanded) return;
-    root.current?.querySelector('[aria-selected="true"]')?.focus();
-    const close = (event) => {
-      if (!root.current?.contains(event.target)) setOpen(false);
-    };
-    document.addEventListener('pointerdown', close);
-    return () => document.removeEventListener('pointerdown', close);
-  }, [expanded]);
-  return (
-    <div className="heatmap-select" ref={root} onBlur={(event) => {
-      if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
-    }}>
-      <span id={`${id}-label`} className="heatmap-select-label">{label}</span>
-      <button ref={trigger} type="button" className="heatmap-select-trigger"
-        aria-labelledby={`${id}-label ${id}-value`} aria-haspopup="listbox"
-        aria-expanded={expanded} aria-controls={expanded ? id : undefined} disabled={disabled}
-        onClick={() => setOpen(!open)} onKeyDown={(event) => {
-          if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-            event.preventDefault();
-            setOpen(true);
-          }
-        }}>
-        <span id={`${id}-value`}>{options.find((option) => option.value === value)?.label || placeholder}</span>
-        <ChevronDown size={14} className={expanded ? 'is-open' : ''} />
-      </button>
-      {expanded && <div id={id} role="listbox" aria-labelledby={`${id}-label`} className="heatmap-select-menu"
-        onKeyDown={(event) => {
-          if (event.key === 'Escape') {
-            event.preventDefault();
-            setOpen(false);
-            trigger.current?.focus();
-          }
-          const items = Array.from(event.currentTarget.querySelectorAll('[role="option"]'));
-          const index = items.indexOf(document.activeElement);
-          const next = { ArrowDown: (index + 1) % items.length, ArrowUp: (index - 1 + items.length) % items.length, Home: 0, End: items.length - 1 }[event.key];
-          if (next !== undefined) {
-            event.preventDefault();
-            items[next]?.focus();
-          }
-        }}>
-        {options.map((option) => <button key={option.value} type="button" role="option"
-          aria-selected={option.value === value} tabIndex={option.value === value ? 0 : -1}
-          className="heatmap-select-option" onClick={() => {
-            onChange(option.value);
-            setOpen(false);
-            trigger.current?.focus();
-          }}>{option.label}</button>)}
-      </div>}
-    </div>
-  );
-}
 
 export default function StoryHeatmap({ students, sections, sectionName, onSectionChange, teacherId }) {
   const [stories, setStories] = useState([]);
@@ -96,10 +37,10 @@ export default function StoryHeatmap({ students, sections, sectionName, onSectio
     <section className="dashboard-bottom-card dashboard-heatmap-card word-heatmap">
       <h2 className="dashboard-heatmap-title">Reading Heatmap</h2>
       <div className="word-heatmap-filters">
-        <HeatmapSelect label="Section" value={sectionName} onChange={onSectionChange}
+        <RoundedSelect label="Section" value={sectionName} onChange={onSectionChange}
           options={sections.map((name) => ({ value: name, label: name }))}
           disabled={!sections.length} placeholder="No sections" />
-        <HeatmapSelect label="Story" value={story?._id || ''} onChange={setStoryId}
+        <RoundedSelect label="Story" value={story?._id || ''} onChange={setStoryId}
           options={stories.map((item) => ({ value: item._id, label: `${item.title} (${item.lang})` }))}
           disabled={loading || !stories.length || Boolean(error)} placeholder={loading ? 'Loading stories…' : 'No stories'} />
       </div>
