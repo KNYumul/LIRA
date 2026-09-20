@@ -30,6 +30,7 @@ app.use("/api/sections", sectionRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/story-results", storyResultRoutes);
 app.use("/api/speech", speechRoutes);
+app.use("/api/surveys", require("./routes/survey"));
 
 mongoose
   .connect(process.env.MONGO_URI, {dbname: "LIRA"} )

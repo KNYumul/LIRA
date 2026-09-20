@@ -119,7 +119,7 @@ function AdminLoginPage() {
         )
       );
 
-      saveSession({ role: "admin", user: data.admin });
+      saveSession({ role: "admin", user: data.admin, token: data.token });
       navigate("/admin");
     } catch (error) {
       console.error("Admin login error:", error);

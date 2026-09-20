@@ -1,18 +1,7 @@
 import { useState } from "react";
 import "./CompletionScreen.css";
 
-const SURVEY_QUESTIONS = [
-  "I would like to use this LIRA a lot.",
-  "LIRA is confusing and hard to use.",
-  "LIRA was easy for me to use.",
-  "I would need a teacher or grown-up to help me use it.",
-  "All the parts of this LIRA work smoothly together.",
-  "Things didn't match up and changed in confusing ways.",
-  "My friends and I could learn how to use this very quickly.",
-  "It felt hard and annoying to get things done.",
-  "I felt sure of myself and knew what I was doing.",
-  "I had to learn way too much before I could even get started.",
-];
+import { SURVEY_QUESTIONS } from "../utils/surveyQuestions";
 
 export default function CompletionScreen({
   onBack,
@@ -30,11 +19,13 @@ export default function CompletionScreen({
     rating: 0,
   });
 
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   // Change the rating of one question
   const handleRating = (questionIndex, rating) => {
-    if (submitted) return;
+    if (submitted || submitting) return;
 
     setRatings((previousRatings) => {
       const updatedRatings = [...previousRatings];
@@ -54,14 +45,18 @@ export default function CompletionScreen({
     (rating) => rating > 0
   ).length;
 
-  const handleSubmit = () => {
-    if (!allQuestionsAnswered || submitted) return;
-
-    setSubmitted(true);
-
-    // Sends the student's answers to the parent component
-    if (onSubmit) {
-      onSubmit(ratings);
+  const handleSubmit = async () => {
+    if (!allQuestionsAnswered || submitted || submitting) return;
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      if (!onSubmit) throw new Error("Survey submission is unavailable. Please try again.");
+      await onSubmit(ratings);
+      setSubmitted(true);
+    } catch (error) {
+      setSubmitError(error.message || "Could not save your survey. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -260,7 +255,7 @@ export default function CompletionScreen({
                               starValue
                             }
                             aria-label={`${starValue} out of 5`}
-                            disabled={submitted}
+                            disabled={submitted || submitting}
                           >
                             ★
                           </button>
@@ -277,6 +272,7 @@ export default function CompletionScreen({
               SUBMIT AREA
           ================================================== */}
 
+          {submitError && <p role="alert">{submitError}</p>}
           {!submitted ? (
             <div className="completion-submit-area">
               {!allQuestionsAnswered && (
@@ -289,10 +285,10 @@ export default function CompletionScreen({
               <button
                 type="button"
                 className="completion-submit-button"
-                disabled={!allQuestionsAnswered}
+                disabled={!allQuestionsAnswered || submitting}
                 onClick={handleSubmit}
               >
-                Submit Survey
+                {submitting ? "Saving..." : "Submit Survey"}
                 <span aria-hidden="true">→</span>
               </button>
             </div>

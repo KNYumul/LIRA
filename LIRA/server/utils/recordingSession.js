@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const Session = mongoose.model('RecordingSession', new mongoose.Schema({
   tokenHash: { type: String, unique: true, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, required: true },
-  role: { type: String, enum: ['teacher', 'student'], required: true },
+  role: { type: String, enum: ['teacher', 'student', 'admin'], required: true },
   expiresAt: { type: Date, expires: 0, required: true },
 }));
 const digest = (token) => crypto.createHash('sha256').update(token).digest('hex');

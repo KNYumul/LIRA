@@ -3,6 +3,7 @@ const Admin = require("../models/Admin");
 const { hashPassword, verifyPassword } = require("../utils/password");
 const { loginKey, cooldownStatus, failedLogin, clearFailedLogins, sendCooldown } = require("../utils/loginCooldown");
 
+const { issueSession } = require("../utils/recordingSession");
 const router = express.Router();
 
 function publicAdmin(admin) {
@@ -46,7 +47,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: `Invalid email or password. ${failure.remainingAttempts} attempt${failure.remainingAttempts === 1 ? "" : "s"} remaining.` });
     }
     clearFailedLogins(key);
-    res.json({ message: "Login successful.", admin: publicAdmin(admin) });
+    res.json({ message: "Login successful.", admin: publicAdmin(admin), token: await issueSession(admin._id, "admin") });
   } catch (error) {
     console.error("Admin login failed:", error);
     res.status(500).json({ message: "Could not log in." });

@@ -1242,7 +1242,15 @@ function StoryMode({ onExit }) {
     if (total === 0 || quizDone) {
       const Completion = showCompletionSurvey ? CompletionScreen : CompletionScreenNormal;
       return (
-        <Completion onBack={backToSelection} backLabel="Back to Stories">
+        <Completion onBack={backToSelection} backLabel="Back to Stories" onSubmit={async (answers) => {
+          const response = await fetch(`${API_URL}/api/surveys`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getSession()?.token || ''}` },
+            body: JSON.stringify({ answers }),
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.message || 'Could not save your survey. Please try again.');
+        }}>
           {savingScore && <p>Saving reading result...</p>}
           {scoreError && <p className="completion-error">{scoreError} Your teacher will not see this attempt yet.</p>}
         </Completion>
