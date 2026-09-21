@@ -1,0 +1,3 @@
+# Install CUDA-enabled torch separately; keep the working GPU installation.
+transformers>=4.57,<5
+numpy>=1.26,<3
