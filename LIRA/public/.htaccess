@@ -1,0 +1,6 @@
+# Load React Router routes on direct visits, including OAuth returns to /login.
+# Existing files and directories are served normally; query strings are preserved.
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
