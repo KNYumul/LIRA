@@ -159,7 +159,8 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.portal-fields label {
+.portal-fields label,
+.portal-fields .portal-field {
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -308,6 +309,18 @@
   .student-bunting {
     display: none;
   }
+}
+
+.forgot-password-link {
+  margin-top: 8px;
+  text-align: right;
+}
+
+.forgot-password-link a {
+  font-size: 0.75rem;
+  color: #0066cc;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 @media (max-width: 560px) {

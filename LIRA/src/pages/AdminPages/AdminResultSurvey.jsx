@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getSession } from '../../utils/session'
 import { SURVEY_QUESTIONS } from '../../utils/surveyQuestions'
+import RoundedSelect from '../../components/RoundedSelect'
 import './AdminResultSurvey.css'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
@@ -8,6 +9,7 @@ const RATING_LABELS = ['Strongly Disagree', 'Disagree', 'Not Sure', 'Agree', 'St
 
 export default function AdminSurveyResults() {
   const [search, setSearch] = useState('')
+  const [sectionFilter, setSectionFilter] = useState('')
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -37,10 +39,14 @@ export default function AdminSurveyResults() {
     return () => controller.abort()
   }, [refresh])
 
+  const sections = useMemo(() => [...new Set(students.map(student => student.section))]
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })), [students])
+
   const filteredStudents = useMemo(() => {
     const keyword = search.trim().toLowerCase()
-    return students.filter(student => student.name.toLowerCase().includes(keyword) || student.section.toLowerCase().includes(keyword))
-  }, [students, search])
+    return students.filter(student => (!sectionFilter || student.section === sectionFilter)
+      && (student.name.toLowerCase().includes(keyword) || student.section.toLowerCase().includes(keyword)))
+  }, [students, search, sectionFilter])
   const overallScore = students.length ? students.reduce((sum, student) => sum + student.score, 0) / students.length : null
   const ready = !loading && !error
 
@@ -58,7 +64,14 @@ export default function AdminSurveyResults() {
         <section className="survey-results-card">
           <div className="survey-card-top">
             <div><h2>Student Responses</h2><p>View each student's answers and SUS score.</p></div>
-            <div className="survey-search-box"><input type="search" aria-label="Search students or sections" placeholder="Search students or sections..." value={search} onChange={event => setSearch(event.target.value)} /></div>
+            <div className="survey-results-controls">
+              <div className="survey-search-box"><input type="search" aria-label="Search students or sections" placeholder="Search students or sections..." value={search} onChange={event => setSearch(event.target.value)} /></div>
+              <div className="survey-section-select">
+                <RoundedSelect label="Filter by section" value={sectionFilter}
+                  options={[{ value: '', label: 'All sections' }, ...sections.map(section => ({ value: section, label: section }))]}
+                  onChange={value => { setSectionFilter(value); setSelected(null) }} />
+              </div>
+            </div>
           </div>
           {loading ? <p className="survey-empty" role="status">Loading survey results...</p> : error ? <p className="survey-empty" role="alert">{error}</p> : (
             <div className="survey-table-wrapper">
@@ -67,7 +80,7 @@ export default function AdminSurveyResults() {
                 <tbody>
                   {filteredStudents.map(student => (
                     <tr key={student.id}>
-                      <td><div className="student-info"><div className="student-avatar">{student.name.charAt(0).toUpperCase()}</div><span className="student-name">{student.name}</span></div></td>
+                      <td><div className="student-info"><span className="student-name">{student.name}</span></div></td>
                       <td><span className="student-section">{student.section}</span></td>
                       <td>{new Date(student.submittedAt).toLocaleString()}</td>
                       <td><span className="rating-number">{student.score.toFixed(1)} / 100</span></td>
@@ -82,10 +95,10 @@ export default function AdminSurveyResults() {
         </section>
         {ready && selected && (
           <section id="survey-answer-details" className="survey-results-card" aria-label={`Survey answers for ${selected.name}`}>
-            <div className="survey-card-top"><div><h2>{selected.name} ? {selected.section}</h2><p>SUS score: {selected.score.toFixed(1)} / 100</p></div><button className="view-survey-btn" type="button" onClick={() => setSelected(null)}>Close Results</button></div>
+            <div className="survey-card-top"><div><h2>{selected.name} - {selected.section}</h2><p>SUS score: {selected.score.toFixed(1)} / 100</p></div><button className="view-survey-btn" type="button" onClick={() => setSelected(null)}>Close Results</button></div>
             <div className="survey-table-wrapper"><table className="survey-table">
               <thead><tr><th>Question</th><th>Answer</th></tr></thead>
-              <tbody>{SURVEY_QUESTIONS.map((question, index) => <tr key={question}><td>{index + 1}. {question}</td><td>{selected.answers[index]} / 5 ? {RATING_LABELS[selected.answers[index] - 1]}</td></tr>)}</tbody>
+              <tbody>{SURVEY_QUESTIONS.map((question, index) => <tr key={question}><td>{index + 1}. {question}</td><td><strong>{selected.answers[index]} / 5 </strong> - {RATING_LABELS[selected.answers[index] - 1]}</td></tr>)}</tbody>
             </table></div>
           </section>
         )}

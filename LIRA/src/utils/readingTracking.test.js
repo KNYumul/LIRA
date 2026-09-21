@@ -2,6 +2,21 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { matchedWordCount } from './readingTracking.js';
 
+test('accepts fifty as a word or digits in partial and complete transcripts', () => {
+  assert.equal(matchedWordCount('I have fifty coins.', 'I have 50'), 3);
+  assert.equal(matchedWordCount('I have fifty coins.', 'I have 50 coins'), 4);
+  assert.equal(matchedWordCount('I have fifty coins.', 'I have fifty coins'), 4);
+  assert.equal(matchedWordCount('I have 50 coins.', 'I have fifty coins'), 4);
+});
+
+test('normalizes other simple English numbers without accepting incorrect numbers or gaps', () => {
+  assert.equal(matchedWordCount('zero five fifteen twenty forty ninety', '0 5 15 20 40 90'), 6);
+  assert.equal(matchedWordCount('fifty coins', 'fifteen coins'), 0);
+  assert.equal(matchedWordCount('fifty coins', '15 coins'), 0);
+  assert.equal(matchedWordCount('I have fifty coins', 'I 50 coins'), 1);
+  assert.equal(matchedWordCount('fifty', '50', 'FIL'), 0);
+});
+
 test('Filipino accepts split hyphens and written stress marks', () => {
   assert.equal(matchedWordCount('Araw-araw ay masayá ang bata.', 'araw araw ay masaya ang bata', 'FIL'), 5);
   assert.equal(matchedWordCount('Siya ay nag aaral.', 'siya ay nag-aaral', 'FIL'), 4);

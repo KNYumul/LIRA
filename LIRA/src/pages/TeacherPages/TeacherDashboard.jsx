@@ -1,3 +1,4 @@
+import RoundedSelect from '../../components/RoundedSelect';
 import TeacherRecording from '../../components/TeacherRecording';
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Heart, Pencil, MinusCircle, ChevronDown, ChevronUp, Upload, Search, X, Plus, CheckCircle2, Sparkles, FileText, ScanLine, Loader2, ArrowLeft, Lock, Eye, EyeOff, Trash2 } from "lucide-react";
@@ -445,52 +446,9 @@ function NavItem({ label, active, onClick }) {
   );
 }
 
-function SectionSelect({ sections, selectedSection, onChange, className = "" }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const selectRef = useRef(null);
-
-  useEffect(() => {
-    const closeOnOutsideClick = (event) => {
-      if (!selectRef.current?.contains(event.target)) setIsOpen(false);
-    };
-    document.addEventListener("mousedown", closeOnOutsideClick);
-    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
-  }, []);
-
-  return (
-    <div ref={selectRef} className="section-select">
-      <button
-        type="button"
-        className={`${className} section-select-trigger text-sm font-medium`}
-        onClick={() => setIsOpen((open) => !open)}
-        aria-label="Select section"
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-      >
-        <span>{selectedSection}</span>
-        <ChevronDown size={16} className={isOpen ? "section-select-chevron is-open" : "section-select-chevron"} />
-      </button>
-      {isOpen && (
-        <div className="section-select-menu" role="listbox" aria-label="Sections">
-          {sections.map((section) => (
-            <button
-              type="button"
-              key={section}
-              role="option"
-              aria-selected={section === selectedSection}
-              className={section === selectedSection ? "section-select-option is-selected" : "section-select-option"}
-              onClick={() => {
-                onChange(section);
-                setIsOpen(false);
-              }}
-            >
-              {section}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+function SectionSelect({ sections, selectedSection, onChange }) {
+  return <RoundedSelect label="Section" hideLabel value={selectedSection} onChange={onChange}
+    options={sections.map(section => ({ value: section, label: section }))} />;
 }
 
 function Sidebar({ page, setPage, onLogout }) {
@@ -999,28 +957,8 @@ function Dashboard({
               Address me as: <span>*</span>
             </label>
 
-            <select
-              value={title}
-              onChange={(event) =>
-                setTitle(event.target.value)
-              }
-            >
-              <option value="Teacher">
-                Teacher
-              </option>
-
-              <option value="Ms.">
-                Ms.
-              </option>
-
-              <option value="Mrs.">
-                Mrs.
-              </option>
-
-              <option value="Mr.">
-                Mr.
-              </option>
-            </select>
+            <RoundedSelect label="Address me as" hideLabel value={title} onChange={setTitle}
+              options={['Teacher', 'Ms.', 'Mrs.', 'Mr.'].map(value => ({ value, label: value }))} />
 
 
             <button
@@ -1619,14 +1557,10 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
 
         <Field label="Birthdate" required>
           <div className="flex gap-2">
-            <select value={month} onChange={(e) => setMonth(e.target.value)} className="w-full rounded-lg px-2 py-2" style={selectStyle}>
-              <option value="">Month</option>
-              {months.map((m) => <option key={m} value={m}>{m}</option>)}
-            </select>
-            <select value={day} onChange={(e) => setDay(e.target.value)} className="w-full rounded-lg px-2 py-2" style={selectStyle}>
-              <option value="">Day</option>
-              {days.map((d) => <option key={d} value={d}>{d}</option>)}
-            </select>
+            <RoundedSelect label="Birth month" hideLabel value={month} onChange={setMonth}
+              options={[{ value: '', label: 'Month' }, ...months.map(value => ({ value, label: value }))]} />
+            <RoundedSelect label="Birth day" hideLabel value={day} onChange={setDay}
+              options={[{ value: '', label: 'Day' }, ...days.map(value => ({ value, label: value }))]} />
             <input
               type="text"
               inputMode="numeric"
@@ -1634,9 +1568,10 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
               onChange={(e) => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))}
               placeholder="Year"
               maxLength={4}
-              className="w-full rounded-lg px-2 py-2 outline-none"
+              className="flex-1 min-w-0 w-0 rounded-lg px-2 py-2 outline-none"
               style={selectStyle}
               aria-label="Birth year"
+              size={4}
             />
           </div>
         </Field>

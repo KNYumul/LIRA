@@ -4,12 +4,49 @@ const Teacher = require("../models/Teacher");
 const Section = require("../models/Section");
 const { hashPassword } = require("../utils/password");
 
-const { issueSession } = require("../utils/recordingSession");
-const { sendVerification } = require("../utils/emailVerification");
+const { issueSession, recordingSession } = require("../utils/recordingSession");
 const router = express.Router();
 const oauthStates = new Map();
 const loginSessions = new Map();
 const TEN_MINUTES = 10 * 60 * 1000;
+const { requestReset, resetPassword } = require("../utils/passwordReset");
+const { loginKey, cooldownStatus, failedLogin } = require("../utils/loginCooldown");
+
+router.get("/session", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  const role = req.query.role;
+  if (!["student", "teacher", "admin"].includes(role)) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  try {
+    const session = await recordingSession(req, role);
+    if (!session) return res.status(401).json({ message: "Unauthorized" });
+    return res.json({ role: session.role });
+  } catch {
+    return res.status(503).json({ message: "Unable to verify session" });
+  }
+});
+
+for (const action of ["forgot-password", "reset-password"]) {
+  router.post(`/${action}`, async (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const key = loginKey(req, action);
+    const limit = cooldownStatus(key);
+    if (limit.locked) {
+      res.set("Retry-After", String(limit.retryAfterSeconds));
+      return res.status(429).json({ message: "Too many requests. Please try again in five minutes." });
+    }
+    failedLogin(key);
+    try {
+      const result = action === "forgot-password"
+        ? await requestReset(req.body?.email)
+        : await resetPassword(req.body?.token, req.body?.password);
+      res.status(result.status).json({ message: result.message });
+    } catch {
+      res.status(503).json({ message: "Unable to process your request. Please try again later." });
+    }
+  });
+}
 
 function configured() {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
@@ -91,7 +128,7 @@ router.get("/google/callback", async (req, res) => {
     if (!profileResponse.ok) return redirectError(res, "Google profile information could not be loaded.");
     const profile = await profileResponse.json();
     const email = String(profile.email || "").trim().toLowerCase();
-    if (!profile.email_verified || !googleEmailAllowed(email)) {
+    if (profile.email_verified !== true || !googleEmailAllowed(email)) {
       return redirectError(res, "Please use a valid DepEd account (@deped.gov.ph).");
     }
 
@@ -102,14 +139,27 @@ router.get("/google/callback", async (req, res) => {
         firstName: profile.given_name || profile.name || fallbackName,
         lastName: profile.family_name || "Teacher",
         email,
-        active: false,
-        activationPending: true,
+        active: true,
+        activationPending: false,
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
         passwordHash: await hashPassword(randomCode())
       });
-      const delivery = await sendVerification(teacher);
-      return redirectError(res, delivery.message);
+    } else {
+      // Google has verified ownership; only pending activation may be completed.
+      // Keep accounts explicitly disabled by an administrator blocked.
+      teacher = await Teacher.findOneAndUpdate({
+        _id: teacher._id, email,
+        $or: [{ active: true }, { activationPending: true }],
+      }, {
+        $set: {
+          active: true, activationPending: false, emailVerified: true,
+          emailVerifiedAt: teacher.emailVerifiedAt || new Date(),
+        },
+        $unset: { verificationTokenHash: 1, verificationExpiresAt: 1, verificationUsedTokenHash: 1 },
+      }, { new: true });
     }
-    if (!teacher.active) return redirectError(res, "Your account is not active. Please contact IT support or check your email for the activation link.");
+    if (!teacher?.active) return redirectError(res, "Your account is not active. Please contact IT support.");
 
     const sections = await Section.find({ teacherId: teacher._id }).distinct("name");
     const sessionCode = randomCode();

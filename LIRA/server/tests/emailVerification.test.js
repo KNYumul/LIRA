@@ -196,14 +196,16 @@ test("signup and resend send branded emails and report cooldown through the API"
   }
 });
 
-test("Google login respects pending activation and allows admin-activated accounts", async (context) => {
+test("Google verifies new and pending accounts without email delivery and keeps disabled accounts blocked", async (context) => {
   const keys = ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"];
   const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
   for (const key of keys) process.env[key] = "test-only";
   const originalFetch = global.fetch;
+  let profile = { email: "teacher1@deped.gov.ph", email_verified: true };
+  const mail = context.mock.method(require("nodemailer"), "createTransport", () => { throw new Error("Google login must not send email"); });
   context.mock.method(global, "fetch", async (url, options) => {
     if (String(url).startsWith("https://oauth2.googleapis.com/")) return Response.json({ access_token: "test-token" });
-    if (String(url).startsWith("https://openidconnect.googleapis.com/")) return Response.json({ email: "teacher1@deped.gov.ph", email_verified: true });
+    if (String(url).startsWith("https://openidconnect.googleapis.com/")) return Response.json(profile);
     return originalFetch(url, options);
   });
   const authBase = base.replace(/\/teachers$/, "/auth");
@@ -213,15 +215,47 @@ test("Google login respects pending activation and allows admin-activated accoun
     return fetch(`${authBase}/google/callback?code=test&state=${state}`, { redirect: "manual" });
   };
   try {
+    const signup = await signIn();
+    const code = new URL(signup.headers.get("location")).searchParams.get("google_auth_code");
+    assert.ok(code);
+    const session = await fetch(`${authBase}/google/session?code=${code}`);
+    assert.equal(session.status, 200);
+    const sessionData = await session.json();
+    assert.ok(sessionData.token);
+    assert.equal(sessionData.teacher.emailVerified, true);
+    const created = await Teacher.findOne({ email: profile.email });
+    assert.equal(created.active, true);
+    assert.equal(created.activationPending, false);
+    assert.ok(created.emailVerifiedAt instanceof Date);
+    await Teacher.deleteMany({});
     const teacher = await account({ passwordHash: await hashPassword("Password1!") });
+    const box = mailbox();
+    await sendVerification(teacher, box.deliver);
     const response = await signIn();
-    assert.match(response.headers.get("location"), /google_auth_error=/);
+    assert.match(response.headers.get("location"), /google_auth_code=/);
+    const verified = await Teacher.findById(teacher._id).select("+verificationTokenHash");
+    assert.equal(verified.emailVerified, true);
+    assert.equal(verified.active, true);
+    assert.equal(verified.activationPending, false);
+    assert.equal(verified.verificationTokenHash, undefined);
+    assert.equal((await verifyEmail(box.token())).code, "INVALID_LINK");
     await Teacher.updateOne({ _id: teacher._id }, { active: true, activationPending: false });
     const activated = await signIn();
     assert.match(activated.headers.get("location"), /google_auth_code=/);
     await Teacher.updateOne({ _id: teacher._id }, { active: false });
     const disabled = await signIn();
     assert.match(disabled.headers.get("location"), /google_auth_error=/);
+    assert.equal((await Teacher.findById(teacher._id)).active, false);
+    for (const invalid of [
+      { email: "unverified@deped.gov.ph", email_verified: false },
+      { email: "unverified@deped.gov.ph", email_verified: "false" },
+      { email: "outsider@deped.gov.ph.evil.com", email_verified: true },
+    ]) {
+      profile = invalid;
+      assert.match((await signIn()).headers.get("location"), /google_auth_error=/);
+      assert.equal(await Teacher.countDocuments({ email: profile.email }), 0);
+    }
+    assert.equal(mail.mock.callCount(), 0);
   } finally {
     for (const key of keys) { if (previous[key] === undefined) delete process.env[key]; else process.env[key] = previous[key]; }
   }

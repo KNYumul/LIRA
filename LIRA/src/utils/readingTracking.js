@@ -6,9 +6,19 @@ export function normalizedWord(word) {
   return String(word || '').toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 }
 
+const englishNumberWords = new Map([
+  ...['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
+    'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen',
+    'seventeen', 'eighteen', 'nineteen'].map((word, number) => [word, String(number)]),
+  ...['twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety']
+    .map((word, index) => [word, String((index + 2) * 10)]),
+]);
+
 export function matchedWordCount(reference, spoken, language = 'ENG') {
   const normalize = (word) => {
     const value = normalizedWord(word);
+    // Match number words when speech transcripts format them as digits.
+    if (language === 'ENG') return englishNumberWords.get(value) ?? value;
     // Written stress marks are normally absent from speech transcripts. Keep ñ.
     return language === 'FIL' ? value.normalize('NFD').replace(/[\u0300\u0301\u0302]/g, '').normalize('NFC') : value;
   };
