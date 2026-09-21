@@ -71,10 +71,6 @@ function Footer() {
               How It Works
             </Link>
 
-            <Link to="/#flow">
-              The Flow
-            </Link>
-
             <Link to="/login">
               Login
             </Link>
