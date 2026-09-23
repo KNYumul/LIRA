@@ -28,15 +28,16 @@ async function requestReset(email, deliver = deliverEmail, now = new Date()) {
     const link = url.toString();
     await deliver({ from: process.env.SMTP_FROM, to: email, subject: "Reset your LIRA password",
       text: `Change your password: ${link}\n\nThis link expires in 30 minutes and can only be used once. If you did not request this, ignore this email.`,
-      html: `
+html: `
 <div style="
   margin:0;
   padding:0;
-  background:#f7f1e6;
-  font-family:Arial,Helvetica,sans-serif;
+  background:#f8f1e7;
+  font-family:Arial, Helvetica, sans-serif;
   color:#3f3f3f;
 ">
 
+  <!-- OUTER WRAPPER -->
   <div style="
     width:100%;
     padding:40px 16px;
@@ -48,92 +49,37 @@ async function requestReset(email, deliver = deliverEmail, now = new Date()) {
       margin:0 auto;
     ">
 
-      <!-- LIRA HEADER -->
+      <!-- MAIN CARD -->
       <div style="
-        text-align:center;
-        padding:0 20px 25px;
-      ">
-
-        <div style="
-          display:inline-block;
-          vertical-align:middle;
-          width:54px;
-          height:54px;
-          border-radius:50%;
-          background:#bfe5ee;
-          overflow:hidden;
-          margin-bottom:10px;
-        ">
-          <div style="
-            width:50%;
-            height:100%;
-            background:#bfe5ee;
-            float:left;
-          "></div>
-
-          <div style="
-            width:50%;
-            height:100%;
-            background:#f1dc92;
-            float:left;
-          "></div>
-        </div>
-
-        <div style="
-          font-size:30px;
-          line-height:34px;
-          font-weight:700;
-          color:#3f7d56;
-          letter-spacing:1px;
-        ">
-          LIRA
-        </div>
-
-        <div style="
-          margin-top:4px;
-          font-size:10px;
-          line-height:15px;
-          font-weight:600;
-          letter-spacing:1.2px;
-          color:#7a7a7a;
-        ">
-          LITERACY INTELLIGENCE AND READING ASSESSMENT
-        </div>
-
-      </div>
-
-
-      <!-- MAIN EMAIL CARD -->
-      <div style="
-        background:#fffdf8;
-        border:1px solid #eee5d8;
-        border-radius:24px;
+        background:#fffdf9;
+        border:1px solid #eee5da;
+        border-radius:22px;
         overflow:hidden;
-        box-shadow:0 8px 25px rgba(80,70,60,0.08);
+        box-shadow:0 8px 25px rgba(80,70,60,0.06);
       ">
 
-        <!-- TOP DECORATION -->
+        <!-- CORAL TOP BORDER -->
         <div style="
-          height:8px;
+          height:7px;
           background:#e58d87;
         "></div>
 
 
-        <!-- CONTENT -->
+        <!-- MAIN CONTENT -->
         <div style="
-          padding:48px 45px 40px;
+          padding:48px 45px 38px;
           text-align:center;
         ">
 
-          <!-- SMALL LABEL -->
+          <!-- PASSWORD RESET LABEL -->
           <div style="
             display:inline-block;
-            padding:8px 24px;
-            margin-bottom:20px;
+            padding:9px 22px;
+            margin-bottom:22px;
+            background:#e6efda;
             border-radius:30px;
-            background:#e8f0dc;
-            color:#3f7651;
-            font-size:15px;
+            color:#477558;
+            font-size:13px;
             font-weight:600;
           ">
             Password Reset
@@ -144,8 +90,8 @@ async function requestReset(email, deliver = deliverEmail, now = new Date()) {
           <h1 style="
             margin:0 0 16px;
             color:#333333;
-            font-size:34px;
-            line-height:42px;
+            font-size:32px;
+            line-height:40px;
             font-weight:700;
           ">
             Reset your password
@@ -154,31 +100,32 @@ async function requestReset(email, deliver = deliverEmail, now = new Date()) {
 
           <!-- DESCRIPTION -->
           <p style="
-            max-width:500px;
+            max-width:490px;
             margin:0 auto 30px;
-            color:#777777;
-            font-size:16px;
-            line-height:26px;
+            color:#747474;
+            font-size:15px;
+            line-height:24px;
           ">
             We received a request to reset your LIRA account password.
             Click the button below to create a new password.
           </p>
 
 
-          <!-- BUTTON -->
-          <div style="margin:0 0 30px;">
+          <!-- CHANGE PASSWORD BUTTON -->
+          <div style="
+            margin:0 0 32px;
+          ">
             <a
               href="${link}"
               style="
                 display:inline-block;
                 background:#e58d87;
                 color:#ffffff;
-                padding:16px 34px;
-                border-radius:14px;
+                padding:16px 32px;
+                border-radius:12px;
                 text-decoration:none;
-                font-size:16px;
+                font-size:15px;
                 font-weight:700;
-                box-shadow:0 5px 12px rgba(229,141,135,0.25);
               "
             >
               Change password &nbsp;→
@@ -189,34 +136,37 @@ async function requestReset(email, deliver = deliverEmail, now = new Date()) {
           <!-- EXPIRATION NOTICE -->
           <div style="
             max-width:500px;
-            margin:0 auto 24px;
+            margin:0 auto 22px;
             padding:16px 20px;
-            border-radius:14px;
-            background:#e8f2e9;
-            color:#477258;
-            font-size:14px;
-            line-height:22px;
+            box-sizing:border-box;
+            background:#e6f1e9;
+            border-radius:13px;
+            color:#477558;
+            font-size:13px;
+            line-height:21px;
           ">
-            <strong>⏱ This link expires in 30 minutes</strong>
+            This link expires in
+            <strong>30 minutes</strong>
             and can only be used once.
           </div>
 
 
-          <!-- FALLBACK LINK -->
+          <!-- FALLBACK LINK BOX -->
           <div style="
             max-width:500px;
             margin:0 auto;
             padding:20px;
-            border-radius:14px;
-            background:#f7f1e6;
+            box-sizing:border-box;
+            background:#f7f0e5;
+            border-radius:13px;
             text-align:left;
           ">
 
             <p style="
               margin:0 0 10px;
-              color:#666666;
-              font-size:13px;
-              line-height:20px;
+              color:#777777;
+              font-size:12px;
+              line-height:19px;
             ">
               If the button does not work, copy and paste this link
               into your browser:
@@ -225,10 +175,11 @@ async function requestReset(email, deliver = deliverEmail, now = new Date()) {
             <a
               href="${link}"
               style="
-                color:#3f7d56;
-                font-size:13px;
-                line-height:20px;
+                color:#477558;
+                font-size:12px;
+                line-height:19px;
                 word-break:break-all;
+                overflow-wrap:anywhere;
               "
             >
               ${link}
@@ -240,19 +191,18 @@ async function requestReset(email, deliver = deliverEmail, now = new Date()) {
           <!-- DIVIDER -->
           <div style="
             height:1px;
-            background:#e5ddd2;
-            margin:35px 0 25px;
+            margin:34px 0 25px;
+            background:#ddd4c8;
           "></div>
 
 
           <!-- SECURITY MESSAGE -->
           <p style="
             margin:0;
-            color:#888888;
-            font-size:13px;
-            line-height:21px;
+            color:#8a8a8a;
+            font-size:12px;
+            line-height:20px;
           ">
-            ✉ &nbsp;
             If you did not request a password reset,
             you can safely ignore this email.
           </p>
@@ -260,25 +210,26 @@ async function requestReset(email, deliver = deliverEmail, now = new Date()) {
         </div>
 
 
-        <!-- BOTTOM DECORATION -->
+        <!-- GREEN FOOTER INSIDE CARD -->
         <div style="
-          background:#dce9c8;
-          padding:20px;
+          padding:24px 20px;
+          background:#dceac9;
           text-align:center;
         ">
 
           <div style="
-            color:#4e7959;
-            font-size:15px;
+            margin-bottom:6px;
+            color:#4f795c;
+            font-size:14px;
             font-weight:700;
           ">
             Better Readers, Brighter Tomorrows
           </div>
 
           <div style="
-            margin-top:5px;
-            color:#78937c;
-            font-size:11px;
+            color:#78907d;
+            font-size:10px;
+            line-height:16px;
           ">
             LIRA — Literacy Intelligence and Reading Assessment
           </div>
@@ -288,13 +239,13 @@ async function requestReset(email, deliver = deliverEmail, now = new Date()) {
       </div>
 
 
-      <!-- EMAIL FOOTER -->
+      <!-- OUTSIDE FOOTER -->
       <div style="
-        text-align:center;
         padding:22px 20px 0;
+        text-align:center;
         color:#999999;
-        font-size:11px;
-        line-height:18px;
+        font-size:10px;
+        line-height:17px;
       ">
         This is an automated email from LIRA.<br>
         Please do not reply to this message.
