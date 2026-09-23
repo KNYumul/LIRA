@@ -31,12 +31,12 @@
   box-shadow: 0 3px 8px rgba(80, 72, 60, 0.08);
 }
 
-.admin-login-mascot {
+/* .admin-login-mascot {
   width: 55px;
   height: 50px;
   margin: 0 auto 3px;
   object-fit: contain;
-}
+} */
 
 /* Header / Title: Quicksand */
 .admin-login-card h1 {
