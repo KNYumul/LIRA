@@ -44,14 +44,18 @@ export default function VerificationPopup({
     >
       <div className="verification-popup__content">
 
-        {/* CLOSE */}
+        {/* CLOSE BUTTON */}
         <button
           className="verification-popup__close"
           type="button"
           aria-label="Close verification popup"
           onClick={() => onClose?.()}
         >
-          <X size={19} strokeWidth={2} aria-hidden="true" />
+          <X
+            size={19}
+            strokeWidth={2}
+            aria-hidden="true"
+          />
         </button>
 
         {/* ICON */}
@@ -59,7 +63,10 @@ export default function VerificationPopup({
           className="verification-popup__icon"
           aria-hidden="true"
         >
-          <MailCheck size={35} strokeWidth={1.7} />
+          <MailCheck
+            size={35}
+            strokeWidth={1.7}
+          />
         </div>
 
         {/* HEADER */}
@@ -79,20 +86,14 @@ export default function VerificationPopup({
             "Check your email. Click the verification link to activate your account."}
         </p>
 
-        {/* RESEND SECTION
-            ResendVerification already contains the email field,
-            so we don't display another email field here.
-        */}
+        {/* RESEND VERIFICATION */}
         {canResend && (
           <div className="verification-popup__resend">
-            <ResendVerification initialEmail={email} />
+            <ResendVerification
+              initialEmail={email}
+            />
           </div>
         )}
-
-        {/* ONE HELP MESSAGE ONLY */}
-        <p className="verification-popup__help">
-          Check your spam folder, too. Still need help? Contact IT support.
-        </p>
 
         {/* FOOTER */}
         <div className="verification-popup__footer">
