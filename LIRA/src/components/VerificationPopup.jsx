@@ -3,25 +3,122 @@ import { MailCheck, ShieldCheck, X } from "lucide-react";
 import ResendVerification from "./ResendVerification";
 import "./VerificationPopup.css";
 
-export default function VerificationPopup({ email, title = "Verify your email", message, canResend = true, onClose }) {
+export default function VerificationPopup({
+  email,
+  title = "Verify your email",
+  message,
+  canResend = true,
+  onClose,
+}) {
   const dialog = useRef(null);
 
   useEffect(() => {
     const element = dialog.current;
-    element.showModal();
-    return () => element.close();
+
+    if (element && !element.open) {
+      element.showModal();
+    }
+
+    return () => {
+      if (element?.open) {
+        element.close();
+      }
+    };
   }, []);
 
   return (
-    <dialog ref={dialog} className="verification-popup" aria-labelledby="verification-popup-title" aria-describedby="verification-popup-description" onCancel={onClose} onClick={(event) => { if (event.target === dialog.current) onClose(); }}>
+    <dialog
+      ref={dialog}
+      className="verification-popup"
+      aria-labelledby="verification-popup-title"
+      aria-describedby="verification-popup-description"
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose?.();
+      }}
+      onClick={(event) => {
+        if (event.target === dialog.current) {
+          onClose?.();
+        }
+      }}
+    >
       <div className="verification-popup__content">
-        <button className="verification-popup__close" type="button" aria-label="Close verification popup" onClick={onClose}><X size={20} aria-hidden="true" /></button>
-        <div className="verification-popup__icon" aria-hidden="true"><MailCheck size={34} strokeWidth={1.6} /></div>
-        <span className="verification-popup__eyebrow">YOUR LIRA ACCOUNT</span>
-        <h2 id="verification-popup-title">{title}</h2>
-        <p id="verification-popup-description">{message || "Check your inbox and spam folder. Use the latest verification link, or contact IT support for help."}</p>
-        {canResend && <ResendVerification initialEmail={email} />}
-        <div className="verification-popup__footer"><ShieldCheck size={16} aria-hidden="true" /><span>Account access begins after activation.</span></div>
+        {/* CLOSE BUTTON */}
+        <button
+          className="verification-popup__close"
+          type="button"
+          aria-label="Close verification popup"
+          onClick={() => onClose?.()}
+        >
+          <X size={19} strokeWidth={2} aria-hidden="true" />
+        </button>
+
+        {/* ICON */}
+        <div className="verification-popup__icon" aria-hidden="true">
+          <MailCheck size={35} strokeWidth={1.7} />
+        </div>
+
+        {/* HEADER */}
+        <span className="verification-popup__eyebrow">
+          LIRA · TEACHER ACCOUNT
+        </span>
+
+        <h2 id="verification-popup-title">
+          {title}
+        </h2>
+
+        <p
+          id="verification-popup-description"
+          className="verification-popup__description"
+        >
+          {message ||
+            "Check your email and click the verification link to activate your account."}
+        </p>
+
+        {/* EMAIL */}
+        {email && (
+          <div className="verification-popup__email">
+            <span className="verification-popup__email-label">
+              DepEd email address
+            </span>
+
+            <div className="verification-popup__email-box">
+              <MailCheck
+                size={18}
+                strokeWidth={1.7}
+                aria-hidden="true"
+              />
+
+              <span>{email}</span>
+            </div>
+          </div>
+        )}
+
+        {/* RESEND */}
+        {canResend && (
+          <div className="verification-popup__resend">
+            <ResendVerification initialEmail={email} />
+          </div>
+        )}
+
+        {/* HELP */}
+        <p className="verification-popup__help">
+          Check your spam folder, too. Still need help? Contact IT
+          support.
+        </p>
+
+        {/* FOOTER */}
+        <div className="verification-popup__footer">
+          <ShieldCheck
+            size={16}
+            strokeWidth={1.7}
+            aria-hidden="true"
+          />
+
+          <span>
+            Account access begins after activation.
+          </span>
+        </div>
       </div>
     </dialog>
   );

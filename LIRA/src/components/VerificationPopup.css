@@ -1,27 +1,442 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700&display=swap');
+
+/* =========================================================
+   DIALOG
+   ========================================================= */
+
 .verification-popup {
-  width: min(480px, calc(100vw - 32px));
-  max-height: calc(100dvh - 40px);
+  width: min(92vw, 560px);
+
+  max-width: 560px;
+  max-height: 92vh;
+
   margin: auto;
   padding: 0;
-  border: 1px solid white;
+
+  border: 0;
   border-radius: 28px;
-  background: #fffdfb;
-  color: #493f37;
-  box-shadow: 0 24px 90px #26312b40;
+
+  background: transparent;
+
+  color: #575757;
+
   font-family: "Poppins", "Segoe UI", sans-serif;
+
+  overflow: visible;
 }
-.verification-popup::backdrop { background: rgb(35 49 42 / 48%); backdrop-filter: blur(5px); }
-.verification-popup__content { position: relative; padding: 36px 32px 0; background: radial-gradient(ellipse at top, #f8eee3 0, transparent 60%); text-align: center; }
-.verification-popup__icon { display: grid; place-items: center; width: 76px; height: 76px; margin: 0 auto 20px; border: 1px solid #dce6d7; border-radius: 25px; background: #edf3e9; color: #698267; box-shadow: 0 5px 0 #e3e9dc; }
-.verification-popup__eyebrow { color: #9b7765; font-size: 10px; font-weight: 700; letter-spacing: 2px; }
-.verification-popup__content h2 { margin: 9px 0 12px; font-family: "Quicksand", "Segoe UI", sans-serif; font-size: 26px; font-weight: 700; line-height: 1.25; text-wrap: balance; }
-.verification-popup__content > p { margin: 0; color: #7d736b; font-size: 13px; line-height: 1.8; }
-.verification-popup__close { position: absolute; top: 15px; right: 15px; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: #f1ece5; color: #81756a; cursor: pointer; }
-.verification-popup__close:hover { background: #e7dfd5; }
-.verification-popup__close:focus-visible { outline: 3px solid #a4b39a; outline-offset: 3px; }
-.verification-popup__footer { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 24px -32px 0; padding: 15px 20px; border-top: 1px solid #eee8e0; background: #f6f5ef; color: #727865; font-size: 11px; }
-@media (max-width: 420px) {
-  .verification-popup__content { padding: 30px 22px 0; }
-  .verification-popup__content h2 { font-size: 23px; }
-  .verification-popup__footer { margin-inline: -22px; }
+
+.verification-popup::backdrop {
+  background: rgba(55, 68, 60, 0.55);
+
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+/* =========================================================
+   CARD
+   Same visual language as Teacher Login
+   ========================================================= */
+
+.verification-popup__content {
+  position: relative;
+
+  box-sizing: border-box;
+
+  width: 100%;
+
+  padding: 36px 40px 0;
+
+  border: 2px solid #e7948c;
+  border-radius: 28px;
+
+  background: rgba(255, 255, 255, 0.99);
+
+  box-shadow:
+    0 10px 35px rgba(80, 72, 60, 0.14);
+
+  text-align: center;
+
+  overflow: hidden;
+}
+
+/* =========================================================
+   CLOSE BUTTON
+   ========================================================= */
+
+.verification-popup__close {
+  position: absolute;
+
+  top: 18px;
+  right: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: #fff0e3;
+  color: #8b7c73;
+
+  cursor: pointer;
+
+  transition: none;
+}
+
+.verification-popup__close:hover,
+.verification-popup__close:active,
+.verification-popup__close:focus {
+  background: #fff0e3;
+  color: #8b7c73;
+
+  transform: none;
+}
+
+.verification-popup__close:focus-visible {
+  outline: 2px solid #e59088;
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   ICON
+   ========================================================= */
+
+.verification-popup__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 68px;
+  height: 68px;
+
+  margin: 0 auto 18px;
+
+  border-radius: 20px;
+
+  background: #fff0e3;
+  color: #ae5c4e;
+}
+
+/* =========================================================
+   EYEBROW
+   ========================================================= */
+
+.verification-popup__eyebrow {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #926b58;
+
+  font-family: "Poppins", sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   TITLE
+   ========================================================= */
+
+.verification-popup h2 {
+  margin: 0;
+
+  color: #575757;
+
+  font-family: "Quicksand", sans-serif;
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* =========================================================
+   DESCRIPTION
+   ========================================================= */
+
+.verification-popup__description {
+  max-width: 430px;
+
+  margin: 10px auto 25px;
+
+  color: #777;
+
+  font-family: "Poppins", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   EMAIL SECTION
+   ========================================================= */
+
+.verification-popup__email {
+  width: 100%;
+
+  margin: 0 0 18px;
+
+  text-align: left;
+}
+
+.verification-popup__email-label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #6e6e6e;
+
+  font-family: "Poppins", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.verification-popup__email-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  width: 100%;
+  min-height: 44px;
+
+  padding: 0 13px;
+
+  border: 1px solid #e2b6a8;
+  border-radius: 8px;
+
+  background: #ffe7cc;
+  color: #4d4d4d;
+
+  font-family: "Poppins", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 400;
+
+  box-sizing: border-box;
+}
+
+.verification-popup__email-box svg {
+  flex-shrink: 0;
+
+  color: #9c786a;
+}
+
+.verification-popup__email-box span {
+  min-width: 0;
+
+  overflow-wrap: anywhere;
+}
+
+/* =========================================================
+   RESEND VERIFICATION COMPONENT
+   ========================================================= */
+
+.verification-popup__resend {
+  width: 100%;
+
+  margin-top: 4px;
+}
+
+/*
+   These selectors also style common buttons/forms inside
+   your existing ResendVerification component.
+*/
+
+.verification-popup__resend form {
+  width: 100%;
+}
+
+.verification-popup__resend button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  width: 100%;
+  min-height: 44px;
+
+  margin: 0;
+
+  padding: 10px 18px;
+
+  border: 0;
+  border-radius: 10px;
+
+  background: #e59088;
+  color: #fff;
+
+  cursor: pointer;
+
+  font-family: "Poppins", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  box-shadow: none;
+
+  transition:
+    opacity 140ms ease,
+    background 140ms ease;
+}
+
+.verification-popup__resend button:hover:not(:disabled) {
+  background: #dd837b;
+}
+
+.verification-popup__resend button:active:not(:disabled) {
+  transform: none;
+}
+
+.verification-popup__resend button:disabled {
+  opacity: 0.65;
+
+  cursor: wait;
+}
+
+/* If ResendVerification contains an input */
+
+.verification-popup__resend input {
+  box-sizing: border-box;
+
+  width: 100%;
+  height: 42px;
+
+  margin-bottom: 10px;
+  padding: 0 12px;
+
+  border: 1px solid #e2b6a8;
+  border-radius: 8px;
+
+  outline: none;
+
+  background: #ffe7cc;
+  color: #4d4d4d;
+
+  font-family: "Poppins", sans-serif;
+  font-size: 0.78rem;
+}
+
+.verification-popup__resend input:focus {
+  border-color: #e59088;
+
+  box-shadow:
+    0 0 0 2px rgba(229, 144, 136, 0.18);
+}
+
+/* =========================================================
+   HELP TEXT
+   ========================================================= */
+
+.verification-popup__help {
+  margin: 18px auto 22px;
+
+  color: #8a817b;
+
+  font-family: "Poppins", sans-serif;
+  font-size: 0.67rem;
+  font-weight: 300;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.verification-popup__footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  margin: 0 -40px;
+  padding: 16px 20px;
+
+  border-top: 1px solid #eee5dd;
+
+  background: #fffaf5;
+  color: #81776f;
+
+  font-family: "Poppins", sans-serif;
+  font-size: 0.67rem;
+  font-weight: 400;
+}
+
+.verification-popup__footer svg {
+  flex-shrink: 0;
+
+  color: #78977e;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 600px) {
+  .verification-popup {
+    width: calc(100vw - 28px);
+  }
+
+  .verification-popup__content {
+    padding:
+      32px
+      24px
+      0;
+
+    border-radius: 24px;
+  }
+
+  .verification-popup__close {
+    top: 14px;
+    right: 14px;
+
+    width: 36px;
+    height: 36px;
+  }
+
+  .verification-popup__icon {
+    width: 62px;
+    height: 62px;
+
+    margin-bottom: 16px;
+  }
+
+  .verification-popup h2 {
+    font-size: 1.45rem;
+  }
+
+  .verification-popup__description {
+    font-size: 0.74rem;
+  }
+
+  .verification-popup__footer {
+    margin:
+      0
+      -24px;
+  }
+}
+
+@media (max-width: 400px) {
+  .verification-popup__content {
+    padding:
+      28px
+      18px
+      0;
+  }
+
+  .verification-popup__footer {
+    margin:
+      0
+      -18px;
+
+    padding: 14px 16px;
+  }
+
+  .verification-popup__email-box {
+    font-size: 0.72rem;
+  }
 }
