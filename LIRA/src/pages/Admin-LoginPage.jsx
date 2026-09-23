@@ -136,7 +136,6 @@ function AdminLoginPage() {
     <main className="admin-login-page">
       <section className="admin-login-hero" aria-labelledby="admin-login-title">
         <form className="admin-login-card" onSubmit={handleSubmit} noValidate>
-          <img className="admin-login-mascot" src={mascot} alt="Admin Squirrel Mascot" />
           <h1 id="admin-login-title">Admin Login</h1>
           <p>
             For authorized school personnel or
