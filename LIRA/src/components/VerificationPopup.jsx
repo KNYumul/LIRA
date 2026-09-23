@@ -43,7 +43,8 @@ export default function VerificationPopup({
       }}
     >
       <div className="verification-popup__content">
-        {/* CLOSE BUTTON */}
+
+        {/* CLOSE */}
         <button
           className="verification-popup__close"
           type="button"
@@ -54,7 +55,10 @@ export default function VerificationPopup({
         </button>
 
         {/* ICON */}
-        <div className="verification-popup__icon" aria-hidden="true">
+        <div
+          className="verification-popup__icon"
+          aria-hidden="true"
+        >
           <MailCheck size={35} strokeWidth={1.7} />
         </div>
 
@@ -72,39 +76,22 @@ export default function VerificationPopup({
           className="verification-popup__description"
         >
           {message ||
-            "Check your email and click the verification link to activate your account."}
+            "Check your email. Click the verification link to activate your account."}
         </p>
 
-        {/* EMAIL */}
-        {email && (
-          <div className="verification-popup__email">
-            <span className="verification-popup__email-label">
-              DepEd email address
-            </span>
-
-            <div className="verification-popup__email-box">
-              <MailCheck
-                size={18}
-                strokeWidth={1.7}
-                aria-hidden="true"
-              />
-
-              <span>{email}</span>
-            </div>
-          </div>
-        )}
-
-        {/* RESEND */}
+        {/* RESEND SECTION
+            ResendVerification already contains the email field,
+            so we don't display another email field here.
+        */}
         {canResend && (
           <div className="verification-popup__resend">
             <ResendVerification initialEmail={email} />
           </div>
         )}
 
-        {/* HELP */}
+        {/* ONE HELP MESSAGE ONLY */}
         <p className="verification-popup__help">
-          Check your spam folder, too. Still need help? Contact IT
-          support.
+          Check your spam folder, too. Still need help? Contact IT support.
         </p>
 
         {/* FOOTER */}
@@ -119,6 +106,7 @@ export default function VerificationPopup({
             Account access begins after activation.
           </span>
         </div>
+
       </div>
     </dialog>
   );
