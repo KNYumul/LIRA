@@ -1,6 +1,31 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { matchedWordCount } from './readingTracking.js';
+import { matchedWordCount, readingProgress } from './readingTracking.js';
+
+test('story reading continues past wrong and skipped words', () => {
+  assert.deepEqual(readingProgress('The little bird flew home', 'the brittle bird flew home'), { count: 5, incorrectWordIndices: [1] });
+  assert.deepEqual(readingProgress('The little bird flew home', 'the bird flew'), { count: 4, incorrectWordIndices: [1] });
+  assert.deepEqual(readingProgress('The bird flew home', 'the bird flew house'), { count: 4, incorrectWordIndices: [3] });
+  assert.deepEqual(readingProgress('The little bird flew home', 'the big dog flew home'), { count: 5, incorrectWordIndices: [1, 2] });
+});
+
+test('story reading leaves unread words alone and tolerates repeats and extra words', () => {
+  assert.deepEqual(readingProgress('The bird flew home', ''), { count: 0, incorrectWordIndices: [] });
+  assert.deepEqual(readingProgress('The bird flew home', 'the bird'), { count: 2, incorrectWordIndices: [] });
+  assert.deepEqual(readingProgress('The bird flew home', 'the the bird bird flew'), { count: 3, incorrectWordIndices: [] });
+  assert.deepEqual(readingProgress('The bird flew home', 'the little bird flew home'), { count: 4, incorrectWordIndices: [] });
+});
+
+test('story reading preserves number and Filipino matching while advancing past errors', () => {
+  assert.deepEqual(readingProgress('I have fifty coins', 'I have 50 coins'), { count: 4, incorrectWordIndices: [] });
+  assert.deepEqual(readingProgress('Araw-araw ay masayá ang bata', 'araw araw ay masaya ang bato', 'FIL'), { count: 5, incorrectWordIndices: [4] });
+  assert.deepEqual(readingProgress('Siya ay nag aaral', 'siya ay nag-aaral', 'FIL'), { count: 4, incorrectWordIndices: [] });
+});
+
+test('a revised interim transcript can clear a provisional error', () => {
+  assert.deepEqual(readingProgress('The bird flew', 'the boat'), { count: 2, incorrectWordIndices: [1] });
+  assert.deepEqual(readingProgress('The bird flew', 'the bird flew'), { count: 3, incorrectWordIndices: [] });
+});
 
 test('accepts fifty as a word or digits in partial and complete transcripts', () => {
   assert.equal(matchedWordCount('I have fifty coins.', 'I have 50'), 3);

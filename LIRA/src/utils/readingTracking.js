@@ -51,3 +51,56 @@ export function matchedWordCount(reference, spoken, language = 'ENG') {
   return Math.min(expectedIndex, expected.length);
 }
 
+// Align speech to a prefix of the remaining story. Unspoken trailing words are
+// not errors; substitutions and omissions before later speech are errors.
+export function readingProgress(reference, spoken, language = 'ENG') {
+  const expected = readingWords(reference);
+  const heard = readingWords(spoken);
+  const rows = Array.from({ length: expected.length + 1 }, () =>
+    Array.from({ length: heard.length + 1 }, () => ({ cost: Infinity })));
+  rows[0][0] = { cost: 0 };
+  const update = (i, j, nextI, nextJ, cost, wrong = []) => {
+    const total = rows[i][j].cost + cost;
+    if (total < rows[nextI][nextJ].cost) {
+      rows[nextI][nextJ] = { cost: total, previous: [i, j], wrong };
+    }
+  };
+  for (let i = 0; i <= expected.length; i += 1) {
+    for (let j = 0; j <= heard.length; j += 1) {
+      if (i < expected.length && j < heard.length) {
+        const matches = matchedWordCount(expected[i], heard[j], language) === 1;
+        update(i, j, i + 1, j + 1, matches ? 0 : 1, matches ? [] : [i]);
+        if (language === 'FIL') {
+          const expectedParts = readingWords(expected[i].replace(/[-'’]/g, ' '));
+          const heardParts = readingWords(heard[j].replace(/[-'’]/g, ' '));
+          if (expectedParts.length > 1 && j + expectedParts.length <= heard.length
+            && matchedWordCount(expected[i], heard.slice(j, j + expectedParts.length).join(' '), language) === 1) {
+            update(i, j, i + 1, j + expectedParts.length, 0);
+          }
+          if (heardParts.length > 1 && i + heardParts.length <= expected.length
+            && matchedWordCount(expected.slice(i, i + heardParts.length).join(' '), heard[j], language) === heardParts.length) {
+            update(i, j, i + heardParts.length, j + 1, 0);
+          }
+        }
+      }
+      if (i < expected.length) update(i, j, i + 1, j, 1, [i]);
+      if (j < heard.length) {
+        const repeated = j > 0 && normalizedWord(heard[j]) === normalizedWord(heard[j - 1]);
+        update(i, j, i, j + 1, repeated ? 0 : 1.1);
+      }
+    }
+  }
+  let count = 0;
+  for (let i = 1; i <= expected.length; i += 1) {
+    if (rows[i][heard.length].cost < rows[count][heard.length].cost) count = i;
+  }
+  const incorrectWordIndices = [];
+  let i = count;
+  let j = heard.length;
+  while (rows[i][j].previous) {
+    incorrectWordIndices.push(...rows[i][j].wrong);
+    [i, j] = rows[i][j].previous;
+  }
+  return { count, incorrectWordIndices: incorrectWordIndices.sort((a, b) => a - b) };
+}
+

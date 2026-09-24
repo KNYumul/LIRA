@@ -496,12 +496,12 @@
   box-shadow: 0 0 0 3px #ffe79a;
 }
 
-.sm-word-retry {
+.sm-word-incorrect {
   color: #a52828;
-  background: #ffe0e0;
-  border-radius: 5px;
-  box-shadow: 0 0 0 3px #ffe0e0;
-  text-decoration: underline wavy;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
 }
 
 .sm-reading-retry,

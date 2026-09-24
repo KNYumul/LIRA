@@ -7,7 +7,7 @@ import CompletionScreenNormal from '../components/CompletionScreenNormal';
 import { getSession } from '../utils/session';
 import { INACTIVITY_PAUSE_EVENT, isInactivityPaused } from '../utils/inactivityPause';
 import { liraAlert } from '../utils/alerts';
-import { readingWords, normalizedWord, matchedWordCount } from '../utils/readingTracking';
+import { readingWords, normalizedWord, readingProgress } from '../utils/readingTracking';
 import { storySlides } from '../utils/storySlides';
 
 /* Static story catalog retained for reference; Student Story Mode now loads from /api/stories.
@@ -596,7 +596,7 @@ function StoryMode({ onExit }) {
   const [progress, setProgress] = useState(0);
   const [spokenWordCount, setSpokenWordCount] = useState(0);
   const [speechStatus, setSpeechStatus] = useState('Tap the microphone and read aloud.');
-  const [retryWordIndex, setRetryWordIndex] = useState(null);
+  const [incorrectWords, setIncorrectWords] = useState(() => new Set());
 
   const [quizIndex, setQuizIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -610,7 +610,7 @@ function StoryMode({ onExit }) {
   const [carouselDirection, setCarouselDirection] = useState('next');
   const recordingRef = useRef(new ReadingRecorder());
   const recognizerRef = useRef(null);
-  const recognizedTextRef = useRef('');
+  const committedReadingRef = useRef({ count: 0, incorrectWords: new Set() });
   const listeningRequestRef = useRef(0);
   const pageTransitionRef = useRef(null);
   const readingScrollRef = useRef(null);
@@ -661,7 +661,7 @@ function StoryMode({ onExit }) {
   useEffect(() => {
     const container = readingScrollRef.current;
     if (!container || !isListening || isFlipping) return;
-    const currentWord = container.querySelector('.sm-word-retry, .sm-word-current');
+    const currentWord = container.querySelector('.sm-word-current');
     if (!currentWord) return;
 
     const viewport = container.getBoundingClientRect();
@@ -673,7 +673,7 @@ function StoryMode({ onExit }) {
         behavior: 'instant',
       });
     }
-  }, [spokenWordCount, retryWordIndex, isListening, isFlipping, pageIndex, view]);
+  }, [spokenWordCount, isListening, isFlipping, pageIndex, view]);
 
   const selectLanguage = (nextLanguage) => {
     setLanguage(nextLanguage);
@@ -753,16 +753,16 @@ function StoryMode({ onExit }) {
   }, []);
 
   const startListening = async (pageText, readingPageIndex = pageIndex) => {
-    setRetryWordIndex(null);
     readingPageRef.current = { text: pageText, index: readingPageIndex };
     speechBoundaryRef.current = 0;
     latestSpeechEndRef.current = 0;
     const request = ++listeningRequestRef.current;
     setIsListening(true);
     setSpeechStatus('Connecting to your reading helper…');
-    // A new recognizer starts with an empty transcript. Seed it with the
-    // accepted words so pausing and resuming preserves the visible position.
-    recognizedTextRef.current = readingWords(pageText).slice(0, spokenWordCount).join(' ');
+    // Resume committed speech and preserve error marks across microphone sessions.
+    setSpokenWordCount(committedReadingRef.current.count);
+    setIncorrectWords(new Set(committedReadingRef.current.incorrectWords));
+    setProgress(Math.round(committedReadingRef.current.count / Math.max(1, readingWords(pageText).length) * 100));
     try {
       if (!getSession()?.token) throw new Error('Please sign in again before recording your reading.');
       if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) throw new Error('Recording requires a supported browser and HTTPS (or localhost).');
@@ -816,11 +816,11 @@ function StoryMode({ onExit }) {
         latestSpeechEndRef.current = Math.max(latestSpeechEndRef.current, event.result.offset + event.result.duration);
         if (pageTransitionRef.current !== null || event.result.offset < speechBoundaryRef.current) return;
         const pageText = readingPageRef.current.text;
-        const combined = `${recognizedTextRef.current} ${event.result.text || ''}`;
-        const count = matchedWordCount(pageText, combined, language);
-        setRetryWordIndex((previous) => previous === count ? previous : null);
-        // Interim transcripts can be revised; every reading indicator must use
-        // the same match position, including when recognition moves backward.
+        const committed = committedReadingRef.current;
+        const result = readingProgress(readingWords(pageText).slice(committed.count).join(' '), event.result.text || '', language);
+        const count = committed.count + result.count;
+        // Interim hypotheses can change; only final speech commits error marks.
+        setIncorrectWords(new Set([...committed.incorrectWords, ...result.incorrectWordIndices.map((index) => committed.count + index)]));
         setSpokenWordCount(count);
         setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
       };
@@ -844,26 +844,23 @@ function StoryMode({ onExit }) {
           }
         }
         const { text: pageText, index: readingPageIndex } = readingPageRef.current;
-        const previousCount = matchedWordCount(pageText, recognizedTextRef.current, language);
-        recognizedTextRef.current = `${recognizedTextRef.current} ${event.result.text || ''}`.trim();
-        const count = matchedWordCount(pageText, recognizedTextRef.current, language);
+        const committed = committedReadingRef.current;
+        const previousCount = committed.count;
         const words = readingWords(pageText);
+        const result = readingProgress(words.slice(previousCount).join(' '), event.result.text || '', language);
+        const count = previousCount + result.count;
+        const errors = new Set([...committed.incorrectWords, ...result.incorrectWordIndices.map((index) => previousCount + index)]);
+        committedReadingRef.current = { count, incorrectWords: errors };
+        setIncorrectWords(errors);
         const recordWord = (word, retry) => {
           const key = normalizedWord(word);
           const stat = readingWordStatsRef.current[key] ||= { word: key, attempts: 0, retries: 0 };
           stat.attempts += 1;
           if (retry) stat.retries += 1;
         };
-        for (let index = previousCount; index < count; index += 1) recordWord(words[index], false);
-        if (count === previousCount && event.result.text?.trim() && words[count]) recordWord(words[count], true);
+        for (let index = previousCount; index < count; index += 1) recordWord(words[index], errors.has(index));
         setSpokenWordCount(count);
         setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
-        if (count === previousCount && event.result.text) {
-          const expectedWord = readingWords(pageText)[count];
-          setRetryWordIndex(expectedWord ? count : null);
-        } else {
-          setRetryWordIndex(null);
-        }
         if (count >= readingWords(pageText).length) goNextPage(true, readingPageIndex);
       };
       recognizer.canceled = (_, event) => {
@@ -913,7 +910,8 @@ function StoryMode({ onExit }) {
     readingTimerRef.current = { elapsed: 0, startedAt: null };
     readingWordStatsRef.current = Object.create(null);
     readingAccuracyRef.current = { sum: 0, count: 0 };
-    setRetryWordIndex(null);
+    setIncorrectWords(new Set());
+    committedReadingRef.current = { count: 0, incorrectWords: new Set() };
     setActiveStory(story);
     setPageIndex(0);
     setProgress(0);
@@ -933,13 +931,13 @@ function StoryMode({ onExit }) {
     pageTransitionRef.current = setTimeout(() => {
       pageTransitionRef.current = null;
       if (currentPageIndex < storyPages.length - 1) {
-        setRetryWordIndex(null);
+        setIncorrectWords(new Set());
+        committedReadingRef.current = { count: 0, incorrectWords: new Set() };
         setPageIndex(currentPageIndex + 1);
         setProgress(0);
         setSpokenWordCount(0);
         const nextPage = storyPages[currentPageIndex + 1];
         readingPageRef.current = { text: `${nextPage.highlight}${nextPage.rest}`, index: currentPageIndex + 1 };
-        recognizedTextRef.current = '';
         speechBoundaryRef.current = latestSpeechEndRef.current;
         setSpeechStatus(continueListening && recognizerRef.current
           ? 'Listening… Read the words at your own pace.'
@@ -1213,15 +1211,12 @@ function StoryMode({ onExit }) {
                   if (!normalizedWord(part)) return <span key={`separator-${index}`}>{part}</span>;
                   const wordIndex = renderedWordIndex++;
                   return (
-                    <span key={`${part}-${index}`} className={wordIndex === retryWordIndex ? 'sm-word-retry' : wordIndex < spokenWordCount ? 'sm-word-read' : wordIndex === spokenWordCount && isListening ? 'sm-word-current' : ''}>
+                    <span key={`${part}-${index}`} className={incorrectWords.has(wordIndex) ? 'sm-word-incorrect' : wordIndex < spokenWordCount ? 'sm-word-read' : wordIndex === spokenWordCount && isListening ? 'sm-word-current' : ''}>
                       {part}
                     </span>
                   );
                 })}
               </p>
-              {retryWordIndex !== null && (
-                <p className="sm-reading-retry" role="status">Try: “{readingWords(pageText)[retryWordIndex]}”</p>
-              )}
             </div>
             <span className="sm-page-fold" aria-hidden="true" />
           </div>
