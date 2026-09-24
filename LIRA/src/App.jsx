@@ -18,7 +18,7 @@ import AdminPage from "./pages/AdminTeacherDashboard";
 import Category from "./pages/Category";
 import FlashcardDifficulty from "./pages/FlashcardDifficulty";
 import FlashcardSession from "./pages/FlashcardSession";
-import { getSession } from "./utils/session";
+import { clearSession, getSession } from "./utils/session";
 import StudentInactivityAlert from "./components/StudentInactivityAlert";
 
 const PAGE_TITLES = {
@@ -91,30 +91,46 @@ function ProtectedRoute({ role, children }) {
   useEffect(() => {
     if (!token) return;
     const controller = new AbortController();
-    fetch(`${import.meta.env.VITE_API_URL || ""}/api/auth/session?role=${role}`, {
+    let checking = false;
+    const checkSession = async () => {
+      if (checking || controller.signal.aborted) return;
+      checking = true;
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/auth/session?role=${role}`, {
       headers: { Authorization: `Bearer ${token}` },
       signal: controller.signal,
       cache: "no-store",
-    })
-      .then(async (response) => {
+        });
         const data = response.ok ? await response.json() : null;
         if (!controller.signal.aborted) {
-          setVerification({ token, role, pathname, allowed: data?.role === role });
+          if (response.status === 401 || response.status === 403) {
+            if (getSession()?.token === token) clearSession();
+            setVerification({ token, role, pathname, allowed: false });
+          } else if (response.ok) {
+            setVerification({ token, role, pathname, allowed: data?.role === role });
+          }
         }
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) {
-          setVerification({ token, role, pathname, allowed: false });
-        }
-      });
-    return () => controller.abort();
+      } catch {
+        // Retry transient connection failures without discarding the login.
+      } finally {
+        checking = false;
+      }
+    };
+    void checkSession();
+    const interval = window.setInterval(checkSession, 5000);
+    window.addEventListener("focus", checkSession);
+    return () => {
+      controller.abort();
+      window.clearInterval(interval);
+      window.removeEventListener("focus", checkSession);
+    };
   }, [token, role, pathname]);
 
-  if (!token) return <Navigate to="/" replace />;
+  if (!token) return <Navigate to={role === "student" ? "/login" : "/"} replace />;
   if (verification?.token !== token || verification?.role !== role || verification?.pathname !== pathname) {
     return <p role="status">Checking session...</p>;
   }
-  return verification.allowed ? children : <Navigate to="/" replace />;
+  return verification.allowed ? children : <Navigate to={role === "student" ? "/login" : "/"} replace />;
 }
 
 function App() {
