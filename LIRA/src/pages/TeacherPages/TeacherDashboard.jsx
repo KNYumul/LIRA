@@ -2148,7 +2148,13 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           Print a Report
         </button>
 
-        <button onClick={() => setModal({ type: "add" })} className="px-5 py-2 rounded-full font-semibold" style={{ background: "#fff", border: `1px solid ${C.cardBorder}`, color: C.text }}>
+        <button
+          disabled={!sectionName}
+          onClick={() => setModal({ type: "add" })}
+          className="px-5 py-2 rounded-full font-semibold disabled:cursor-not-allowed"
+          style={{ background: sectionName ? "#fff" : "#E5E7EB", border: sectionName ? `1px solid ${C.cardBorder}` : "1px solid #9CA3AF", color: sectionName ? C.text : "#6B7280" }}
+          title={!sectionName ? "A section is required before adding a learner." : "Add learner"}
+        >
           + Add learner
         </button>
       </div>
