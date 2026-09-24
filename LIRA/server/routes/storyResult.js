@@ -160,4 +160,26 @@ router.get('/:id/recording/:segment', async (req, res) => {
   }
 });
 
+router.delete('/:id/recording', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    const session = await recordingSession(req, 'teacher');
+    if (!session || !(await Teacher.exists({ _id: session.userId, active: true }))) {
+      return res.status(401).json({ message: 'Please sign in as a teacher to delete recordings.' });
+    }
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ message: 'Story attempt not found.' });
+    const result = await StoryResult.findById(req.params.id);
+    if (!result) return res.status(404).json({ message: 'Story attempt not found.' });
+    const learner = await Learner.findById(result.learnerId).select('sectionId');
+    if (!learner || !(await Section.exists({ _id: learner.sectionId, teacherId: session.userId }))) {
+      return res.status(403).json({ message: 'You can only delete recordings for learners in your sections.' });
+    }
+    await StoryResult.updateOne({ _id: result._id }, { $set: { recording: [], recordingSegmentCount: 0 } });
+    res.json({ message: 'Recording deleted.' });
+  } catch (error) {
+    console.error('Could not delete recording:', error);
+    res.status(500).json({ message: 'Could not delete the recording.' });
+  }
+});
+
 module.exports = router;

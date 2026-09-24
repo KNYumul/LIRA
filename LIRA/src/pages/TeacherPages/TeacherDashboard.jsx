@@ -1634,7 +1634,7 @@ function DeleteConfirmModal({ title = "Remove this learner?", subtitle, onCancel
 // ---------- Students page ----------
 const STUDENT_COLUMNS = "minmax(0, 1.4fr) minmax(0, 0.7fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr)";
 
-function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
+function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore, onRecordingDeleted }) {
   const [attemptSort, setAttemptSort] = useState({ key: "completedAt", direction: "desc" });
   const sortedAttempts = useMemo(
     () => sortStoryAttempts(s.storyResults, attemptSort.key, attemptSort.direction),
@@ -1755,7 +1755,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
                       </button>
                     ) : <span aria-hidden="true" />}
                     <div style={{ gridColumn: "1 / -1", marginTop: 8 }}>
-                      <TeacherRecording resultId={storyResult.id} count={storyResult.recordingSegmentCount} />
+                      <TeacherRecording resultId={storyResult.id} count={storyResult.recordingSegmentCount} onDeleted={() => onRecordingDeleted(s.id, storyResult.id)} />
                     </div>
                   </div>
                 ))}
@@ -2166,6 +2166,9 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           onDelete={deleteLearner}
           onToggle={toggle}
           onSelectScore={selectScoreForAverage}
+          onRecordingDeleted={(learnerId, resultId) => setStudents((previous) => previous.map((student) => student.id === learnerId
+            ? { ...student, storyResults: student.storyResults.map((result) => result.id === resultId ? { ...result, recordingSegmentCount: 0 } : result) }
+            : student))}
         />
       ))}
       {!loading && filtered.length === 0 && (
