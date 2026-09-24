@@ -2,7 +2,7 @@ import RoundedSelect from '../../components/RoundedSelect';
 import TeacherRecording from '../../components/TeacherRecording';
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Heart, Pencil, MinusCircle, ChevronDown, ChevronUp, Upload, Search, X, Plus, CheckCircle2, Sparkles, FileText, ScanLine, Loader2, ArrowLeft, Lock, Eye, EyeOff, Trash2 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell, Tooltip } from "recharts";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { createWorker } from "tesseract.js";
@@ -582,31 +582,14 @@ function Dashboard({
 
 
   // ---------------------------------------------------------
-  // Risk breakdown chart data
-  // ---------------------------------------------------------
-
-  const chartData = useMemo(() => {
-    const groups = Array.from(
-      { length: 10 },
-      (_, index) => ({
-        name: `Surname ${index + 1}`,
-        gradeReady: 0,
-        lightRefresher: 0,
-        moderateRefresher: 0,
-        fullRefresher: 0,
-        noData: 0,
-      })
-    );
-
-    students.forEach((student, index) => {
-      const group = groups[index % groups.length];
-      const risk = riskOf(student);
-
-      group[risk] += 1;
-    });
-
-    return groups;
-  }, [students]);
+  // Missing assessments stay null, distinct from a real 0% score.
+  const chartData = useMemo(() => students.map((student) => ({
+    id: student.id,
+    name: student.lastName,
+    fullName: student.displayName || student.lastName,
+    score: riskOf(student) === "noData" ? null : student.accuracy,
+    category: riskOf(student),
+  })), [students]);
 
 
   // ---------------------------------------------------------
@@ -1080,6 +1063,8 @@ function Dashboard({
 
             <section className="dashboard-bottom-card dashboard-risk-breakdown">
 
+              <h2 className="text-sm font-semibold" style={{ color: C.text }}>Learner Comprehension Scores</h2>
+              <p className="text-xs mt-1 mb-3" style={{ color: C.textMuted }}>Average comprehension score from selected story assessments</p>
               {/* Legend INSIDE the chart card */}
 
               <div className="dashboard-risk-legend">
@@ -1134,7 +1119,8 @@ function Dashboard({
 
               {hasChartData ? (
 
-                <div className="dashboard-chart-wrapper">
+                <div className="dashboard-chart-wrapper" style={{ overflowX: "auto" }}>
+                  <div style={{ minWidth: Math.max(420, chartData.length * 75) }}>
 
                   <ResponsiveContainer
                     width="100%"
@@ -1157,17 +1143,29 @@ function Dashboard({
                       />
 
                       <XAxis
-                        dataKey="name"
-                        tick={{
-                          fontSize: 9,
-                          fill: C.textMuted,
+                        dataKey="id"
+                        interval={0}
+                        tick={({ x, y, payload }) => {
+                          const learner = chartData.find((entry) => entry.id === payload.value);
+                          return (
+                            <g transform={"translate(" + x + "," + y + ")"}>
+                              <title>{learner?.fullName}: {learner?.score == null ? "No Data" : learner.score + "%"}</title>
+                              <text y={14} textAnchor="middle" fontSize={9} fill={C.textMuted}>
+                                {(learner?.name || "Learner").slice(0, 12)}{learner?.name?.length > 12 ? "..." : ""}
+                              </text>
+                              <text y={29} textAnchor="middle" fontSize={9} fill={C.textMuted}>
+                                {learner?.score == null ? "No Data" : learner.score + "%"}
+                              </text>
+                            </g>
+                          );
                         }}
-                        angle={-25}
-                        textAnchor="end"
                         height={50}
                       />
 
                       <YAxis
+                        domain={[0, 100]}
+                        ticks={[0, 20, 40, 60, 80, 100]}
+                        tickFormatter={(value) => value + "%"}
                         allowDecimals={false}
                         tick={{
                           fontSize: 10,
@@ -1175,46 +1173,30 @@ function Dashboard({
                         }}
                       />
 
-                      <Bar
-                        dataKey="gradeReady"
-                        stackId="risk"
-                        fill={C.gradeReady}
+                      <Tooltip
+                        filterNull={false}
+                        content={({ active, payload }) => {
+                          const learner = payload?.[0]?.payload;
+                          if (!active || !learner) return null;
+                          return (
+                            <div className="rounded-lg border bg-white p-3 shadow-sm" style={{ borderColor: C.cardBorder, color: C.text }}>
+                              <div className="font-semibold">{learner.fullName}</div>
+                              <div>{learner.score == null ? "No assessments yet" : "Comprehension: " + learner.score + "%"}</div>
+                              <div>{riskLabel[learner.category]}</div>
+                            </div>
+                          );
+                        }}
                       />
-
-                      <Bar
-                        dataKey="lightRefresher"
-                        stackId="risk"
-                        fill={C.lightRefresher}
-                      />
-
-                      <Bar
-                        dataKey="moderateRefresher"
-                        stackId="risk"
-                        fill={C.moderateRefresher}
-                      />
-
-                      <Bar
-                        dataKey="fullRefresher"
-                        stackId="risk"
-                        fill={C.fullRefresher}
-                      />
-
-                      <Bar
-                        dataKey="noData"
-                        stackId="risk"
-                        fill={C.noData}
-                        radius={[
-                          5,
-                          5,
-                          0,
-                          0,
-                        ]}
-                      />
+                      <Bar dataKey="score" name="Comprehension" maxBarSize={36} radius={[5, 5, 0, 0]}>
+                        {chartData.map((learner) => (
+                          <Cell key={learner.id} fill={riskColor[learner.category]} />
+                        ))}
+                      </Bar>
 
                     </BarChart>
 
                   </ResponsiveContainer>
-
+                  </div>
                 </div>
 
               ) : (
@@ -1235,7 +1217,7 @@ function Dashboard({
                       color: C.textMuted,
                     }}
                   >
-                    Risk breakdown will appear here once learners are added.
+                    Learner comprehension scores will appear here once learners are added.
                   </div>
 
                 </div>
