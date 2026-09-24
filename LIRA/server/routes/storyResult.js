@@ -8,6 +8,7 @@ const Teacher = require("../models/Teacher");
 
 const { recordingSession } = require("../utils/recordingSession");
 const { parseRecording } = require("../utils/recording");
+const { calculateReadingAccuracy } = require("../utils/readingAccuracy");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
@@ -34,15 +35,12 @@ router.post("/", async (req, res) => {
       const session = await recordingSession(req, 'student');
       if (!session || String(session.userId) !== learnerId) return res.status(401).json({ message: 'Please sign in again to submit your recording.' });
     }
-    const { storyId, language, answers, readingDurationSeconds, readingAccuracy, readingWordStats = [] } = req.body;
+    const { storyId, language, answers, readingDurationSeconds, readingWordStats = [] } = req.body;
     if (!mongoose.isValidObjectId(learnerId) || !mongoose.isValidObjectId(storyId)) {
       return res.status(400).json({ message: "A valid learner and story are required." });
     }
     if (!Array.isArray(answers)) return res.status(400).json({ message: "Quiz answers are required." });
 
-    if (readingAccuracy != null && (typeof readingAccuracy !== "number" || !Number.isFinite(readingAccuracy) || readingAccuracy < 0 || readingAccuracy > 100)) {
-      return res.status(400).json({ message: "Reading accuracy must be a number from 0 to 100." });
-    }
     if (readingDurationSeconds != null && (typeof readingDurationSeconds !== "number" || !Number.isFinite(readingDurationSeconds) || readingDurationSeconds < 0.001)) {
       return res.status(400).json({ message: "Reading duration must be a positive number of seconds." });
     }
@@ -87,7 +85,7 @@ router.post("/", async (req, res) => {
       readingWordCount,
       readingWordStats,
       readingWpm,
-      readingAccuracy: story.lang === "ENG" ? readingAccuracy : null,
+      readingAccuracy: calculateReadingAccuracy(story.pages, readingWordStats),
       recording,
       recordingSegmentCount: recording.length,
       selectedForAverage: true

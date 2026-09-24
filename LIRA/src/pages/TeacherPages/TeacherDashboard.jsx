@@ -1704,7 +1704,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore, onRecordingD
               <div className="font-semibold mb-3">
                 Comprehension Score: {s.accuracy == null ? "--" : `${s.accuracy}%`} using one selected attempt per story.
               </div>
-              <p className="mb-3">Reading Accuracy: {s.readingAccuracy == null ? "--" : `${s.readingAccuracy}%`}. Average spoken-word pronunciation score across selected assessed attempts (English). Unavailable scores appear as --.</p>
+              <p className="mb-3">Reading Accuracy: {s.readingAccuracy == null ? "--" : `${s.readingAccuracy}%`}. Average accuracy across selected attempts. New English and Filipino attempts use correct words divided by total story words; incorrect and skipped words lower the score. Older attempts retain their original scores. Unavailable scores appear as --.</p>
               <div className="overflow-x-auto">
                 <div className="grid gap-2">
                   <div className="grid items-center py-1 text-xs font-semibold" style={{ gridTemplateColumns: STUDENT_COLUMNS }}>
