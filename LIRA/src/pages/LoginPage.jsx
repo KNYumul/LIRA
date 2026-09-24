@@ -219,7 +219,7 @@ const handleEmailChange = (e) => {
       }
 
       try {
-        const response = await fetch(`${API_URL}/api/learners/login`, {
+        let response = await fetch(`${API_URL}/api/learners/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -231,7 +231,18 @@ const handleEmailChange = (e) => {
           }),
         });
 
-        const { data, error: responseError } = await readApiResponse(response);
+        let { data, error: responseError } = await readApiResponse(response);
+        if (data?.code === "FIRST_NAME_REQUIRED") {
+          const answer = await liraAlert.fire({ title: "Enter your first name", text: data.message,
+            input: "text", inputLabel: "First name", showCancelButton: true,
+            inputValidator: (value) => value.trim() ? undefined : "Please enter your first name." });
+          if (!answer.isConfirmed) return;
+          response = await fetch(`${API_URL}/api/learners/login`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lastName: trimmedLastName, birthdate, section: studentSection, firstName: answer.value.trim() })
+          });
+          ({ data, error: responseError } = await readApiResponse(response));
+        }
 
         if (responseError) {
           setError(responseError);

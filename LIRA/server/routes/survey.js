@@ -27,10 +27,10 @@ router.get('/', async (req, res) => {
   try {
     const session = await recordingSession(req, 'admin');
     if (!session || !await Admin.exists({ _id: session.userId, active: true })) return res.status(401).json({ message: 'Please sign in as an administrator again to view survey results.' });
-    const responses = await SurveyResponse.find().sort({ updatedAt: -1 }).populate({ path: 'learnerId', select: 'lastName section sectionId', populate: { path: 'sectionId', select: 'name' } }).lean();
+    const responses = await SurveyResponse.find().sort({ updatedAt: -1 }).populate({ path: 'learnerId', select: 'lastName firstName section sectionId', populate: { path: 'sectionId', select: 'name' } }).lean();
     res.json(responses.map((response) => ({
       id: response._id,
-      name: response.learnerId?.lastName || 'Deleted learner',
+      name: [response.learnerId?.lastName, response.learnerId?.firstName].filter(Boolean).join(', ') || 'Deleted learner',
       section: response.learnerId?.sectionId?.name || response.learnerId?.section || 'Unavailable',
       answers: response.answers,
       score: response.answers.reduce((total, answer, index) => total + (index % 2 === 0 ? answer - 1 : 5 - answer), 0) * 2.5,

@@ -335,6 +335,8 @@ function learnerToStudent(learner) {
   return {
     id: learner._id,
     lastName: learner.lastName,
+    firstName: learner.firstName || "",
+    displayName: [learner.lastName, learner.firstName].filter(Boolean).join(", "),
     section: learner.section,
     birthMonth,
     birthDay,
@@ -1516,11 +1518,13 @@ const selectStyle = { border: `1px solid #D8E8D0`, background: "#F5FAF2" };
 
 function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
   const [lastName, setLastName] = useState(initial?.lastName || "");
+  const [firstName, setFirstName] = useState(initial?.firstName || "");
+  const [submitting, setSubmitting] = useState(false);
   const [month, setMonth] = useState(initial?.birthMonth || "");
   const [day, setDay] = useState(initial?.birthDay || "");
   const [year, setYear] = useState(initial?.birthYear || "");
 
-  const clear = () => { setLastName(""); setMonth(""); setDay(""); setYear(""); };
+  const clear = () => { setLastName(""); setFirstName(""); setMonth(""); setDay(""); setYear(""); };
   const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0"));
 
@@ -1555,6 +1559,10 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
           />
         </Field>
 
+        {initial?.firstName && <Field label="First Name" required>
+          <input value={firstName} maxLength={50} onChange={(e) => setFirstName(e.target.value)}
+            className="w-full rounded-lg px-3 py-2 outline-none" style={selectStyle} />
+        </Field>}
         <Field label="Birthdate" required>
           <div className="flex gap-2">
             <RoundedSelect label="Birth month" hideLabel value={month} onChange={setMonth}
@@ -1590,8 +1598,13 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
             Cancel
           </button>
           <button
-            disabled={!valid}
-            onClick={() => valid && onSubmit({ lastName: formatStudentName(lastName), birthMonth: month, birthDay: day, birthYear: year })}
+            disabled={!valid || submitting}
+            onClick={async () => {
+              if (!valid || submitting) return;
+              setSubmitting(true);
+              try { await onSubmit({ firstName, lastName: formatStudentName(lastName), birthMonth: month, birthDay: day, birthYear: year }); }
+              finally { setSubmitting(false); }
+            }}
             className="flex-1 rounded-full py-2 font-semibold text-white"
             style={{ background: valid ? "#EDA751" : "#EAD9BE" }}
           >
@@ -1679,7 +1692,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore, onRecordingD
         }}
         onClick={() => onToggle(s.id)}
       >
-        <div className="font-semibold">{s.lastName}</div>
+        <div className="font-semibold">{s.displayName}</div>
         <div className="font-semibold">{s.wpm == null ? "--" : `${s.wpm} wpm`}</div>
         <div className="font-semibold text-center tabular-nums">{s.accuracy == null ? "--" : `${s.accuracy}%`}</div>
         <div className="font-semibold text-center tabular-nums">{s.readingAccuracy == null ? "--" : `${s.readingAccuracy}%`}</div>
@@ -1703,7 +1716,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore, onRecordingD
       {s.expanded && (
         <div className="px-5 py-4 text-sm" style={{ background: isFullRefresher ? C.warningBg : "#F7F3EA", color: "#000" }}>
           {!s.storyResults.length ? (
-            `No story test score has been recorded for ${s.lastName} yet.`
+            `No story test score has been recorded for ${s.displayName} yet.`
           ) : (
             <>
               <div className="font-semibold mb-3">
@@ -1777,7 +1790,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
   const [modal, setModal] = useState(null);
   const fileRef = useRef(null);
 
-  const filtered = students.filter((s) => s.lastName.toLowerCase().includes(search.toLowerCase()));
+  const filtered = students.filter((s) => s.displayName.toLowerCase().includes(search.toLowerCase()));
 
   const toggle = (id) => setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, expanded: !s.expanded } : s)));
 
@@ -1809,6 +1822,8 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
   const saveLearner = async (data, id) => {
     const payload = {
       lastName: data.lastName,
+      firstName: data.firstName,
+      existingFirstNames: data.existingFirstNames,
       birthdate: `${data.birthYear}-${data.birthMonth}-${data.birthDay}`,
       section: data.section || sectionName,
     };
@@ -1817,7 +1832,26 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       headers: { "Content-Type": "application/json", "X-Teacher-Id": currentTeacher?.id || "" },
       body: JSON.stringify(payload),
     });
-    if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not save learner."));
+    if (!response.ok) {
+      const failure = await response.json();
+      if (failure.code === "FIRST_NAMES_REQUIRED") {
+        const askName = async (title, text, value = "") => {
+          const answer = await liraAlert.fire({ title, text, input: "text", inputValue: value,
+            inputLabel: "First name", inputAttributes: { maxlength: 50 }, showCancelButton: true,
+            confirmButtonText: "Continue", cancelButtonText: "Cancel / skip",
+            inputValidator: (name) => /^[\p{L}]+(?:[ '-][\p{L}]+)*$/u.test(name.trim()) ? undefined : "Enter a valid first name." });
+          if (!answer.isConfirmed) throw Object.assign(new Error("Duplicate learner skipped."), { cancelled: true });
+          return answer.value.trim();
+        };
+        const firstName = await askName("Duplicate details found", `${payload.lastName}, born ${payload.birthdate}, is already listed in ${payload.section}. Enter the first name of the learner you are saving, or cancel if this is the same student.`, data.firstName || "");
+        const existingFirstNames = {};
+        for (const existing of failure.unnamedLearners) {
+          existingFirstNames[existing.id] = await askName("Existing learner's first name", "Enter the first name of " + existing.lastName + " already listed in " + payload.section + ".");
+        }
+        return saveLearner({ ...data, firstName, existingFirstNames }, id);
+      }
+      throw new Error(failure.message || "Could not save learner.");
+    }
     return learnerToStudent(await response.json());
   };
 
@@ -1841,6 +1875,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       });
 
       setStudents((prev) => [...prev, learner]);
+      await onRefresh();
       setModal(null);
       await liraAlert.fire({
         icon: "success",
@@ -1848,7 +1883,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         confirmButtonText: "OK"
       });
     } catch (requestError) {
-      await showError(requestError.message);
+      if (!requestError.cancelled) await showError(requestError.message);
     }
   };
 
@@ -1856,6 +1891,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     try {
       const learner = await saveLearner(data, modal.student.id);
       setStudents((prev) => prev.map((s) => (s.id === learner.id ? { ...learner, expanded: s.expanded } : s)));
+      await onRefresh();
       setModal(null);
       await liraAlert.fire({
         icon: "success",
@@ -1863,7 +1899,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         confirmButtonText: "OK"
       });
     } catch (requestError) {
-      await showError(requestError.message);
+      if (!requestError.cancelled) await showError(requestError.message);
     }
   };
 
@@ -1871,7 +1907,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     const confirmation = await liraAlert.fire({
       icon: "warning",
       title: "Remove this learner?",
-      text: `${student.lastName} will be removed from your class roster.`,
+      text: `${student.displayName} will be removed from your class roster.`,
       showCancelButton: true,
       confirmButtonText: "Remove",
       cancelButtonText: "Cancel"
@@ -1974,8 +2010,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       }
       const newRows = [];
       const invalidRows = [];
-      const duplicateRows = [];
-      const csvLearners = new Set();
+
       for (let i = startIdx; i < lines.length; i++) {
         const row = parseCsvLine(lines[i]);
         const lastName = formatStudentName(extractCsvLastName(row[columns.lastName], nameColumn.fullName));
@@ -1995,13 +2030,6 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           invalidRows.push(i + 1);
           continue;
         }
-        const normalizedBirthdate = `${by}-${bm.padStart(2, "0")}-${bd.padStart(2, "0")}`;
-        const learnerKey = `${lastName.toLowerCase()}|${normalizedBirthdate}|${section.toLowerCase()}`;
-        if (csvLearners.has(learnerKey)) {
-          duplicateRows.push(i + 1);
-          continue;
-        }
-        csvLearners.add(learnerKey);
         newRows.push({
           lastName,
           birthMonth: bm.padStart(2, "0"),
@@ -2034,18 +2062,20 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         if (!confirmation.isConfirmed) return;
       }
 
-      const results = await Promise.allSettled(
-        newRows.map(({ lastName, birthMonth, birthDay, birthYear, section }) =>
-          saveLearner({ lastName, birthMonth, birthDay, birthYear, section }))
-      );
+      const results = [];
+      // Process sequentially so collision prompts never overlap.
+      for (const row of newRows) {
+        try { results.push({ status: "fulfilled", value: await saveLearner(row) }); }
+        catch (reason) { results.push({ status: "rejected", reason }); }
+      }
       const failed = results.filter((result) => result.status === "rejected");
-      const isDuplicateFailure = (result) => /already listed|duplicate key|E11000/i.test(result.reason?.message || "");
+      const isDuplicateFailure = (result) => /already listed|duplicate key|E11000|Duplicate learner skipped/i.test(result.reason?.message || "");
       const storedDuplicates = failed.filter(isDuplicateFailure);
       const ownershipFailures = failed.filter((result) => /managed by/i.test(result.reason?.message || ""));
       const otherFailures = failed.filter((result) => !isDuplicateFailure(result) && !/managed by/i.test(result.reason?.message || ""));
       await onRefresh();
       const importedCount = results.length - failed.length;
-      const duplicateCount = duplicateRows.length + storedDuplicates.length;
+      const duplicateCount = storedDuplicates.length;
       if (duplicateCount > 0 || invalidRows.length > 0 || ownershipFailures.length > 0 || otherFailures.length > 0) {
         const summary = [`<div><strong>${importedCount}</strong> learner(s) imported</div>`];
         if (duplicateCount > 0) summary.push(`<div><strong>${duplicateCount}</strong> duplicate row(s) skipped</div>`);
@@ -2221,7 +2251,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
               return (
                 <tr key={`print-${student.id}`}>
                   <td>{index + 1}</td>
-                  <td>{student.lastName}</td>
+                  <td>{student.displayName}</td>
                   <td>{student.wpm == null ? "--" : student.wpm}</td>
                   <td>{student.accuracy == null ? "--" : `${student.accuracy}%`}</td>
                   <td>{student.readingAccuracy == null ? "--" : `${student.readingAccuracy}%`}</td>

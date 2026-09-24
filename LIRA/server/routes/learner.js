@@ -50,13 +50,48 @@ async function ownedLearner(learnerId, teacherId) {
   return Learner.findOne({ _id: learnerId, sectionId: { $in: sectionIds } });
 }
 
+async function resolveNames(req, res, scope, excludeId) {
+  if (!String(scope.lastName || "").trim() || !String(scope.birthdate || "").trim()) {
+    res.status(400).json({ message: "Last name and birthdate are required." });
+    return null;
+  }
+  const matches = await Learner.find({ ...scope, ...(excludeId ? { _id: { $ne: excludeId } } : {}) })
+    .collation({ locale: "en", strength: 2 });
+  const firstName = String(req.body.firstName || "").trim();
+  const supplied = req.body.existingFirstNames || {};
+  const unnamed = matches.filter(learner => !learner.firstName);
+  if (matches.length && (!firstName || unnamed.some(learner => !String(supplied[learner.id] || "").trim()))) {
+    res.status(409).json({ code: "FIRST_NAMES_REQUIRED", message: "A learner with the same last name, birthdate, and section already exists. Enter first names to distinguish them.",
+      unnamedLearners: unnamed.map(learner => ({ id: learner.id, lastName: learner.lastName })) });
+    return null;
+  }
+  const names = [firstName, ...matches.map(learner => learner.firstName || String(supplied[learner.id] || "").trim())];
+  if (names.some(name => name && (name.length > 50 || !/^[\p{L}]+(?:[ '-][\p{L}]+)*$/u.test(name)))) {
+    res.status(400).json({ message: "Enter a valid first name using letters, spaces, apostrophes, or hyphens (up to 50 characters)." });
+    return null;
+  }
+  if (new Set(names.map(name => name.toLocaleLowerCase())).size !== names.length) {
+    res.status(409).json({ message: "That learner is already listed with the same first name, last name, birthdate, and section." });
+    return null;
+  }
+  for (const learner of unnamed) {
+    const updated = await Learner.updateOne({ _id: learner._id, $or: [{ firstName: "" }, { firstName: null }] },
+      { $set: { firstName: String(supplied[learner.id]).trim() } });
+    if (!updated.modifiedCount) {
+      res.status(409).json({ message: "This learner was updated by another request. Please try again." });
+      return null;
+    }
+  }
+  return { firstName };
+}
+
 router.get("/", async (req, res) => {
   try {
     const teacher = await currentTeacher(req, res);
     if (!teacher) return;
     const sectionIds = await Section.find({ teacherId: teacher._id }).distinct("_id");
     const learners = await Learner.find({ sectionId: { $in: sectionIds } })
-      .select("lastName birthdate section sectionId")
+      .select("lastName firstName birthdate section sectionId")
       .sort({ lastName: 1 });
     const learnerIds = learners.map((learner) => learner._id);
     const results = await StoryResult.find({ learnerId: { $in: learnerIds } })
@@ -101,10 +136,10 @@ router.post("/", async (req, res) => {
         code: "SECTION_OWNED_BY_ANOTHER_TEACHER"
       });
     }
-    const duplicate = await Learner.exists({ lastName, birthdate, sectionId: section._id })
-      .collation({ locale: "en", strength: 2 });
-    if (duplicate) return res.status(409).json({ message: `${lastName} is already listed in ${section.name}.` });
+    const names = await resolveNames(req, res, { lastName, birthdate, sectionId: section._id });
+    if (!names) return;
     const learner = await Learner.create({
+      ...names,
       lastName,
       birthdate,
       section: section.name,
@@ -125,6 +160,10 @@ router.put("/:id", async (req, res) => {
     if (!learner) return res.status(404).json({ message: "Learner not found in your sections." });
     const section = await teacherSection(teacher, req.body);
     if (!section) return res.status(403).json({ message: "That section is not assigned to you." });
+    if (req.body.firstName === undefined) req.body.firstName = learner.firstName;
+    const names = await resolveNames(req, res, { lastName: req.body.lastName, birthdate: req.body.birthdate, sectionId: section._id }, learner._id);
+    if (!names) return;
+    learner.firstName = names.firstName;
     learner.lastName = req.body.lastName;
     learner.birthdate = req.body.birthdate;
     learner.section = section.name;
@@ -162,8 +201,15 @@ router.post("/login", async (req, res) => {
     const status = cooldownStatus(key);
     if (status.locked) return sendCooldown(res, status.retryAfterSeconds);
 
-    const learner = await Learner.findOne({ lastName, birthdate, section })
+    const matches = await Learner.find({ lastName, birthdate, section })
       .collation({ locale: "en", strength: 2 });
+    const firstName = String(req.body.firstName || "").trim();
+    if (matches.length > 1 && !firstName) {
+      return res.status(409).json({ code: "FIRST_NAME_REQUIRED", message: "Please enter your first name to identify your account." });
+    }
+    const learner = firstName
+      ? matches.find(candidate => candidate.firstName?.toLocaleLowerCase() === firstName.toLocaleLowerCase())
+      : matches[0];
     if (!learner) {
       const failure = failedLogin(key);
       if (failure.locked) return sendCooldown(res, failure.retryAfterSeconds);
@@ -173,7 +219,7 @@ router.post("/login", async (req, res) => {
     res.json({
       message: "Login successful!",
       token: await issueSession(learner._id, "student"),
-      learner: { id: learner._id, lastName: learner.lastName, birthdate: learner.birthdate, section: learner.section }
+      learner: { id: learner._id, lastName: learner.lastName, firstName: learner.firstName, birthdate: learner.birthdate, section: learner.section }
     });
   } catch (error) {
     console.error(error);
