@@ -381,6 +381,11 @@
   flex-shrink: 0;
 }
 
+.sm-mic-btn.is-connecting {
+  background-color: #facc15;
+  box-shadow: 0 12px 28px rgba(250, 204, 21, 0.45);
+}
+
 .sm-mic-btn.is-listening {
   background-color: #35a66f;
   animation: sm-pulse 1.4s ease-in-out infinite;

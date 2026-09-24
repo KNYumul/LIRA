@@ -1182,7 +1182,7 @@ function StoryMode({ onExit }) {
           <div className="sm-mic-control">
             <button
               type="button"
-              className={`sm-mic-btn ${isListening ? 'is-listening' : ''}`}
+              className={`sm-mic-btn ${isListening ? speechStatus.startsWith('Connecting') ? 'is-connecting' : 'is-listening' : ''}`}
               onClick={() => {
                 if (isListening) {
                   stopListening();

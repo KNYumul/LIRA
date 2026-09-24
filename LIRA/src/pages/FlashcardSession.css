@@ -156,6 +156,10 @@
   transform: scale(1.05);
 }
 
+.fs-mic--connecting {
+  background: #facc15;
+}
+
 .fs-mic--active {
   background: #35a66f;
   animation: fs-pulse 1.4s ease-in-out infinite;

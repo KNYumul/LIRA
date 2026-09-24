@@ -115,7 +115,7 @@ export default function FlashcardReader({ text, language }) {
       return <span key={index} className={position === retry ? 'fs-word-retry' : position < count ? 'fs-sentence__read' : position === count && listening ? 'fs-word-current' : 'fs-sentence__rest'}>{part}</span>;
     })}</p>
     {retry !== null && <p className="fs-reading-feedback" role="status">Try: “{words[retry]}”</p>}
-    <button type="button" className={`fs-mic ${listening ? 'fs-mic--active' : ''}`} onClick={() => listening ? stop() : start()} disabled={!words.length} aria-pressed={listening} aria-label={listening ? 'Stop listening' : 'Start listening'}>🎤</button>
+    <button type="button" className={`fs-mic ${listening ? status.startsWith('Connecting') ? 'fs-mic--connecting' : 'fs-mic--active' : ''}`} onClick={() => listening ? stop() : start()} disabled={!words.length} aria-pressed={listening} aria-label={listening ? 'Stop listening' : 'Start listening'}>🎤</button>
     <span className="fs-mic__status" role="status">{status}</span>
   </>;
 }
