@@ -3365,14 +3365,14 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions, onChec
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "rgba(60,50,45,0.35)" }}>
-      <div className="rounded-3xl w-[520px] max-h-[85vh] flex flex-col transition-all" style={{ background: C.cream }}>
+      <div className="rounded-3xl w-[520px] max-w-[calc(100vw-2rem)] max-h-[85vh] flex flex-col transition-all" style={{ background: C.cream }}>
         
         {/* ===================== VIEW 1: STORY CONTENT ===================== */}
         {activeTab === "story" && (
           <>
             <div className="p-6 pb-3">
               <div className="flex items-start gap-4 justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
                   <div
                     className="w-16 h-20 rounded-lg overflow-hidden shadow flex items-center justify-center shrink-0"
                     style={{ background: coverImage ? "#222" : story.cover }}
