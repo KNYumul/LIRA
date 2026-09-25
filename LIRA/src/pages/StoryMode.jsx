@@ -779,7 +779,7 @@ function StoryMode({ onExit }) {
       speechConfig.speechRecognitionLanguage = language === 'FIL' ? 'fil-PH' : 'en-US';
       speechConfig.outputFormat = SpeechSDK.OutputFormat.Detailed;
       speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceResponse_StablePartialResultThreshold, '1');
-      speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, language === 'FIL' ? '900' : '500');
+      speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, '300');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       if (request !== listeningRequestRef.current) {
         stream.getTracks().forEach((track) => track.stop());
@@ -816,12 +816,13 @@ function StoryMode({ onExit }) {
         if (pageTransitionRef.current !== null || event.result.offset < speechBoundaryRef.current) return;
         const pageText = readingPageRef.current.text;
         const committed = committedReadingRef.current;
-        const result = readingProgress(readingWords(pageText).slice(committed.count).join(' '), event.result.text || '', language);
+        const words = readingWords(pageText);
+        const result = readingProgress(words.slice(committed.count), event.result.text || '', language);
         const count = committed.count + result.count;
         // Interim hypotheses can change; only final speech commits error marks.
         setIncorrectWords(new Set([...committed.incorrectWords, ...result.incorrectWordIndices.map((index) => committed.count + index)]));
         setSpokenWordCount(count);
-        setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
+        setProgress(Math.round((count / Math.max(1, words.length)) * 100));
       };
       recognizer.recognized = (_, event) => {
         if (recognizerRef.current !== recognizer) return;
@@ -834,7 +835,7 @@ function StoryMode({ onExit }) {
         const committed = committedReadingRef.current;
         const previousCount = committed.count;
         const words = readingWords(pageText);
-        const result = readingProgress(words.slice(previousCount).join(' '), event.result.text || '', language);
+        const result = readingProgress(words.slice(previousCount), event.result.text || '', language);
         const count = previousCount + result.count;
         const errors = new Set([...committed.incorrectWords, ...result.incorrectWordIndices.map((index) => previousCount + index)]);
         committedReadingRef.current = { count, incorrectWords: errors };
@@ -847,8 +848,8 @@ function StoryMode({ onExit }) {
         };
         for (let index = previousCount; index < count; index += 1) recordWord(words[index], errors.has(index));
         setSpokenWordCount(count);
-        setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
-        if (count >= readingWords(pageText).length) goNextPage(true, readingPageIndex);
+        setProgress(Math.round((count / Math.max(1, words.length)) * 100));
+        if (count >= words.length) goNextPage(true, readingPageIndex);
       };
       recognizer.canceled = (_, event) => {
         if (recognizerRef.current !== recognizer) return;

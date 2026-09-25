@@ -27,6 +27,16 @@ test('a revised interim transcript can clear a provisional error', () => {
   assert.deepEqual(readingProgress('The bird flew', 'the bird flew'), { count: 3, incorrectWordIndices: [] });
 });
 
+test('pre-tokenized remaining words preserve errors, compounds and unread trailing words', () => {
+  const words = ['Araw-araw', 'ay', 'masayá', 'ang', 'bata'];
+  assert.deepEqual(readingProgress(words, 'araw araw ay masaya', 'FIL'), { count: 3, incorrectWordIndices: [] });
+  assert.deepEqual(readingProgress(words.slice(3), 'ang bato', 'FIL'), { count: 2, incorrectWordIndices: [1] });
+  assert.deepEqual(readingProgress(['I', 'have', 'fifty', 'coins'], 'I have 50'), { count: 3, incorrectWordIndices: [] });
+  assert.deepEqual(readingProgress(words, '', 'FIL'), { count: 0, incorrectWordIndices: [] });
+  assert.deepEqual(readingProgress([], 'hello'), { count: 0, incorrectWordIndices: [] });
+  assert.deepEqual(words, ['Araw-araw', 'ay', 'masayá', 'ang', 'bata']);
+});
+
 test('accepts fifty as a word or digits in partial and complete transcripts', () => {
   assert.equal(matchedWordCount('I have fifty coins.', 'I have 50'), 3);
   assert.equal(matchedWordCount('I have fifty coins.', 'I have 50 coins'), 4);
