@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getSession } from '../utils/session';
 import { isInactivityPaused } from '../utils/inactivityPause';
-import { readingWords, normalizedWord, readingProgress } from '../utils/readingTracking';
+import { readingWords, normalizedWord, assessedReadingProgress } from '../utils/readingTracking';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -41,9 +41,9 @@ export default function FlashcardReader({ text, language }) {
     setIncorrectWords(new Set(committedRef.current.incorrectWords));
     setStatus('Connecting to your reading helper…');
     // Interim revisions replace provisional marks; only final results commit them.
-    const updateReading = (transcript, final) => {
+    const updateReading = (transcript, final, detailedJson) => {
       const committed = committedRef.current;
-      const result = readingProgress(words.slice(committed.count), transcript, language);
+      const result = assessedReadingProgress(words.slice(committed.count), transcript, language, detailedJson);
       const nextCount = committed.count + result.count;
       const errors = new Set([...committed.incorrectWords,
         ...result.incorrectWordIndices.map((index) => committed.count + index)]);
@@ -84,8 +84,11 @@ export default function FlashcardReader({ text, language }) {
         if (isInactivityPaused()) return;
         if (event.result.text?.trim()) window.dispatchEvent(new Event('lira:student-activity'));
         if (event.result.reason !== SDK.ResultReason.RecognizedSpeech) return;
-        const matched = updateReading(event.result.text || '', true);
-        if (matched >= words.length) stop('Great job! You finished this flashcard.');
+        const matched = updateReading(event.result.text || '', true,
+          event.result.properties.getProperty(SDK.PropertyId.SpeechServiceResponse_JsonResult));
+        if (matched >= words.length) stop(committedRef.current.incorrectWords.size
+          ? 'You finished this flashcard. Words to practice are marked in red. Tap the microphone to try again.'
+          : 'Great job! You finished this flashcard.');
       };
       recognizer.canceled = (_, event) => {
         if (recognizerRef.current !== recognizer) return;

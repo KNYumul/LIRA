@@ -73,9 +73,10 @@ export function matchedWordCount(reference, spoken, language = 'ENG') {
 
 // Align speech to a prefix of the remaining story. Unspoken trailing words are
 // not errors; substitutions and omissions before later speech are errors.
-export function readingProgress(reference, spoken, language = 'ENG') {
+export function readingProgress(reference, spoken, language = 'ENG', incorrectSpokenWordIndices = []) {
   const expected = Array.isArray(reference) ? reference : readingWords(reference);
   const heard = readingWords(spoken);
+  const spokenErrors = new Set(incorrectSpokenWordIndices);
   if (!expected.length || !heard.length) return { count: 0, incorrectWordIndices: [] };
   // Normalize once per word, not once per cell of the alignment matrix.
   const expectedKeys = expected.map((word) => normalizeReadingWord(word, language));
@@ -96,7 +97,8 @@ export function readingProgress(reference, spoken, language = 'ENG') {
     for (let j = 0; j <= heard.length; j += 1) {
       if (i < expected.length && j < heard.length) {
         const matches = expectedKeys[i] === heardKeys[j];
-        update(i, j, i + 1, j + 1, matches ? 0 : 1, matches ? [] : [i]);
+        // Pronunciation errors affect feedback, not the transcript alignment.
+        update(i, j, i + 1, j + 1, matches ? 0 : 1, matches && !spokenErrors.has(j) ? [] : [i]);
         if (language === 'FIL') {
           const expectedPartCount = expectedParts[i].length;
           const heardPartCount = heardParts[j].length;
@@ -129,5 +131,34 @@ export function readingProgress(reference, spoken, language = 'ENG') {
     [i, j] = rows[i][j].previous;
   }
   return { count, incorrectWordIndices: incorrectWordIndices.sort((a, b) => a - b) };
+}
+
+export function assessedReadingProgress(reference, transcript, language, detailedJson) {
+  let details;
+  try {
+    details = JSON.parse(detailedJson);
+  } catch {
+    return readingProgress(reference, transcript, language);
+  }
+  const assessedWords = details?.NBest?.[0]?.Words;
+  if (language !== 'ENG' || !Array.isArray(assessedWords) || !assessedWords.length) {
+    return readingProgress(reference, transcript, language);
+  }
+  const spoken = [];
+  const incorrect = [];
+  for (const entry of assessedWords) {
+    // An omitted reference word is not speech. Alignment marks omissions only
+    // when later spoken words establish that the reader has moved past them.
+    const error = entry.PronunciationAssessment?.ErrorType;
+    if (error === 'Omission') continue;
+    const tokens = readingWords(entry.Word);
+    if (error === 'Mispronunciation') {
+      incorrect.push(...tokens.map((_, index) => spoken.length + index));
+    }
+    spoken.push(...tokens);
+  }
+  return spoken.length
+    ? readingProgress(reference, spoken.join(' '), language, incorrect)
+    : readingProgress(reference, transcript, language);
 }
 

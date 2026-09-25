@@ -1,6 +1,45 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { matchedWordCount, readingProgress } from './readingTracking.js';
+import { matchedWordCount, readingProgress, assessedReadingProgress } from './readingTracking.js';
+
+const assessmentJson = (entries) => JSON.stringify({ NBest: [{ Words: entries.map(([Word, ErrorType = 'None']) =>
+  ({ Word, PronunciationAssessment: { ErrorType } })) }] });
+
+test('flashcards advance through mispronunciations even when the transcript spells the target correctly', () => {
+  assert.deepEqual(assessedReadingProgress('The little bird flew', 'The little bird flew', 'ENG',
+    assessmentJson([['the'], ['little', 'Mispronunciation'], ['bird'], ['flew']])),
+  { count: 4, incorrectWordIndices: [1] });
+  assert.deepEqual(assessedReadingProgress('bird', 'bird', 'ENG',
+    assessmentJson([['bird', 'Mispronunciation']])), { count: 1, incorrectWordIndices: [0] });
+});
+
+test('flashcard assessment aligns omissions and extra words without marking unread trailing words', () => {
+  assert.deepEqual(assessedReadingProgress('The little bird flew home', 'the big bird flew', 'ENG',
+    assessmentJson([['the'], ['little', 'Omission'], ['big', 'Insertion'], ['bird'], ['flew'], ['home', 'Omission']])),
+  { count: 4, incorrectWordIndices: [1] });
+  assert.deepEqual(assessedReadingProgress('The bird flew', 'the little bird', 'ENG',
+    assessmentJson([['the'], ['little', 'Insertion'], ['bird', 'Mispronunciation']])),
+  { count: 2, incorrectWordIndices: [1] });
+});
+
+test('flashcard reading keeps transcript error detection for partial results and Filipino', () => {
+  for (const details of [undefined, 'invalid json', '{}', '{"NBest":[]}', assessmentJson([])]) {
+    assert.deepEqual(assessedReadingProgress('The bird flew home', 'the boat flew', 'ENG', details),
+      { count: 3, incorrectWordIndices: [1] });
+  }
+  assert.deepEqual(assessedReadingProgress('Isang bata ay masaya', '1 bato ay masaya', 'FIL'),
+    { count: 4, incorrectWordIndices: [1] });
+});
+
+test('flashcard speech segments continue from committed progress after an error', () => {
+  const words = ['The', 'little', 'bird', 'flew', 'home'];
+  const first = assessedReadingProgress(words, 'the little', 'ENG',
+    assessmentJson([['the'], ['little', 'Mispronunciation']]));
+  const next = assessedReadingProgress(words.slice(first.count), 'bird flew home', 'ENG',
+    assessmentJson([['bird'], ['flew'], ['home']]));
+  assert.equal(first.count + next.count, words.length);
+  assert.deepEqual([...first.incorrectWordIndices, ...next.incorrectWordIndices.map((index) => first.count + index)], [1]);
+});
 
 test('story reading continues past wrong and skipped words', () => {
   assert.deepEqual(readingProgress('The little bird flew home', 'the brittle bird flew home'), { count: 5, incorrectWordIndices: [1] });
