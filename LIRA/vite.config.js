@@ -7,6 +7,10 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss()],
+    // Bundle PDF.js as a JavaScript module worker instead of a raw .mjs asset.
+    worker: {
+      format: 'es',
+    },
     server: {
       proxy: {
         '/api': {
