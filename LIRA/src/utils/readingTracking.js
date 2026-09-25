@@ -14,12 +14,30 @@ const englishNumberWords = new Map([
     .map((word, index) => [word, String((index + 2) * 10)]),
 ]);
 
+const filipinoNumberWords = new Map([
+  ['sero', '0'], ['zero', '0'],
+  ['isa', '1'], ['isang', '1'],
+  ['dalawa', '2'], ['dalawang', '2'],
+  ['tatlo', '3'], ['tatlong', '3'],
+  ['apat', '4'],
+  ['lima', '5'], ['limang', '5'],
+  ['anim', '6'],
+  ['pito', '7'], ['pitong', '7'],
+  ['walo', '8'], ['walong', '8'],
+  ['siyam', '9'],
+  ['sampu', '10'], ['sampung', '10'],
+]);
+
 function normalizeReadingWord(word, language) {
   const value = normalizedWord(word);
   // Match number words when speech transcripts format them as digits.
   if (language === 'ENG') return englishNumberWords.get(value) ?? value;
   // Written stress marks are normally absent from speech transcripts. Keep ñ.
-  return language === 'FIL' ? value.normalize('NFD').replace(/[\u0300\u0301\u0302]/g, '').normalize('NFC') : value;
+  if (language === 'FIL') {
+    const unaccented = value.normalize('NFD').replace(/[\u0300\u0301\u0302]/g, '').normalize('NFC');
+    return filipinoNumberWords.get(unaccented) ?? unaccented;
+  }
+  return value;
 }
 
 export function matchedWordCount(reference, spoken, language = 'ENG') {

@@ -52,6 +52,35 @@ test('normalizes other simple English numbers without accepting incorrect number
   assert.equal(matchedWordCount('fifty', '50', 'FIL'), 0);
 });
 
+test('Filipino number words and linker forms match digit transcripts', () => {
+  for (const spoken of ['isang', 'isa', '1']) {
+    assert.equal(matchedWordCount('Isang araw may isang bata', spoken, 'FIL'), 1);
+    assert.deepEqual(readingProgress('Isang araw may isang bata', `${spoken} araw may 1 bata`, 'FIL'),
+      { count: 5, incorrectWordIndices: [] });
+  }
+  for (const [word, digit] of [
+    ['sero', '0'], ['isa', '1'], ['isang', '1'], ['dalawa', '2'], ['dalawang', '2'],
+    ['tatlo', '3'], ['tatlong', '3'], ['apat', '4'], ['lima', '5'], ['limang', '5'],
+    ['anim', '6'], ['pito', '7'], ['pitong', '7'], ['walo', '8'], ['walong', '8'],
+    ['siyam', '9'], ['sampu', '10'], ['sampung', '10'],
+  ]) {
+    assert.equal(matchedWordCount(word, digit, 'FIL'), 1);
+    assert.equal(matchedWordCount(digit, word, 'FIL'), 1);
+    assert.deepEqual(readingProgress([word], digit, 'FIL'), { count: 1, incorrectWordIndices: [] });
+  }
+  assert.equal(matchedWordCount('isáng bata', '1 bata', 'FIL'), 2);
+  assert.equal(matchedWordCount('Isa-isang nakalaya', '1 1 nakalaya', 'FIL'), 2);
+});
+
+test('Filipino number normalization preserves incorrect numbers, gaps and language boundaries', () => {
+  assert.equal(matchedWordCount('isang bata', '2 bata', 'FIL'), 0);
+  assert.deepEqual(readingProgress('isang bata', '2 bata', 'FIL'), { count: 2, incorrectWordIndices: [0] });
+  assert.equal(matchedWordCount('may isang bata', '1 bata', 'FIL'), 0);
+  assert.equal(matchedWordCount('apat na bata', '4 bata', 'FIL'), 1);
+  assert.equal(matchedWordCount('isang', '1', 'ENG'), 0);
+  assert.equal(matchedWordCount('bata', 'batang', 'FIL'), 0);
+});
+
 test('Filipino accepts split hyphens and written stress marks', () => {
   assert.equal(matchedWordCount('Araw-araw ay masayá ang bata.', 'araw araw ay masaya ang bata', 'FIL'), 5);
   assert.equal(matchedWordCount('Siya ay nag aaral.', 'siya ay nag-aaral', 'FIL'), 4);
