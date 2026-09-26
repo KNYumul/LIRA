@@ -882,7 +882,7 @@ function Dashboard({
             className="text-sm mt-1"
             style={{ color: C.textMuted }}
           >
-            School Year 2025–2026
+            School Year 2026–2027
           </p>
         </div>
 
