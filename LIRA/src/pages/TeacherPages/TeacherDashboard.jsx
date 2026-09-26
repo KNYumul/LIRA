@@ -17,7 +17,7 @@ import { splitScannedStory } from "../../utils/scannedStory";
 import StoryHeatmap from "../../components/StoryHeatmap";
 import ScanImageList from "../../components/ScanImageList";
 import { readPdfPages, ocrLanguages } from "../../utils/pdfOcr";
-import { detectStoryLanguage } from "../../utils/storyLanguage";
+import { detectFlashcardLanguage, detectStoryLanguage } from "../../utils/storyLanguage";
 import { storyFeedbackIssues } from "../../utils/storyFeedback";
 import { groupStoryAttempts, sortStoryAttempts } from "../../utils/storyAttemptSort";
 
@@ -2734,7 +2734,7 @@ function Flashcards({ currentTeacher }) {
     if (countWords(data.content) > 250) return;
     try {
       let flashcardLanguage = data.lang;
-      const detectedLanguage = detectStoryLanguage(data.content);
+      const detectedLanguage = detectFlashcardLanguage(data.content);
       if (detectedLanguage && detectedLanguage !== data.lang) {
         const detectedLabel = detectedLanguage === "FIL" ? "Filipino" : "English";
         const selectedLabel = data.lang === "FIL" ? "Filipino" : "English";
