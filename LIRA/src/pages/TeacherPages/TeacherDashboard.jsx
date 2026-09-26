@@ -2733,14 +2733,42 @@ function Flashcards({ currentTeacher }) {
   const addItem = async (data) => {
     if (countWords(data.content) > 250) return;
     try {
+      let flashcardLanguage = data.lang;
+      const detectedLanguage = detectStoryLanguage(data.content);
+      if (detectedLanguage && detectedLanguage !== data.lang) {
+        const detectedLabel = detectedLanguage === "FIL" ? "Filipino" : "English";
+        const selectedLabel = data.lang === "FIL" ? "Filipino" : "English";
+        const choice = await liraAlert.fire({
+          icon: "question",
+          title: "Check flashcard language",
+          text: `This flashcard appears to be ${detectedLabel}, but you selected ${selectedLabel}. Change its language to ${detectedLabel}?`,
+          showDenyButton: true,
+          showCancelButton: true,
+          confirmButtonText: `Use ${detectedLabel}`,
+          denyButtonText: `Keep ${selectedLabel}`,
+          confirmButtonColor: "#3D995A",
+          denyButtonColor: "#DC3545",
+          customClass: {
+            popup: "lira-sweet-alert",
+            confirmButton: "lira-sweet-alert-button",
+            denyButton: "lira-sweet-alert-button",
+            cancelButton: "lira-sweet-alert-button",
+          },
+          cancelButtonText: "Back to editing",
+          allowOutsideClick: false,
+        });
+        if (choice.isConfirmed) flashcardLanguage = detectedLanguage;
+        else if (!choice.isDenied) return;
+      }
       const response = await fetch(flashcardUrl(), {
         method: "POST",
         headers: teacherHeaders(true),
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, lang: flashcardLanguage }),
       });
       if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not add flashcard."));
       const saved = await response.json();
       setItems((prev) => [...prev, { ...saved, id: saved._id }]);
+      setLang(flashcardLanguage);
       setShowAdd(false);
       await liraAlert.fire({
         icon: "success",
