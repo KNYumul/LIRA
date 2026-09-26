@@ -20,6 +20,7 @@ import FlashcardDifficulty from "./pages/FlashcardDifficulty";
 import FlashcardSession from "./pages/FlashcardSession";
 import { clearSession, getSession } from "./utils/session";
 import StudentInactivityAlert from "./components/StudentInactivityAlert";
+import DesktopOnly from "./components/DesktopOnly";
 
 const PAGE_TITLES = {
   "/": "Home",
@@ -160,8 +161,8 @@ function App() {
           <Route path="/flashcards" element={<FlashcardDifficulty />} />
           <Route path="/flashcards/:difficulty" element={<FlashcardSession />} />
         </Route>
-        <Route path="/teacher" element={<ProtectedRoute role="teacher"><TeacherDashboardPage /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute role="admin"><AdminPage /></ProtectedRoute>} />
+        <Route path="/teacher" element={<DesktopOnly><ProtectedRoute role="teacher"><TeacherDashboardPage /></ProtectedRoute></DesktopOnly>} />
+        <Route path="/admin" element={<DesktopOnly><ProtectedRoute role="admin"><AdminPage /></ProtectedRoute></DesktopOnly>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
