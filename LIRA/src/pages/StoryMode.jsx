@@ -1,5 +1,5 @@
 import { ReadingRecorder } from '../utils/readingRecorder';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import './StoryMode.css';
 import CompletionScreen from '../components/CompletionScreen';
@@ -579,7 +579,20 @@ function KoalaMascot() {
   );
 }
 
+const mobileStoryQuery = '(max-width: 900px)';
+
+function subscribeToStoryViewport(onChange) {
+  const media = window.matchMedia(mobileStoryQuery);
+  media.addEventListener('change', onChange);
+  return () => media.removeEventListener('change', onChange);
+}
+
+function getMobileStoryViewport() {
+  return window.matchMedia(mobileStoryQuery).matches;
+}
+
 function StoryMode({ onExit }) {
+  const isMobileStoryPicker = useSyncExternalStore(subscribeToStoryViewport, getMobileStoryViewport, () => false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [stories, setStories] = useState([]);
@@ -1041,7 +1054,7 @@ function StoryMode({ onExit }) {
 
   /* Selection View */
   if (view === 'selection') {
-    const visibleStories = filteredStories.slice(carouselOffset, carouselOffset + 3);
+    const visibleStories = isMobileStoryPicker ? filteredStories : filteredStories.slice(carouselOffset, carouselOffset + 3);
 
     return (
       <section className="story-mode sm-selection-bg">
