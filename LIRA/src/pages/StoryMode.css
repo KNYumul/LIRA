@@ -746,6 +746,47 @@
 }
 
 
+@media (max-width: 900px) {
+  .sm-selection-bg {
+    padding: 24px 16px 80px;
+  }
+
+  .sm-selection-bg .sm-header {
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+
+  .sm-selection-bg .sm-header-left {
+    gap: 12px;
+  }
+
+  .sm-carousel-arrow {
+    display: none;
+  }
+
+  .sm-cards-track {
+    min-width: 0;
+    display: flex;
+    justify-content: flex-start;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    padding: 20px 8px 36px;
+    scroll-padding-inline: 8px;
+    will-change: auto;
+  }
+
+  .sm-cards-track.sm-slide-from-right,
+  .sm-cards-track.sm-slide-from-left {
+    animation: none;
+  }
+
+  .sm-book-card {
+    flex: 0 0 min(72vw, 260px);
+    scroll-snap-align: start;
+  }
+}
+
 /* Carousel transition accessibility */
 @media (prefers-reduced-motion: reduce) {
   .sm-cards-track {
