@@ -50,6 +50,28 @@ export default function AdminSurveyResults() {
   const overallScore = students.length ? students.reduce((sum, student) => sum + student.score, 0) / students.length : null
   const ready = !loading && !error
 
+  const interpretScore = (overallScore) => {
+    if (overallScore >= 84.1) return 'A+'
+    if (overallScore >= 80.8) return 'A'
+    if (overallScore >= 78.9) return 'A-'
+    if (overallScore >= 77.2) return 'B+'
+    if (overallScore >= 74.1) return 'B'
+    if (overallScore >= 72.6) return 'B-'
+    if (overallScore >= 71.1) return 'C+'
+    if (overallScore >= 65) return 'C'
+    if (overallScore >= 62.7) return 'C-'
+    if (overallScore >= 51.7) return 'D'
+    return 'F'
+  }
+
+  const interpretRank = (overallScore) => {
+    if (overallScore >= 84.1) return 'Best imaginable'
+    if (overallScore >= 77.2) return 'Excellent'
+    if (overallScore >= 71.1) return 'Good'
+    if (overallScore >= 51.7) return 'Okay'
+    return 'Poor'
+  }
+
   return (
     <div className="survey-results-page">
       <div className="survey-results-container">
@@ -60,6 +82,7 @@ export default function AdminSurveyResults() {
         <div className="survey-summary-grid">
           <div className="survey-summary-card"><div><span className="summary-label">Total Responses</span><h2>{ready ? students.length : '?'}</h2><p>Students completed the survey</p></div></div>
           <div className="survey-summary-card"><div><span className="summary-label">Overall SUS Score</span><h2>{ready && overallScore !== null ? `${overallScore.toFixed(1)} / 100` : '?'}</h2><p>Scores account for positive and negative questions.</p></div></div>
+          <div className="survey-summary-card"><div><span className="summary-label">SUS Score Interpretation</span><h2>{ready && overallScore !== null ? interpretScore(overallScore) : '?'}</h2><p>{ready && overallScore !== null ? interpretRank(overallScore) : 'Rank'}</p></div></div>
         </div>
         <section className="survey-results-card">
           <div className="survey-card-top">
