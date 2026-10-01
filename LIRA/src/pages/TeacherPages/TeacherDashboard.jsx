@@ -3374,12 +3374,12 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions, onChec
   const save = async () => {
     const hasQuestions = questions.some((question) => question.question?.trim());
 
-    if (story.badge === "AI-generated" && !hasQuestions) {
+    if (!hasQuestions) {
       setActiveTab("questions");
       await liraAlert.fire({
         icon: "warning",
         title: "Add at least one question",
-        text: "This AI-generated story needs at least one question before you can upload it.",
+        text: "This story needs at least one question before you can upload it.",
         confirmButtonText: "Review questions"
       });
       return;
