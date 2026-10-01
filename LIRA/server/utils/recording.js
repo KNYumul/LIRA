@@ -4,7 +4,10 @@ function parseRecording(segments) {
   if (!Array.isArray(segments) || segments.length > 100) throw new Error('Invalid recording segments.');
   let bytes = 0;
   return segments.map((segment) => {
-    if (!segment || !/^audio\/(webm|ogg|mp4)(;codecs=[a-zA-Z0-9., -]+)?$/.test(segment.mimeType)
+    // Safari may serialize the codecs parameter with quotes, while Chromium
+    // typically omits them. Both are valid MIME parameter forms.
+    if (!segment || typeof segment.mimeType !== 'string'
+      || !/^audio\/(webm|ogg|mp4)(\s*;\s*codecs\s*=\s*(?:"[a-zA-Z0-9., -]+"|'[a-zA-Z0-9., -]+'|[a-zA-Z0-9., -]+))?$/i.test(segment.mimeType)
       || typeof segment.data !== 'string' || !segment.data.length
       || segment.data.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(segment.data)) {
       throw new Error('Invalid audio recording.');
