@@ -3372,6 +3372,19 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions, onChec
   };
 
   const save = async () => {
+    const hasQuestions = questions.some((question) => question.question?.trim());
+
+    if (story.badge === "AI-generated" && !hasQuestions) {
+      setActiveTab("questions");
+      await liraAlert.fire({
+        icon: "warning",
+        title: "Add at least one question",
+        text: "This AI-generated story needs at least one question before you can upload it.",
+        confirmButtonText: "Review questions"
+      });
+      return;
+    }
+
     const missingAnswerKeys = questions
       .map((question, index) => ({ question, number: question.id ?? index + 1 }))
       .filter(({ question }) => question.question?.trim() && !Number.isInteger(question.correct))
