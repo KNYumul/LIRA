@@ -237,12 +237,12 @@ function AdminLoginPage() {
             Log in
           </button>
 
-          {/* OR Divider */}
+          {/* OR Divider
           <div className="admin-login-divider">
             <span>OR</span>
-          </div>
+          </div> */}
 
-          {/* Google SSO Button matching exact design */}
+          {/* Google SSO Button matching exact design
           <button
             type="button"
             className="admin-google-btn"
@@ -250,7 +250,7 @@ function AdminLoginPage() {
           >
             <span className="google-dot"></span>
             <span>Connect through Gmail / Google Workspace</span>
-          </button>
+          </button> */}
 
         </form>
       </section>
