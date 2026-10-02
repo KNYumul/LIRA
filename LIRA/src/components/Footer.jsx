@@ -120,12 +120,12 @@ function Footer() {
               Navotas Elementary School - Central, Philippines
             </span>
 
-            <Link
+            {/* <Link
               className="lira-footer__portal"
               to="/admin/login"
             >
               Admin Portal
-            </Link>
+            </Link> */}
           </address>
 
         </div>

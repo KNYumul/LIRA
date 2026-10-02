@@ -793,3 +793,488 @@
     animation: none !important;
   }
 }
+
+
+/* =========================================================
+   MOBILE RESPONSIVE OVERRIDES
+   ========================================================= */
+
+/* Prevent horizontal overflow and make sizing predictable */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.story-mode {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100dvh;
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .story-mode {
+    padding: 24px 16px 0;
+  }
+
+  .sm-selection-bg {
+    min-height: 100dvh;
+    padding: 20px 16px 60px;
+  }
+
+  .sm-selection-bg .sm-header {
+    margin-bottom: 36px;
+    gap: 12px;
+  }
+
+  .sm-selection-bg .sm-header-left {
+    gap: 10px;
+  }
+
+  .sm-title {
+    font-size: clamp(1.35rem, 4vw, 1.8rem);
+  }
+
+  .sm-lang-option {
+    padding: 7px 16px;
+    font-size: 0.78rem;
+  }
+
+  .sm-categories {
+    gap: 36px;
+    margin-bottom: 50px;
+    padding-bottom: 20px;
+  }
+
+  .sm-carousel-row {
+    gap: 0;
+  }
+
+  .sm-cards-track {
+    width: 100%;
+    padding: 18px 6px 32px;
+    gap: 18px;
+  }
+
+  .sm-book-card {
+    flex: 0 0 min(68vw, 250px);
+  }
+
+  .sm-reader-stage {
+    gap: 28px;
+    margin-top: 30px;
+  }
+
+  .sm-mic-control {
+    width: 140px;
+  }
+
+  .sm-page-card {
+    max-width: 100%;
+    padding: 28px 24px 38px;
+  }
+
+  .sm-page-inner {
+    padding: 22px 18px;
+    max-height: 50vh;
+  }
+
+  .sm-page-text {
+    font-size: clamp(17px, 2.4vw, 20px);
+    line-height: 1.65;
+  }
+
+  .sm-quiz-stage {
+    margin-top: 28px;
+    width: 100%;
+  }
+
+  .sm-quiz-card,
+  .sm-quiz-card-shadow {
+    max-width: 100%;
+  }
+
+  .sm-quiz-card {
+    padding: 30px 26px 36px;
+  }
+}
+
+/* Phones */
+@media (max-width: 600px) {
+  .story-mode {
+    padding: 14px 12px 0;
+    perspective: none;
+  }
+
+  .sm-selection-bg {
+    padding: 14px 12px 50px;
+    background-position: center top;
+  }
+
+  /* Compact mobile header */
+  .sm-selection-bg .sm-header {
+    display: grid;
+    grid-template-columns: 42px 1fr auto;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 28px;
+  }
+
+  .sm-selection-bg .sm-header-left {
+    display: contents;
+  }
+
+  .sm-selection-bg .sm-header-center {
+    margin-left: 0;
+    gap: 7px;
+  }
+
+  .sm-back-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .sm-title {
+    font-size: 1.25rem;
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  .sm-lang-toggle {
+    padding: 3px;
+  }
+
+  .sm-lang-option {
+    padding: 6px 10px;
+    font-size: 0.7rem;
+  }
+
+  .sm-choose-label {
+    display: block;
+    font-size: 14px;
+  }
+
+  .sm-categories {
+    gap: 30px;
+    width: 100%;
+    margin: 0 auto 30px;
+    padding-bottom: 10px;
+  }
+
+  .sm-category-block {
+    width: 100%;
+  }
+
+  .sm-category-pill {
+    max-width: 90%;
+    margin-bottom: 16px;
+    padding: 8px 17px;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .sm-carousel-row {
+    width: 100%;
+  }
+
+  /* Horizontal swipe carousel on phones */
+  .sm-cards-track {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    gap: 14px;
+    padding: 16px 4px 30px;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .sm-cards-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sm-book-card {
+    flex: 0 0 min(70vw, 210px);
+    max-width: 210px;
+    scroll-snap-align: center;
+  }
+
+  .sm-book-card:hover {
+    transform: none;
+  }
+
+  .sm-book-cover {
+    border-width: 3px;
+    border-radius: 10px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+  }
+
+  .sm-star {
+    top: -11px;
+    font-size: 19px;
+  }
+
+  .sm-completed-star {
+    width: 48px;
+    height: 48px;
+    font-size: 28px;
+    border-width: 3px;
+  }
+
+  /* Reader */
+  .sm-reader-stage {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+    margin-top: 20px;
+    perspective: none;
+  }
+
+  .sm-mic-control {
+    order: 2;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .sm-mic-btn {
+    width: 68px;
+    height: 68px;
+  }
+
+  .sm-mic-label {
+    height: auto;
+    max-height: 5.5em;
+    font-size: 12px;
+    line-height: 1.4;
+    overflow-y: auto;
+  }
+
+  .sm-page-card {
+    order: 1;
+    width: 100%;
+    max-width: none;
+    padding: 24px 16px 32px;
+    border-radius: 16px;
+  }
+
+  .sm-bookmark {
+    right: 28px;
+    width: 22px;
+    height: 44px;
+  }
+
+  .sm-page-fold {
+    border-width: 0 0 30px 30px;
+  }
+
+  .sm-page-inner {
+    padding: 18px 14px;
+    max-height: 52vh;
+    border-radius: 10px;
+  }
+
+  .sm-progress-track {
+    height: 8px;
+    margin-bottom: 16px;
+  }
+
+  .sm-page-text {
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  .sm-next-page-label {
+    font-size: 12px;
+    margin-top: 10px;
+  }
+
+  .sm-reading-retry,
+  .sm-reading-score {
+    font-size: 12px;
+    margin-top: 14px;
+  }
+
+  /* Quiz */
+  .sm-quiz-stage {
+    width: 100%;
+    margin-top: 18px;
+    perspective: none;
+  }
+
+  .sm-quiz-card-shadow {
+    top: 10px;
+    left: 50%;
+    width: calc(100% - 12px);
+    min-height: 0;
+    border-radius: 20px;
+  }
+
+  .sm-quiz-card {
+    width: 100%;
+    max-width: none;
+    border-width: 3px;
+    border-radius: 20px;
+    padding: 28px 16px 24px;
+  }
+
+  .sm-quiz-number {
+    top: 14px;
+    left: 14px;
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .sm-quiz-mascot {
+    margin-bottom: 10px;
+  }
+
+  .sm-quiz-question {
+    font-size: 19px;
+    line-height: 1.35;
+    margin: 0 0 20px;
+    padding: 0 8px;
+  }
+
+  .sm-quiz-options {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .sm-quiz-option {
+    min-height: 52px;
+    padding: 14px 12px;
+    border-radius: 13px;
+    font-size: 14px;
+  }
+
+  .sm-quiz-option:hover {
+    transform: none;
+  }
+
+  .sm-quiz-next-btn,
+  .sm-quiz-done-btn {
+    width: 100%;
+    max-width: 280px;
+    padding: 13px 22px;
+    font-size: 14px;
+  }
+
+  .sm-quiz-done {
+    margin-top: 45px;
+    padding: 0 12px;
+    gap: 12px;
+  }
+
+  .sm-quiz-done h2 {
+    font-size: 26px;
+  }
+
+  .sm-quiz-done p {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .sm-exit-popup {
+    width: calc(100% - 24px) !important;
+    border-radius: 20px;
+  }
+}
+
+/* Extra-small phones */
+@media (max-width: 380px) {
+  .story-mode {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .sm-selection-bg {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .sm-selection-bg .sm-header {
+    grid-template-columns: 38px 1fr auto;
+    gap: 5px;
+  }
+
+  .sm-back-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .sm-title {
+    font-size: 1.1rem;
+  }
+
+  .sm-lang-option {
+    padding: 5px 8px;
+    font-size: 0.65rem;
+  }
+
+  .sm-book-card {
+    flex-basis: 74vw;
+  }
+
+  .sm-page-card {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .sm-page-inner {
+    padding: 16px 12px;
+  }
+
+  .sm-page-text {
+    font-size: 15px;
+  }
+
+  .sm-quiz-card {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .sm-quiz-question {
+    font-size: 17px;
+  }
+
+  .sm-quiz-option {
+    font-size: 13px;
+  }
+}
+
+/* Landscape phones */
+@media (max-width: 900px) and (orientation: landscape) {
+  .sm-page-inner {
+    max-height: 55vh;
+  }
+
+  .sm-reader-stage {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .sm-mic-control {
+    width: 110px;
+  }
+
+  .sm-page-card {
+    max-width: min(70vw, 580px);
+  }
+}
+
+/* Touch devices: remove hover-only movement */
+@media (hover: none) and (pointer: coarse) {
+  .sm-book-card:hover,
+  .sm-carousel-arrow:not(:disabled):hover,
+  .sm-quiz-option:hover,
+  .sm-quiz-next-btn:not(:disabled):hover {
+    transform: none;
+  }
+}
