@@ -770,7 +770,7 @@ function StoryMode({ onExit }) {
     latestSpeechEndRef.current = 0;
     const request = ++listeningRequestRef.current;
     setIsListening(true);
-    setSpeechStatus('Connecting to your reading helper…');
+    setSpeechStatus('Microphone Connecting...');
     // Resume committed speech and preserve error marks across microphone sessions.
     setSpokenWordCount(committedReadingRef.current.count);
     setIncorrectWords(new Set(committedReadingRef.current.incorrectWords));
@@ -1211,7 +1211,7 @@ function StoryMode({ onExit }) {
                   if (!normalizedWord(part)) return <span key={`separator-${index}`}>{part}</span>;
                   const wordIndex = renderedWordIndex++;
                   return (
-                    <span key={`${part}-${index}`} className={incorrectWords.has(wordIndex) ? 'sm-word-incorrect' : wordIndex < spokenWordCount ? 'sm-word-read' : wordIndex === spokenWordCount && isListening ? 'sm-word-current' : ''}>
+                    <span key={`${part}-${index}`} className={incorrectWords.has(wordIndex) ? 'sm-word-incorrect' : wordIndex < spokenWordCount ? 'sm-word-read' : wordIndex === spokenWordCount && isListening && !speechStatus.startsWith('Connecting') ? 'sm-word-current' : ''}>
                       {part}
                     </span>
                   );

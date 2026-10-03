@@ -39,7 +39,7 @@ export default function FlashcardReader({ text, language }) {
     setListening(true);
     setCount(committedRef.current.count);
     setIncorrectWords(new Set(committedRef.current.incorrectWords));
-    setStatus('Connecting to your reading helper…');
+    setStatus('Microphone Connecting…');
     // Interim revisions replace provisional marks; only final results commit them.
     const updateReading = (transcript, final) => {
       const committed = committedRef.current;
@@ -93,13 +93,13 @@ export default function FlashcardReader({ text, language }) {
         if (recognizerRef.current !== recognizer) return;
         stop(event.reason === SDK.CancellationReason.Error
           ? 'Could not continue listening. Check microphone access and your connection, then try again.'
-          : 'Listening stopped. Tap the microphone to try again.');
+          : 'Microphone listening stopped. Tap the microphone to try again.');
       };
       recognizer.sessionStopped = () => {
         if (recognizerRef.current === recognizer) stop();
       };
       recognizer.startContinuousRecognitionAsync(() => {
-        if (recognizerRef.current === recognizer) setStatus('Listening… Read the words at your own pace.');
+        if (recognizerRef.current === recognizer) setStatus('Microphone Listening… Read the words at your own pace.');
       }, (error) => {
         if (recognizerRef.current === recognizer) stop(String(error || 'Could not start the reading helper.'));
       });
