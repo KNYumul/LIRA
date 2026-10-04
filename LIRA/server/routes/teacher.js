@@ -183,8 +183,10 @@ router.put("/:id", async (req, res) => {
 // DELETE a teacher account from the admin dashboard.
 router.delete("/:id", async (req, res) => {
   try {
-    const teacher = await Teacher.findByIdAndDelete(req.params.id);
+    const teacher = await Teacher.findById(req.params.id);
     if (!teacher) return res.status(404).json({ message: "Teacher not found." });
+    teacher.deletedAt = new Date();
+    await teacher.save();
     res.status(204).send();
   } catch {
     res.status(400).json({ message: "Could not delete teacher account." });

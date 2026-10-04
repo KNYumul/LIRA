@@ -447,7 +447,8 @@ router.delete("/:id", async (req, res) => {
   try {
     const story = await ownedStory(req, res);
     if (!story) return;
-    await story.deleteOne();
+    story.deletedAt = new Date();
+    await story.save();
     res.status(204).send();
   } catch (error) {
     console.error("Could not delete story:", error);
