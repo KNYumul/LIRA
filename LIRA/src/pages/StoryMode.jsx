@@ -606,6 +606,7 @@ function StoryMode({ onExit }) {
   const [pageIndex, setPageIndex] = useState(0);
   const [isFlipping, setIsFlipping] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [speechReady, setSpeechReady] = useState(false);
   const [progress, setProgress] = useState(0);
   const [spokenWordCount, setSpokenWordCount] = useState(0);
   const [speechStatus, setSpeechStatus] = useState('Tap the microphone and read aloud.');
@@ -728,6 +729,7 @@ function StoryMode({ onExit }) {
     const recognizer = recognizerRef.current;
     recognizerRef.current = null;
     setIsListening(false);
+    setSpeechReady(false);
     if (recognizer) {
       recognizer.stopContinuousRecognitionAsync(
         () => recognizer.close(),
@@ -745,6 +747,7 @@ function StoryMode({ onExit }) {
       recognizerRef.current = null;
       if (recognizer) recognizer.stopContinuousRecognitionAsync(() => recognizer.close(), () => recognizer.close());
       setIsListening(false);
+      setSpeechReady(false);
       setSpeechStatus('Microphone paused. Tap it to continue recording your reading.');
     };
     document.addEventListener('visibilitychange', pauseMicrophone);
@@ -770,6 +773,7 @@ function StoryMode({ onExit }) {
     latestSpeechEndRef.current = 0;
     const request = ++listeningRequestRef.current;
     setIsListening(true);
+    setSpeechReady(false);
     setSpeechStatus('Microphone Connecting...');
     // Resume committed speech and preserve error marks across microphone sessions.
     setSpokenWordCount(committedReadingRef.current.count);
@@ -879,6 +883,7 @@ function StoryMode({ onExit }) {
         () => {
           if (recognizerRef.current !== recognizer) return;
           setIsListening(true);
+          setSpeechReady(true);
           setSpeechStatus('Listening… Read the words at your own pace.');
         },
         (error) => {
@@ -887,6 +892,7 @@ function StoryMode({ onExit }) {
           recognizer.close();
           recognizerRef.current = null;
           setIsListening(false);
+          setSpeechReady(false);
           setSpeechStatus(String(error || 'Could not start the reading helper.'));
         }
       );
@@ -896,6 +902,7 @@ function StoryMode({ onExit }) {
       recognizerRef.current?.close();
       recognizerRef.current = null;
       setIsListening(false);
+      setSpeechReady(false);
       const denied = error?.name === 'NotAllowedError' || /permission|microphone/i.test(String(error?.message));
       setSpeechStatus(denied
         ? 'Microphone access is blocked. Allow it in your browser, then try again.'
@@ -918,6 +925,7 @@ function StoryMode({ onExit }) {
     setSpokenWordCount(0);
     setSpeechStatus('Tap the microphone and read aloud.');
     setIsListening(false);
+    setSpeechReady(false);
     setView('reading');
   };
 
@@ -1182,7 +1190,7 @@ function StoryMode({ onExit }) {
           <div className="sm-mic-control">
             <button
               type="button"
-              className={`sm-mic-btn ${isListening ? speechStatus.startsWith('Connecting') ? 'is-connecting' : 'is-listening' : ''}`}
+              className={`sm-mic-btn ${isListening ? speechReady ? 'is-listening' : 'is-connecting' : ''}`}
               onClick={() => {
                 if (isListening) {
                   stopListening();
@@ -1211,7 +1219,7 @@ function StoryMode({ onExit }) {
                   if (!normalizedWord(part)) return <span key={`separator-${index}`}>{part}</span>;
                   const wordIndex = renderedWordIndex++;
                   return (
-                    <span key={`${part}-${index}`} className={incorrectWords.has(wordIndex) ? 'sm-word-incorrect' : wordIndex < spokenWordCount ? 'sm-word-read' : wordIndex === spokenWordCount && isListening && !speechStatus.startsWith('Connecting') ? 'sm-word-current' : ''}>
+                    <span key={`${part}-${index}`} className={incorrectWords.has(wordIndex) ? 'sm-word-incorrect' : wordIndex < spokenWordCount ? 'sm-word-read' : wordIndex === spokenWordCount && isListening && speechReady ? 'sm-word-current' : ''}>
                       {part}
                     </span>
                   );
