@@ -185,6 +185,34 @@ router.delete("/:id", async (req, res) => {
   try {
     const teacher = await Teacher.findById(req.params.id);
     if (!teacher) return res.status(404).json({ message: "Teacher not found." });
+
+    const sections = await Section.find({ teacherId: teacher._id });
+    const { replacementTeacherId } = req.body || {};
+
+    if (replacementTeacherId) {
+      if (replacementTeacherId === teacher._id.toString()) {
+        return res.status(400).json({ message: "Choose a different teacher to receive the sections." });
+      }
+
+      const replacementTeacher = await Teacher.findById(replacementTeacherId);
+      if (!replacementTeacher || !replacementTeacher.active) {
+        return res.status(400).json({ message: "Choose an active teacher to receive the sections." });
+      }
+
+      if (sections.length) {
+        await Section.updateMany(
+          { _id: { $in: sections.map((section) => section._id) } },
+          { $set: { teacherId: replacementTeacher._id } }
+        );
+      }
+    } else if (sections.length) {
+      const deletedAt = new Date();
+      await Section.updateMany(
+        { _id: { $in: sections.map((section) => section._id) } },
+        { $set: { deletedAt } }
+      );
+    }
+
     teacher.deletedAt = new Date();
     await teacher.save();
     res.status(204).send();

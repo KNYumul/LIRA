@@ -23,6 +23,15 @@ function toDashboardTeacher(teacher) {
   }
 }
 
+function escapeAlertHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;')
+}
+
 export default function AdminTeacherDashboard() {
   const navigate = useNavigate()
 
@@ -76,15 +85,41 @@ export default function AdminTeacherDashboard() {
 
   async function handleDelete(id) {
     const teacher = teachers.find(t => t.id === id)
+    if (!teacher) return
 
-    const result = await liraAlert.fire({
-      icon: 'warning',
-      title: 'Remove teacher?',
-      text: `${teacher.name} will be removed from the teacher list.`,
-      showCancelButton: true,
-      confirmButtonText: 'Remove',
-      cancelButtonText: 'Cancel'
-    })
+    const managedSections = teacher.sections || []
+    let replacementTeacherId = null
+
+    let result
+    if (managedSections.length) {
+      const replacementOptions = Object.fromEntries(
+        teachers
+          .filter(candidate => candidate.id !== id && candidate.status === 'Active')
+          .map(candidate => [candidate.id, candidate.name])
+      )
+
+      result = await liraAlert.fire({
+        icon: 'warning',
+        title: 'Remove teacher and managed sections?',
+        html: `${escapeAlertHtml(teacher.name)} manages ${managedSections.length === 1 ? 'this section' : 'these sections'}: <strong>${managedSections.map(escapeAlertHtml).join(', ')}</strong>. Select another active teacher to transfer ${managedSections.length === 1 ? 'it' : 'them'}, or leave this blank to delete ${managedSections.length === 1 ? 'the section' : 'the sections'}.`,
+        input: 'select',
+        inputOptions: replacementOptions,
+        inputPlaceholder: 'Delete managed section(s)',
+        showCancelButton: true,
+        confirmButtonText: 'Remove teacher',
+        cancelButtonText: 'Cancel'
+      })
+      replacementTeacherId = result.value || null
+    } else {
+      result = await liraAlert.fire({
+        icon: 'warning',
+        title: 'Remove teacher?',
+        text: `${teacher.name} will be removed from the teacher list.`,
+        showCancelButton: true,
+        confirmButtonText: 'Remove',
+        cancelButtonText: 'Cancel'
+      })
+    }
 
     if (!result.isConfirmed) return
 
@@ -92,7 +127,9 @@ export default function AdminTeacherDashboard() {
       const response = await fetch(
         `${API_URL}/api/teachers/${id}`,
         {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ replacementTeacherId })
         }
       )
 
@@ -113,6 +150,11 @@ export default function AdminTeacherDashboard() {
       await liraAlert.fire({
         icon: 'success',
         title: 'Teacher removed',
+        text: replacementTeacherId
+          ? 'The managed section(s) were transferred to the selected teacher.'
+          : managedSections.length
+            ? 'The managed section(s) were removed.'
+            : undefined,
         timer: 1600,
         showConfirmButton: false
       })
