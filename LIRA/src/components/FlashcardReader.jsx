@@ -89,7 +89,7 @@ export default function FlashcardReader({ text, language }) {
         if (event.result.reason !== SDK.ResultReason.RecognizedSpeech) return;
         const matched = updateReading(event.result.text || '', true);
         if (matched >= words.length) stop(committedRef.current.incorrectWords.size
-          ? 'You finished this flashcard. Words to practice are marked in red. Tap the microphone to try again.'
+          ? 'You finished this flashcard. Words to practice are marked in purple. Tap the microphone to try again.'
           : 'Great job! You finished this flashcard.');
       };
       recognizer.canceled = (_, event) => {
