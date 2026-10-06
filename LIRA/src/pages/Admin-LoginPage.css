@@ -1,226 +1,209 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Quicksand:wght@500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700&display=swap");
 
 .admin-login-page {
-  color: #575757;
+  color: #4d574d;
   font-family: "Poppins", "Segoe UI", sans-serif;
-  font-weight: 300;
 }
 
 .admin-login-hero {
   display: grid;
   min-height: 610px;
   place-items: center;
-  padding: 70px 24px 44px;
-  background-color: #fbf5e9;
-  background-image: url("/UI_Designs/BACKGROUND/background_forest.svg");
-  background-position: center 54%;
-  background-repeat: no-repeat;
-  background-size: cover;
-  border-bottom: 1px solid #757575;
+  box-sizing: border-box;
+  padding: 68px 24px 56px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 251, 241, 0.18),
+      rgba(249, 245, 229, 0.08)
+    ),
+    #fbf5e9 url("/UI_Designs/BACKGROUND/background_forest.svg")
+      center 54% / cover no-repeat;
+  border-bottom: 1px solid rgba(94, 119, 91, 0.35);
 }
 
 .admin-login-card {
+  position: relative;
   display: flex;
-  width: min(100%, 386px);
-  min-height: 500px;
+  width: min(100%, 400px);
   flex-direction: column;
-  padding: 26px 35px 30px;
-  border: 2px solid #747474;
-  border-radius: 34px;
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 3px 8px rgba(80, 72, 60, 0.08);
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 38px 38px 34px;
+  border: 1px solid rgba(131, 157, 123, 0.5);
+  border-radius: 28px;
+  background: linear-gradient(155deg, #ffffff 0%, #fffdf8 65%, #f7faef 100%);
+  box-shadow:
+    0 18px 45px rgba(59, 78, 49, 0.16),
+    0 4px 12px rgba(59, 78, 49, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
-.admin-login-mascot {
-  width: 55px;
-  height: 50px;
-  margin: 0 auto 3px;
-  object-fit: contain;
+/* Decorative strip at the top of the card */
+.admin-login-card::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 7px;
+  background: linear-gradient(
+    90deg,
+    #a8c99d 0%,
+    #d5e4a9 48%,
+    #f2c5a9 100%
+  );
+  content: "";
 }
 
-/* Header / Title: Quicksand */
 .admin-login-card h1 {
   margin: 0;
-  color: #555;
+  color: #416548;
   font-family: "Quicksand", sans-serif;
-  font-size: 1.45rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1.2;
   text-align: center;
 }
 
-/* Description / Subtitle: Poppins Thin */
 .admin-login-card > p {
-  margin: 8px 0 23px;
-  color: #686868;
-  font-family: "Poppins", sans-serif;
-  font-weight: 300;
-  font-size: 0.69rem;
-  line-height: 1.35;
+  max-width: 270px;
+  margin: 9px auto 25px;
+  color: #788074;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.6;
   text-align: center;
 }
 
 .admin-login-card label {
   margin: 0 0 7px;
-  color: #777;
-  font-family: "Poppins", sans-serif;
-  font-size: 0.61rem;
-  font-weight: 700;
+  color: #526b53;
+  font-size: 0.74rem;
+  font-weight: 600;
 }
 
 .admin-login-card label span {
-  color: #df7e78;
+  color: #dd857a;
 }
 
 .admin-login-card input {
   width: 100%;
-  height: 34px;
-  margin: 0 0 17px;
-  border: 1px solid #aaa;
-  border-radius: 7px;
-  outline: none;
-  background: #fffdf8;
-  color: #4d4d4d;
-  font-family: "Poppins", sans-serif;
-  font-weight: 400;
-  font-size: 0.78rem;
-  padding: 0 10px;
+  height: 43px;
   box-sizing: border-box;
+  margin: 0 0 18px;
+  padding: 0 14px;
+  border: 1px solid #d7dfd1;
+  border-radius: 11px;
+  outline: none;
+  background: #fffefa;
+  color: #425045;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 400;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.admin-login-card input::placeholder {
+  color: #a7aea3;
+}
+
+.admin-login-card input:hover {
+  border-color: #a9c5a3;
 }
 
 .admin-login-card input:focus {
-  border-color: #707070;
-  box-shadow: 0 0 0 3px rgba(112, 112, 112, 0.15);
+  border-color: #79aa7b;
+  box-shadow: 0 0 0 3px rgba(121, 170, 123, 0.16);
 }
 
-/* Password wrapper & Toggle button */
+/* Password field and eye icon */
 .admin-password-wrapper {
   position: relative;
   width: 100%;
-  margin: 0 0 17px;
+  margin-bottom: 20px;
 }
 
 .admin-password-wrapper input {
   margin: 0;
-  padding-right: 36px;
+  padding-right: 44px;
 }
 
 .admin-toggle-password {
   position: absolute;
   top: 50%;
-  right: 8px;
-  transform: translateY(-50%);
-  width: auto !important;
-  height: auto !important;
-  margin: 0 !important;
-  padding: 4px !important;
-  background: transparent !important;
-  border: none !important;
-  cursor: pointer;
-  display: flex !important;
+  right: 10px;
+  display: flex;
+  width: 30px !important;
+  height: 30px !important;
   align-items: center;
   justify-content: center;
-  color: #888;
-  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 4px !important;
+  transform: translateY(-50%);
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: #829282;
+  cursor: pointer;
 }
 
 .admin-toggle-password:hover {
   transform: translateY(-50%) !important;
-  background: transparent !important;
-  color: #4d4d4d;
+  background: #f0f5ec !important;
+  color: #416548;
 }
 
-/* Submit Button */
+.admin-toggle-password:focus-visible {
+  outline: 2px solid #79aa7b;
+  outline-offset: 2px;
+}
+
+/* Login button */
 .admin-submit-btn {
-  height: 45px;
-  margin: 16px auto 0;
-  width: min(100%, 187px);
+  width: 100%;
+  height: 46px;
+  margin: 2px 0 0;
   border: 0;
-  border-radius: 14px;
-  background: #7d7d7d;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #65996c, #467c57);
+  box-shadow: 0 6px 14px rgba(65, 118, 77, 0.2);
   color: #fff;
   cursor: pointer;
   font-family: "Poppins", sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  transition: background 160ms ease, transform 160ms ease;
+  transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
 }
 
-.admin-submit-btn:hover,
+.admin-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 18px rgba(65, 118, 77, 0.26);
+  filter: brightness(1.04);
+}
+
+.admin-submit-btn:active {
+  transform: translateY(0);
+}
+
 .admin-submit-btn:focus-visible {
-  background: #646464;
-  transform: translateY(-1px);
-}
-
-/* Divider Line */
-.admin-login-divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin: 22px 0 16px;
-}
-
-.admin-login-divider::before,
-.admin-login-divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.admin-login-divider span {
-  padding: 0 12px;
-  color: #a0a0a0;
-  font-family: "Poppins", sans-serif;
-  font-size: 0.65rem;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
-
-/* Rounded Google Button */
-.admin-google-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 16px;
-  border: 1px solid #f3bcac;
-  border-radius: 50px;
-  background: #ffffff;
-  color: #555555;
-  font-family: "Poppins", sans-serif;
-  font-size: 0.68rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 160ms ease;
-  line-height: 1.25;
-  text-align: center;
-}
-
-.admin-google-btn:hover {
-  background-color: #fff9f6;
-  border-color: #e59c86;
-  transform: translateY(-1px);
-}
-
-/* Blue dot icon inside Google button */
-.google-dot {
-  width: 7px;
-  height: 7px;
-  background-color: #3b82f6;
-  border-radius: 50%;
-  flex-shrink: 0;
+  outline: 3px solid rgba(90, 149, 101, 0.38);
+  outline-offset: 3px;
 }
 
 @media (max-width: 600px) {
   .admin-login-hero {
     min-height: 570px;
-    padding: 42px 18px 36px;
+    padding: 44px 18px 40px;
     background-size: auto 100%;
   }
 
   .admin-login-card {
-    min-height: 475px;
-    padding: 24px 28px;
+    width: min(100%, 400px);
+    padding: 34px 25px 28px;
+    border-radius: 24px;
+  }
+
+  .admin-login-card h1 {
+    font-size: 1.6rem;
   }
 }

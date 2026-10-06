@@ -2,9 +2,9 @@ import RoundedSelect from '../../components/RoundedSelect';
 import TeacherRecording from '../../components/TeacherRecording';
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Heart, Pencil, MinusCircle, ChevronDown, ChevronUp, Upload, Search, X, Plus, CheckCircle2, Sparkles, FileText, ScanLine, Loader2, ArrowLeft, Lock, Eye, EyeOff, Trash2 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell, Tooltip } from "recharts";
 import * as pdfjsLib from "pdfjs-dist";
-import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker&url";
 import { createWorker } from "tesseract.js";
 import { useNavigate } from "react-router-dom";
 import './TeacherDashboard.css';
@@ -17,7 +17,7 @@ import { splitScannedStory } from "../../utils/scannedStory";
 import StoryHeatmap from "../../components/StoryHeatmap";
 import ScanImageList from "../../components/ScanImageList";
 import { readPdfPages, ocrLanguages } from "../../utils/pdfOcr";
-import { detectStoryLanguage } from "../../utils/storyLanguage";
+import { detectFlashcardLanguage, detectStoryLanguage } from "../../utils/storyLanguage";
 import { storyFeedbackIssues } from "../../utils/storyFeedback";
 import { groupStoryAttempts, sortStoryAttempts } from "../../utils/storyAttemptSort";
 
@@ -335,6 +335,8 @@ function learnerToStudent(learner) {
   return {
     id: learner._id,
     lastName: learner.lastName,
+    firstName: learner.firstName || "",
+    displayName: [learner.lastName, learner.firstName].filter(Boolean).join(", "),
     section: learner.section,
     birthMonth,
     birthDay,
@@ -580,31 +582,14 @@ function Dashboard({
 
 
   // ---------------------------------------------------------
-  // Risk breakdown chart data
-  // ---------------------------------------------------------
-
-  const chartData = useMemo(() => {
-    const groups = Array.from(
-      { length: 10 },
-      (_, index) => ({
-        name: `Surname ${index + 1}`,
-        gradeReady: 0,
-        lightRefresher: 0,
-        moderateRefresher: 0,
-        fullRefresher: 0,
-        noData: 0,
-      })
-    );
-
-    students.forEach((student, index) => {
-      const group = groups[index % groups.length];
-      const risk = riskOf(student);
-
-      group[risk] += 1;
-    });
-
-    return groups;
-  }, [students]);
+  // Missing assessments stay null, distinct from a real 0% score.
+  const chartData = useMemo(() => students.map((student) => ({
+    id: student.id,
+    name: student.lastName,
+    fullName: student.displayName || student.lastName,
+    score: riskOf(student) === "noData" ? null : student.accuracy,
+    category: riskOf(student),
+  })), [students]);
 
 
   // ---------------------------------------------------------
@@ -897,7 +882,7 @@ function Dashboard({
             className="text-sm mt-1"
             style={{ color: C.textMuted }}
           >
-            School Year 2025–2026
+            School Year 2026–2027
           </p>
         </div>
 
@@ -1078,6 +1063,8 @@ function Dashboard({
 
             <section className="dashboard-bottom-card dashboard-risk-breakdown">
 
+              <h2 className="text-sm font-semibold" style={{ color: C.text }}>Learner Comprehension Scores</h2>
+              <p className="text-xs mt-1 mb-3" style={{ color: C.textMuted }}>Average comprehension score from selected story assessments</p>
               {/* Legend INSIDE the chart card */}
 
               <div className="dashboard-risk-legend">
@@ -1132,7 +1119,8 @@ function Dashboard({
 
               {hasChartData ? (
 
-                <div className="dashboard-chart-wrapper">
+                <div className="dashboard-chart-wrapper" style={{ overflowX: "auto" }}>
+                  <div style={{ minWidth: Math.max(420, chartData.length * 75) }}>
 
                   <ResponsiveContainer
                     width="100%"
@@ -1155,17 +1143,29 @@ function Dashboard({
                       />
 
                       <XAxis
-                        dataKey="name"
-                        tick={{
-                          fontSize: 9,
-                          fill: C.textMuted,
+                        dataKey="id"
+                        interval={0}
+                        tick={({ x, y, payload }) => {
+                          const learner = chartData.find((entry) => entry.id === payload.value);
+                          return (
+                            <g transform={"translate(" + x + "," + y + ")"}>
+                              <title>{learner?.fullName}: {learner?.score == null ? "No Data" : learner.score + "%"}</title>
+                              <text y={14} textAnchor="middle" fontSize={9} fill={C.textMuted}>
+                                {(learner?.name || "Learner").slice(0, 12)}{learner?.name?.length > 12 ? "..." : ""}
+                              </text>
+                              <text y={29} textAnchor="middle" fontSize={9} fill={C.textMuted}>
+                                {learner?.score == null ? "No Data" : learner.score + "%"}
+                              </text>
+                            </g>
+                          );
                         }}
-                        angle={-25}
-                        textAnchor="end"
                         height={50}
                       />
 
                       <YAxis
+                        domain={[0, 100]}
+                        ticks={[0, 20, 40, 60, 80, 100]}
+                        tickFormatter={(value) => value + "%"}
                         allowDecimals={false}
                         tick={{
                           fontSize: 10,
@@ -1173,46 +1173,30 @@ function Dashboard({
                         }}
                       />
 
-                      <Bar
-                        dataKey="gradeReady"
-                        stackId="risk"
-                        fill={C.gradeReady}
+                      <Tooltip
+                        filterNull={false}
+                        content={({ active, payload }) => {
+                          const learner = payload?.[0]?.payload;
+                          if (!active || !learner) return null;
+                          return (
+                            <div className="rounded-lg border bg-white p-3 shadow-sm" style={{ borderColor: C.cardBorder, color: C.text }}>
+                              <div className="font-semibold">{learner.fullName}</div>
+                              <div>{learner.score == null ? "No assessments yet" : "Comprehension: " + learner.score + "%"}</div>
+                              <div>{riskLabel[learner.category]}</div>
+                            </div>
+                          );
+                        }}
                       />
-
-                      <Bar
-                        dataKey="lightRefresher"
-                        stackId="risk"
-                        fill={C.lightRefresher}
-                      />
-
-                      <Bar
-                        dataKey="moderateRefresher"
-                        stackId="risk"
-                        fill={C.moderateRefresher}
-                      />
-
-                      <Bar
-                        dataKey="fullRefresher"
-                        stackId="risk"
-                        fill={C.fullRefresher}
-                      />
-
-                      <Bar
-                        dataKey="noData"
-                        stackId="risk"
-                        fill={C.noData}
-                        radius={[
-                          5,
-                          5,
-                          0,
-                          0,
-                        ]}
-                      />
+                      <Bar dataKey="score" name="Comprehension" maxBarSize={36} radius={[5, 5, 0, 0]}>
+                        {chartData.map((learner) => (
+                          <Cell key={learner.id} fill={riskColor[learner.category]} />
+                        ))}
+                      </Bar>
 
                     </BarChart>
 
                   </ResponsiveContainer>
-
+                  </div>
                 </div>
 
               ) : (
@@ -1233,7 +1217,7 @@ function Dashboard({
                       color: C.textMuted,
                     }}
                   >
-                    Risk breakdown will appear here once learners are added.
+                    Learner comprehension scores will appear here once learners are added.
                   </div>
 
                 </div>
@@ -1516,11 +1500,13 @@ const selectStyle = { border: `1px solid #D8E8D0`, background: "#F5FAF2" };
 
 function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
   const [lastName, setLastName] = useState(initial?.lastName || "");
+  const [firstName, setFirstName] = useState(initial?.firstName || "");
+  const [submitting, setSubmitting] = useState(false);
   const [month, setMonth] = useState(initial?.birthMonth || "");
   const [day, setDay] = useState(initial?.birthDay || "");
   const [year, setYear] = useState(initial?.birthYear || "");
 
-  const clear = () => { setLastName(""); setMonth(""); setDay(""); setYear(""); };
+  const clear = () => { setLastName(""); setFirstName(""); setMonth(""); setDay(""); setYear(""); };
   const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0"));
 
@@ -1555,6 +1541,10 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
           />
         </Field>
 
+        {initial?.firstName && <Field label="First Name" required>
+          <input value={firstName} maxLength={50} onChange={(e) => setFirstName(e.target.value)}
+            className="w-full rounded-lg px-3 py-2 outline-none" style={selectStyle} />
+        </Field>}
         <Field label="Birthdate" required>
           <div className="flex gap-2">
             <RoundedSelect label="Birth month" hideLabel value={month} onChange={setMonth}
@@ -1590,8 +1580,13 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
             Cancel
           </button>
           <button
-            disabled={!valid}
-            onClick={() => valid && onSubmit({ lastName: formatStudentName(lastName), birthMonth: month, birthDay: day, birthYear: year })}
+            disabled={!valid || submitting}
+            onClick={async () => {
+              if (!valid || submitting) return;
+              setSubmitting(true);
+              try { await onSubmit({ firstName, lastName: formatStudentName(lastName), birthMonth: month, birthDay: day, birthYear: year }); }
+              finally { setSubmitting(false); }
+            }}
             className="flex-1 rounded-full py-2 font-semibold text-white"
             style={{ background: valid ? "#EDA751" : "#EAD9BE" }}
           >
@@ -1634,7 +1629,7 @@ function DeleteConfirmModal({ title = "Remove this learner?", subtitle, onCancel
 // ---------- Students page ----------
 const STUDENT_COLUMNS = "minmax(0, 1.4fr) minmax(0, 0.7fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr)";
 
-function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
+function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore, onRecordingDeleted }) {
   const [attemptSort, setAttemptSort] = useState({ key: "completedAt", direction: "desc" });
   const sortedAttempts = useMemo(
     () => sortStoryAttempts(s.storyResults, attemptSort.key, attemptSort.direction),
@@ -1679,7 +1674,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
         }}
         onClick={() => onToggle(s.id)}
       >
-        <div className="font-semibold">{s.lastName}</div>
+        <div className="font-semibold">{s.displayName}</div>
         <div className="font-semibold">{s.wpm == null ? "--" : `${s.wpm} wpm`}</div>
         <div className="font-semibold text-center tabular-nums">{s.accuracy == null ? "--" : `${s.accuracy}%`}</div>
         <div className="font-semibold text-center tabular-nums">{s.readingAccuracy == null ? "--" : `${s.readingAccuracy}%`}</div>
@@ -1703,13 +1698,13 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
       {s.expanded && (
         <div className="px-5 py-4 text-sm" style={{ background: isFullRefresher ? C.warningBg : "#F7F3EA", color: "#000" }}>
           {!s.storyResults.length ? (
-            `No story test score has been recorded for ${s.lastName} yet.`
+            `No story test score has been recorded for ${s.displayName} yet.`
           ) : (
             <>
               <div className="font-semibold mb-3">
                 Comprehension Score: {s.accuracy == null ? "--" : `${s.accuracy}%`} using one selected attempt per story.
               </div>
-              <p className="mb-3">Reading Accuracy: {s.readingAccuracy == null ? "--" : `${s.readingAccuracy}%`}. Average spoken-word pronunciation score across selected assessed attempts (English). Unavailable scores appear as --.</p>
+              <p className="mb-3">Reading Accuracy: {s.readingAccuracy == null ? "--" : `${s.readingAccuracy}%`}. Average accuracy across selected attempts. New English and Filipino attempts use correct words divided by total story words; incorrect and skipped words lower the score. Older attempts retain their original scores. Unavailable scores appear as --.</p>
               <div className="overflow-x-auto">
                 <div className="grid gap-2">
                   <div className="grid items-center py-1 text-xs font-semibold" style={{ gridTemplateColumns: STUDENT_COLUMNS }}>
@@ -1755,7 +1750,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore }) {
                       </button>
                     ) : <span aria-hidden="true" />}
                     <div style={{ gridColumn: "1 / -1", marginTop: 8 }}>
-                      <TeacherRecording resultId={storyResult.id} count={storyResult.recordingSegmentCount} />
+                      <TeacherRecording resultId={storyResult.id} count={storyResult.recordingSegmentCount} onDeleted={() => onRecordingDeleted(s.id, storyResult.id)} />
                     </div>
                   </div>
                 ))}
@@ -1777,7 +1772,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
   const [modal, setModal] = useState(null);
   const fileRef = useRef(null);
 
-  const filtered = students.filter((s) => s.lastName.toLowerCase().includes(search.toLowerCase()));
+  const filtered = students.filter((s) => s.displayName.toLowerCase().includes(search.toLowerCase()));
 
   const toggle = (id) => setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, expanded: !s.expanded } : s)));
 
@@ -1809,6 +1804,8 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
   const saveLearner = async (data, id) => {
     const payload = {
       lastName: data.lastName,
+      firstName: data.firstName,
+      existingFirstNames: data.existingFirstNames,
       birthdate: `${data.birthYear}-${data.birthMonth}-${data.birthDay}`,
       section: data.section || sectionName,
     };
@@ -1817,7 +1814,26 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       headers: { "Content-Type": "application/json", "X-Teacher-Id": currentTeacher?.id || "" },
       body: JSON.stringify(payload),
     });
-    if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not save learner."));
+    if (!response.ok) {
+      const failure = await response.json();
+      if (failure.code === "FIRST_NAMES_REQUIRED") {
+        const askName = async (title, text, value = "") => {
+          const answer = await liraAlert.fire({ title, text, input: "text", inputValue: value,
+            inputLabel: "First name", inputAttributes: { maxlength: 50 }, showCancelButton: true,
+            confirmButtonText: "Continue", cancelButtonText: "Cancel / skip",
+            inputValidator: (name) => /^[\p{L}]+(?:[ '-][\p{L}]+)*$/u.test(name.trim()) ? undefined : "Enter a valid first name." });
+          if (!answer.isConfirmed) throw Object.assign(new Error("Duplicate learner skipped."), { cancelled: true });
+          return answer.value.trim();
+        };
+        const firstName = await askName("Duplicate details found", `${payload.lastName}, born ${payload.birthdate}, is already listed in ${payload.section}. Enter the first name of the learner you are saving, or cancel if this is the same student.`, data.firstName || "");
+        const existingFirstNames = {};
+        for (const existing of failure.unnamedLearners) {
+          existingFirstNames[existing.id] = await askName("Existing learner's first name", "Enter the first name of " + existing.lastName + " already listed in " + payload.section + ".");
+        }
+        return saveLearner({ ...data, firstName, existingFirstNames }, id);
+      }
+      throw new Error(failure.message || "Could not save learner.");
+    }
     return learnerToStudent(await response.json());
   };
 
@@ -1841,6 +1857,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       });
 
       setStudents((prev) => [...prev, learner]);
+      await onRefresh();
       setModal(null);
       await liraAlert.fire({
         icon: "success",
@@ -1848,7 +1865,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         confirmButtonText: "OK"
       });
     } catch (requestError) {
-      await showError(requestError.message);
+      if (!requestError.cancelled) await showError(requestError.message);
     }
   };
 
@@ -1856,6 +1873,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     try {
       const learner = await saveLearner(data, modal.student.id);
       setStudents((prev) => prev.map((s) => (s.id === learner.id ? { ...learner, expanded: s.expanded } : s)));
+      await onRefresh();
       setModal(null);
       await liraAlert.fire({
         icon: "success",
@@ -1863,7 +1881,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         confirmButtonText: "OK"
       });
     } catch (requestError) {
-      await showError(requestError.message);
+      if (!requestError.cancelled) await showError(requestError.message);
     }
   };
 
@@ -1871,7 +1889,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     const confirmation = await liraAlert.fire({
       icon: "warning",
       title: "Remove this learner?",
-      text: `${student.lastName} will be removed from your class roster.`,
+      text: `${student.displayName} will be removed from your class roster.`,
       showCancelButton: true,
       confirmButtonText: "Remove",
       cancelButtonText: "Cancel"
@@ -1974,8 +1992,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       }
       const newRows = [];
       const invalidRows = [];
-      const duplicateRows = [];
-      const csvLearners = new Set();
+
       for (let i = startIdx; i < lines.length; i++) {
         const row = parseCsvLine(lines[i]);
         const lastName = formatStudentName(extractCsvLastName(row[columns.lastName], nameColumn.fullName));
@@ -1995,13 +2012,6 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           invalidRows.push(i + 1);
           continue;
         }
-        const normalizedBirthdate = `${by}-${bm.padStart(2, "0")}-${bd.padStart(2, "0")}`;
-        const learnerKey = `${lastName.toLowerCase()}|${normalizedBirthdate}|${section.toLowerCase()}`;
-        if (csvLearners.has(learnerKey)) {
-          duplicateRows.push(i + 1);
-          continue;
-        }
-        csvLearners.add(learnerKey);
         newRows.push({
           lastName,
           birthMonth: bm.padStart(2, "0"),
@@ -2034,18 +2044,20 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         if (!confirmation.isConfirmed) return;
       }
 
-      const results = await Promise.allSettled(
-        newRows.map(({ lastName, birthMonth, birthDay, birthYear, section }) =>
-          saveLearner({ lastName, birthMonth, birthDay, birthYear, section }))
-      );
+      const results = [];
+      // Process sequentially so collision prompts never overlap.
+      for (const row of newRows) {
+        try { results.push({ status: "fulfilled", value: await saveLearner(row) }); }
+        catch (reason) { results.push({ status: "rejected", reason }); }
+      }
       const failed = results.filter((result) => result.status === "rejected");
-      const isDuplicateFailure = (result) => /already listed|duplicate key|E11000/i.test(result.reason?.message || "");
+      const isDuplicateFailure = (result) => /already listed|duplicate key|E11000|Duplicate learner skipped/i.test(result.reason?.message || "");
       const storedDuplicates = failed.filter(isDuplicateFailure);
       const ownershipFailures = failed.filter((result) => /managed by/i.test(result.reason?.message || ""));
       const otherFailures = failed.filter((result) => !isDuplicateFailure(result) && !/managed by/i.test(result.reason?.message || ""));
       await onRefresh();
       const importedCount = results.length - failed.length;
-      const duplicateCount = duplicateRows.length + storedDuplicates.length;
+      const duplicateCount = storedDuplicates.length;
       if (duplicateCount > 0 || invalidRows.length > 0 || ownershipFailures.length > 0 || otherFailures.length > 0) {
         const summary = [`<div><strong>${importedCount}</strong> learner(s) imported</div>`];
         if (duplicateCount > 0) summary.push(`<div><strong>${duplicateCount}</strong> duplicate row(s) skipped</div>`);
@@ -2148,7 +2160,13 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           Print a Report
         </button>
 
-        <button onClick={() => setModal({ type: "add" })} className="px-5 py-2 rounded-full font-semibold" style={{ background: "#fff", border: `1px solid ${C.cardBorder}`, color: C.text }}>
+        <button
+          disabled={!sectionName}
+          onClick={() => setModal({ type: "add" })}
+          className="px-5 py-2 rounded-full font-semibold disabled:cursor-not-allowed"
+          style={{ background: sectionName ? "#fff" : "#E5E7EB", border: sectionName ? `1px solid ${C.cardBorder}` : "1px solid #9CA3AF", color: sectionName ? C.text : "#6B7280" }}
+          title={!sectionName ? "A section is required before adding a learner." : "Add learner"}
+        >
           + Add learner
         </button>
       </div>
@@ -2166,6 +2184,9 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           onDelete={deleteLearner}
           onToggle={toggle}
           onSelectScore={selectScoreForAverage}
+          onRecordingDeleted={(learnerId, resultId) => setStudents((previous) => previous.map((student) => student.id === learnerId
+            ? { ...student, storyResults: student.storyResults.map((result) => result.id === resultId ? { ...result, recordingSegmentCount: 0 } : result) }
+            : student))}
         />
       ))}
       {!loading && filtered.length === 0 && (
@@ -2212,7 +2233,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
               return (
                 <tr key={`print-${student.id}`}>
                   <td>{index + 1}</td>
-                  <td>{student.lastName}</td>
+                  <td>{student.displayName}</td>
                   <td>{student.wpm == null ? "--" : student.wpm}</td>
                   <td>{student.accuracy == null ? "--" : `${student.accuracy}%`}</td>
                   <td>{student.readingAccuracy == null ? "--" : `${student.readingAccuracy}%`}</td>
@@ -2712,14 +2733,42 @@ function Flashcards({ currentTeacher }) {
   const addItem = async (data) => {
     if (countWords(data.content) > 250) return;
     try {
+      let flashcardLanguage = data.lang;
+      const detectedLanguage = detectFlashcardLanguage(data.content);
+      if (detectedLanguage && detectedLanguage !== data.lang) {
+        const detectedLabel = detectedLanguage === "FIL" ? "Filipino" : "English";
+        const selectedLabel = data.lang === "FIL" ? "Filipino" : "English";
+        const choice = await liraAlert.fire({
+          icon: "question",
+          title: "Check flashcard language",
+          text: `This flashcard appears to be ${detectedLabel}, but you selected ${selectedLabel}. Change its language to ${detectedLabel}?`,
+          showDenyButton: true,
+          showCancelButton: true,
+          confirmButtonText: `Use ${detectedLabel}`,
+          denyButtonText: `Keep ${selectedLabel}`,
+          confirmButtonColor: "#3D995A",
+          denyButtonColor: "#DC3545",
+          customClass: {
+            popup: "lira-sweet-alert",
+            confirmButton: "lira-sweet-alert-button",
+            denyButton: "lira-sweet-alert-button",
+            cancelButton: "lira-sweet-alert-button",
+          },
+          cancelButtonText: "Back to editing",
+          allowOutsideClick: false,
+        });
+        if (choice.isConfirmed) flashcardLanguage = detectedLanguage;
+        else if (!choice.isDenied) return;
+      }
       const response = await fetch(flashcardUrl(), {
         method: "POST",
         headers: teacherHeaders(true),
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, lang: flashcardLanguage }),
       });
       if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not add flashcard."));
       const saved = await response.json();
       setItems((prev) => [...prev, { ...saved, id: saved._id }]);
+      setLang(flashcardLanguage);
       setShowAdd(false);
       await liraAlert.fire({
         icon: "success",
@@ -3323,6 +3372,19 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions, onChec
   };
 
   const save = async () => {
+    const hasQuestions = questions.some((question) => question.question?.trim());
+
+    if (!hasQuestions) {
+      setActiveTab("questions");
+      await liraAlert.fire({
+        icon: "warning",
+        title: "Add at least one question",
+        text: "This story needs at least one question before you can upload it.",
+        confirmButtonText: "Review questions"
+      });
+      return;
+    }
+
     const missingAnswerKeys = questions
       .map((question, index) => ({ question, number: question.id ?? index + 1 }))
       .filter(({ question }) => question.question?.trim() && !Number.isInteger(question.correct))
@@ -3344,14 +3406,14 @@ function StoryEditModal({ story, onCancel, onSave, onRegenerateQuestions, onChec
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "rgba(60,50,45,0.35)" }}>
-      <div className="rounded-3xl w-[520px] max-h-[85vh] flex flex-col transition-all" style={{ background: C.cream }}>
+      <div className="rounded-3xl w-[520px] max-w-[calc(100vw-2rem)] max-h-[85vh] flex flex-col transition-all" style={{ background: C.cream }}>
         
         {/* ===================== VIEW 1: STORY CONTENT ===================== */}
         {activeTab === "story" && (
           <>
             <div className="p-6 pb-3">
               <div className="flex items-start gap-4 justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
                   <div
                     className="w-16 h-20 rounded-lg overflow-hidden shadow flex items-center justify-center shrink-0"
                     style={{ background: coverImage ? "#222" : story.cover }}

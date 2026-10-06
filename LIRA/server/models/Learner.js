@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const softDeleteSchema = require("./softDelete");
 
 function formatLastName(value) {
   const lastName = String(value || "").trim().toLocaleLowerCase();
@@ -14,6 +15,8 @@ const learnerSchema = new mongoose.Schema({
     trim: true,
     set: formatLastName
   },
+
+  firstName: { type: String, trim: true, default: "", set: formatLastName },
 
   birthdate: {
     type: String,
@@ -34,10 +37,12 @@ const learnerSchema = new mongoose.Schema({
   }
 });
 
-// A learner can appear only once in the same section. Last names are compared case-insensitively.
+// First names distinguish learners with the same surname, birthdate, and section.
 learnerSchema.index(
-  { sectionId: 1, lastName: 1, birthdate: 1 },
+  { sectionId: 1, lastName: 1, birthdate: 1, firstName: 1 },
   { unique: true, collation: { locale: "en", strength: 2 } }
 );
+
+softDeleteSchema(learnerSchema);
 
 module.exports = mongoose.model("Learner", learnerSchema, "Learners");

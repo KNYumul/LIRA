@@ -21,8 +21,237 @@ function verificationMessage(email, token) {
     to: email,
     subject: "Verify your email for LIRA",
     text: `Welcome to LIRA!\n\nClick this link to verify your email and activate your account:\n${link}\n\nThis link expires in 24 hours and can only be used once. If you did not sign up, ignore this email. For help, contact your school IT support.`,
-    html: `<div style="background:#f5f3ff;padding:32px;font-family:Arial,sans-serif;color:#242039"><div style="max-width:560px;margin:auto;background:white;padding:32px;border-radius:16px"><h1 style="color:#6d28d9">LIRA</h1><h2>Welcome to LIRA!</h2><p>Verify your email to activate your teacher account.</p><p style="margin:32px 0"><a href="${safeLink}" style="background:#6d28d9;color:white;padding:14px 24px;border-radius:8px;text-decoration:none">Verify my email</a></p><p>This link expires in 24 hours and can only be used once.</p><p>If the button does not work, click this link:</p><p style="word-break:break-all"><a href="${safeLink}">${safeLink}</a></p><p>If you did not sign up, ignore this email. For help, contact your school IT support.</p></div></div>`,
-  };
+html: `
+<div style="
+  margin:0;
+  padding:0;
+  background:#f8f1e7;
+  font-family:Arial, Helvetica, sans-serif;
+  color:#3f3f3f;
+">
+
+  <!-- OUTER WRAPPER -->
+  <div style="
+    width:100%;
+    padding:40px 16px;
+    box-sizing:border-box;
+  ">
+
+    <div style="
+      max-width:650px;
+      margin:0 auto;
+    ">
+
+      <!-- MAIN CARD -->
+      <div style="
+        background:#fffdf9;
+        border:1px solid #eee5da;
+        border-radius:22px;
+        overflow:hidden;
+        box-shadow:0 8px 25px rgba(80,70,60,0.06);
+      ">
+
+        <!-- CORAL TOP BORDER -->
+        <div style="
+          height:7px;
+          background:#e58d87;
+        "></div>
+
+
+        <!-- MAIN CONTENT -->
+        <div style="
+          padding:48px 45px 38px;
+          text-align:center;
+        ">
+
+          <!-- WELCOME LABEL -->
+          <div style="
+            display:inline-block;
+            padding:9px 24px;
+            margin-bottom:22px;
+            background:#e6efda;
+            border-radius:30px;
+            color:#477558;
+            font-size:13px;
+            font-weight:600;
+          ">
+            Welcome!
+          </div>
+
+
+          <!-- TITLE -->
+          <h1 style="
+            margin:0 0 16px;
+            color:#333333;
+            font-size:32px;
+            line-height:40px;
+            font-weight:700;
+          ">
+            Welcome to
+            <span style="color:#3f7d56;">LIRA!</span>
+          </h1>
+
+
+          <!-- DESCRIPTION -->
+          <p style="
+            max-width:490px;
+            margin:0 auto 30px;
+            color:#747474;
+            font-size:15px;
+            line-height:24px;
+          ">
+            Verify your email to activate your teacher account.
+          </p>
+
+
+          <!-- VERIFY BUTTON -->
+          <div style="
+            margin:0 0 32px;
+          ">
+            <a
+              href="${link}"
+              style="
+                display:inline-block;
+                background:#e58d87;
+                color:#ffffff;
+                padding:16px 34px;
+                border-radius:12px;
+                text-decoration:none;
+                font-size:15px;
+                font-weight:700;
+              "
+            >
+              Verify my email &nbsp;→
+            </a>
+          </div>
+
+
+          <!-- EXPIRATION NOTICE -->
+          <div style="
+            max-width:500px;
+            margin:0 auto 22px;
+            padding:16px 20px;
+            box-sizing:border-box;
+            background:#e6f1e9;
+            border-radius:13px;
+            color:#477558;
+            font-size:13px;
+            line-height:21px;
+          ">
+            This link expires in
+            <strong>24 hours</strong>
+            and can only be used once.
+          </div>
+
+
+          <!-- FALLBACK LINK -->
+          <div style="
+            max-width:500px;
+            margin:0 auto;
+            padding:20px;
+            box-sizing:border-box;
+            background:#f7f0e5;
+            border-radius:13px;
+            text-align:left;
+          ">
+
+            <p style="
+              margin:0 0 10px;
+              color:#777777;
+              font-size:12px;
+              line-height:19px;
+            ">
+              If the button does not work, click or copy and paste
+              this link into your browser:
+            </p>
+
+            <a
+              href="${link}"
+              style="
+                color:#477558;
+                font-size:12px;
+                line-height:19px;
+                word-break:break-all;
+                overflow-wrap:anywhere;
+              "
+            >
+              ${link}
+            </a>
+
+          </div>
+
+
+          <!-- DIVIDER -->
+          <div style="
+            height:1px;
+            margin:34px 0 25px;
+            background:#ddd4c8;
+          "></div>
+
+
+          <!-- SECURITY MESSAGE -->
+          <p style="
+            margin:0;
+            color:#8a8a8a;
+            font-size:12px;
+            line-height:20px;
+          ">
+            If you did not sign up, you can safely ignore this email.
+            <br>
+            For help, contact your school IT support.
+          </p>
+
+        </div>
+
+
+        <!-- GREEN FOOTER -->
+        <div style="
+          padding:24px 20px;
+          background:#dceac9;
+          text-align:center;
+        ">
+
+          <div style="
+            margin-bottom:6px;
+            color:#4f795c;
+            font-size:14px;
+            font-weight:700;
+          ">
+            Better Readers, Brighter Tomorrows
+          </div>
+
+          <div style="
+            color:#78907d;
+            font-size:10px;
+            line-height:16px;
+          ">
+            LIRA — Literacy Intelligence and Reading Assessment
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- OUTSIDE FOOTER -->
+      <div style="
+        padding:22px 20px 0;
+        text-align:center;
+        color:#999999;
+        font-size:10px;
+        line-height:17px;
+      ">
+        This is an automated email from LIRA.<br>
+        Please do not reply to this message.
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+`,  
+};
 }
 
 async function deliverEmail(message) {

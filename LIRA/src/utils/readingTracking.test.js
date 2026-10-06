@@ -1,6 +1,41 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { matchedWordCount } from './readingTracking.js';
+import { matchedWordCount, readingProgress } from './readingTracking.js';
+
+test('story reading continues past wrong and skipped words', () => {
+  assert.deepEqual(readingProgress('The little bird flew home', 'the brittle bird flew home'), { count: 5, incorrectWordIndices: [1] });
+  assert.deepEqual(readingProgress('The little bird flew home', 'the bird flew'), { count: 4, incorrectWordIndices: [1] });
+  assert.deepEqual(readingProgress('The bird flew home', 'the bird flew house'), { count: 4, incorrectWordIndices: [3] });
+  assert.deepEqual(readingProgress('The little bird flew home', 'the big dog flew home'), { count: 5, incorrectWordIndices: [1, 2] });
+});
+
+test('story reading leaves unread words alone and tolerates repeats and extra words', () => {
+  assert.deepEqual(readingProgress('The bird flew home', ''), { count: 0, incorrectWordIndices: [] });
+  assert.deepEqual(readingProgress('The bird flew home', 'the bird'), { count: 2, incorrectWordIndices: [] });
+  assert.deepEqual(readingProgress('The bird flew home', 'the the bird bird flew'), { count: 3, incorrectWordIndices: [] });
+  assert.deepEqual(readingProgress('The bird flew home', 'the little bird flew home'), { count: 4, incorrectWordIndices: [] });
+});
+
+test('story reading preserves number and Filipino matching while advancing past errors', () => {
+  assert.deepEqual(readingProgress('I have fifty coins', 'I have 50 coins'), { count: 4, incorrectWordIndices: [] });
+  assert.deepEqual(readingProgress('Araw-araw ay masayá ang bata', 'araw araw ay masaya ang bato', 'FIL'), { count: 5, incorrectWordIndices: [4] });
+  assert.deepEqual(readingProgress('Siya ay nag aaral', 'siya ay nag-aaral', 'FIL'), { count: 4, incorrectWordIndices: [] });
+});
+
+test('a revised interim transcript can clear a provisional error', () => {
+  assert.deepEqual(readingProgress('The bird flew', 'the boat'), { count: 2, incorrectWordIndices: [1] });
+  assert.deepEqual(readingProgress('The bird flew', 'the bird flew'), { count: 3, incorrectWordIndices: [] });
+});
+
+test('pre-tokenized remaining words preserve errors, compounds and unread trailing words', () => {
+  const words = ['Araw-araw', 'ay', 'masayá', 'ang', 'bata'];
+  assert.deepEqual(readingProgress(words, 'araw araw ay masaya', 'FIL'), { count: 3, incorrectWordIndices: [] });
+  assert.deepEqual(readingProgress(words.slice(3), 'ang bato', 'FIL'), { count: 2, incorrectWordIndices: [1] });
+  assert.deepEqual(readingProgress(['I', 'have', 'fifty', 'coins'], 'I have 50'), { count: 3, incorrectWordIndices: [] });
+  assert.deepEqual(readingProgress(words, '', 'FIL'), { count: 0, incorrectWordIndices: [] });
+  assert.deepEqual(readingProgress([], 'hello'), { count: 0, incorrectWordIndices: [] });
+  assert.deepEqual(words, ['Araw-araw', 'ay', 'masayá', 'ang', 'bata']);
+});
 
 test('accepts fifty as a word or digits in partial and complete transcripts', () => {
   assert.equal(matchedWordCount('I have fifty coins.', 'I have 50'), 3);
@@ -15,6 +50,35 @@ test('normalizes other simple English numbers without accepting incorrect number
   assert.equal(matchedWordCount('fifty coins', '15 coins'), 0);
   assert.equal(matchedWordCount('I have fifty coins', 'I 50 coins'), 1);
   assert.equal(matchedWordCount('fifty', '50', 'FIL'), 0);
+});
+
+test('Filipino number words and linker forms match digit transcripts', () => {
+  for (const spoken of ['isang', 'isa', '1']) {
+    assert.equal(matchedWordCount('Isang araw may isang bata', spoken, 'FIL'), 1);
+    assert.deepEqual(readingProgress('Isang araw may isang bata', `${spoken} araw may 1 bata`, 'FIL'),
+      { count: 5, incorrectWordIndices: [] });
+  }
+  for (const [word, digit] of [
+    ['sero', '0'], ['isa', '1'], ['isang', '1'], ['dalawa', '2'], ['dalawang', '2'],
+    ['tatlo', '3'], ['tatlong', '3'], ['apat', '4'], ['lima', '5'], ['limang', '5'],
+    ['anim', '6'], ['pito', '7'], ['pitong', '7'], ['walo', '8'], ['walong', '8'],
+    ['siyam', '9'], ['sampu', '10'], ['sampung', '10'],
+  ]) {
+    assert.equal(matchedWordCount(word, digit, 'FIL'), 1);
+    assert.equal(matchedWordCount(digit, word, 'FIL'), 1);
+    assert.deepEqual(readingProgress([word], digit, 'FIL'), { count: 1, incorrectWordIndices: [] });
+  }
+  assert.equal(matchedWordCount('isáng bata', '1 bata', 'FIL'), 2);
+  assert.equal(matchedWordCount('Isa-isang nakalaya', '1 1 nakalaya', 'FIL'), 2);
+});
+
+test('Filipino number normalization preserves incorrect numbers, gaps and language boundaries', () => {
+  assert.equal(matchedWordCount('isang bata', '2 bata', 'FIL'), 0);
+  assert.deepEqual(readingProgress('isang bata', '2 bata', 'FIL'), { count: 2, incorrectWordIndices: [0] });
+  assert.equal(matchedWordCount('may isang bata', '1 bata', 'FIL'), 0);
+  assert.equal(matchedWordCount('apat na bata', '4 bata', 'FIL'), 1);
+  assert.equal(matchedWordCount('isang', '1', 'ENG'), 0);
+  assert.equal(matchedWordCount('bata', 'batang', 'FIL'), 0);
 });
 
 test('Filipino accepts split hyphens and written stress marks', () => {

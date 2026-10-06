@@ -1,6 +1,26 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { detectStoryLanguage } from "./storyLanguage.js";
+import { detectFlashcardLanguage, detectStoryLanguage } from "./storyLanguage.js";
+
+test("detects single-word flashcards in both languages", () => {
+  for (const text of ["Apple", "DOG!", "school", "beautiful"]) {
+    assert.equal(detectFlashcardLanguage(text), "ENG");
+  }
+  for (const text of ["mansanas", "PUSA!", "paaralan", "mag-aaral"]) {
+    assert.equal(detectFlashcardLanguage(text), "FIL");
+  }
+});
+
+test("detects short flashcard phrases", () => {
+  assert.equal(detectFlashcardLanguage("The dog is happy."), "ENG");
+  assert.equal(detectFlashcardLanguage("Ang mga bata ay masaya."), "FIL");
+});
+
+test("leaves ambiguous, unknown, and balanced mixed flashcards undecided", () => {
+  for (const text of ["", "123", "xyz", "ate", "may", "at", "pusa dog", "xyz qqq dog"]) {
+    assert.equal(detectFlashcardLanguage(text), null);
+  }
+});
 
 test("detects Filipino story text even with an English name", () => {
   assert.equal(detectStoryLanguage("Isang araw, si Jane ay nagpunta sa paaralan. Nakita niya ang kanyang mga kaibigan at sila ay naglaro sa ilalim ng puno."), "FIL");

@@ -1,0 +1,98 @@
+<svg viewBox="0 0 1600 900" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @keyframes floatDuck {
+        0%, 100% { transform: translate(80px, 860px) scale(0.8) rotate(0deg); }
+        50% { transform: translate(80px, 838px) scale(0.8) rotate(-4deg); }
+      }
+      @keyframes floatBear {
+        0%, 100% { transform: translate(1530px, 870px) scale(0.85) rotate(0deg); }
+        50% { transform: translate(1530px, 848px) scale(0.85) rotate(3deg); }
+      }
+      .anim-duck {
+        animation: floatDuck 3.4s ease-in-out infinite;
+        transform-origin: 80px 860px;
+      }
+      .anim-bear {
+        animation: floatBear 3.8s ease-in-out infinite 0.7s;
+        transform-origin: 1530px 870px;
+      }
+    </style>
+    <linearGradient id="o10-sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#CDEEF5"/><stop offset="100%" stop-color="#FBF6EC"/>
+    </linearGradient>
+    <radialGradient id="o10-vignette" cx="50%" cy="48%" r="40%">
+      <stop offset="0%" stop-color="#FBF6EC" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#FBF6EC" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="o10-blur"><feGaussianBlur stdDeviation="4"/></filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#o10-sky)"/>
+
+  <!-- bunting flag garland strung across the very top -->
+  <path d="M0,40 Q400,100 800,40 T1600,40" fill="none" stroke="#C9BA8E" stroke-width="2" opacity="0.6"/>
+  <g opacity="0.75">
+    <polygon points="60,52 100,52 80,92" fill="#9FD8E6"/>
+    <polygon points="160,66 200,66 180,106" fill="#EDD98C"/>
+    <polygon points="260,76 300,76 280,116" fill="#EDA97A"/>
+    <polygon points="360,82 400,82 380,122" fill="#E2938C"/>
+    <polygon points="460,84 500,84 480,124" fill="#8FAE7D"/>
+    <polygon points="1140,84 1180,84 1160,124" fill="#9FD8E6"/>
+    <polygon points="1240,80 1280,80 1260,120" fill="#EDD98C"/>
+    <polygon points="1340,72 1380,72 1360,112" fill="#EDA97A"/>
+    <polygon points="1440,62 1480,62 1460,102" fill="#E2938C"/>
+    <polygon points="1540,50 1580,50 1560,90" fill="#8FAE7D"/>
+  </g>
+
+  <!-- kites drifting in upper corners -->
+  <g transform="translate(100,160) rotate(-12)" opacity="0.8">
+    <polygon points="0,-40 32,0 0,50 -32,0" fill="#9FD8E6"/>
+    <line x1="0" y1="50" x2="-30" y2="140" stroke="#C9BA8E" stroke-width="2"/>
+    <polygon points="-34,150 -26,150 -30,164" fill="#EDD98C"/>
+    <polygon points="-24,170 -16,170 -20,184" fill="#E2938C"/>
+  </g>
+  <g transform="translate(1480,130) rotate(10) scale(0.9)" opacity="0.75">
+    <polygon points="0,-40 32,0 0,50 -32,0" fill="#EDA97A"/>
+    <line x1="0" y1="50" x2="26" y2="130" stroke="#C9BA8E" stroke-width="2"/>
+    <polygon points="22,140 30,140 26,154" fill="#8FAE7D"/>
+    <polygon points="30,160 38,160 34,174" fill="#9FD8E6"/>
+  </g>
+
+  <!-- clouds scattered mid-height on both sides -->
+  <g fill="#FFFFFF" opacity="0.8" filter="url(#o10-blur)">
+    <ellipse cx="120" cy="420" rx="56" ry="20"/><ellipse cx="170" cy="412" rx="38" ry="16"/>
+    <ellipse cx="1480" cy="460" rx="60" ry="22"/><ellipse cx="1530" cy="452" rx="40" ry="16"/>
+  </g>
+
+  <!-- soft grass band along the bottom, full width -->
+  <path d="M0,760 C300,730 600,780 900,760 C1200,740 1400,770 1600,752 L1600,900 L0,900 Z" fill="#B7D19F" opacity="0.6"/>
+  <path d="M0,820 C300,800 600,840 900,822 C1200,805 1400,835 1600,818 L1600,900 L0,900 Z" fill="#9AC17F" opacity="0.55"/>
+
+  <!-- scattered picnic-party dots and flowers along the grass -->
+  <g opacity="0.7">
+    <g transform="translate(100,880)"><circle r="7" fill="#EDD98C"/><circle cx="11" cy="3" r="6" fill="#F7EFC6"/><circle cx="-9" cy="5" r="6" fill="#F7EFC6"/></g>
+    <g transform="translate(1500,810)"><circle r="7" fill="#E2938C"/><circle cx="11" cy="3" r="6" fill="#F3C4C0"/><circle cx="-9" cy="5" r="6" fill="#F3C4C0"/></g>
+    <circle cx="300" cy="840" r="5" fill="#9FD8E6" opacity="0.6"/>
+    <circle cx="1300" cy="850" r="5" fill="#EDA97A" opacity="0.6"/>
+  </g>
+
+  <!-- duckling peeking bottom-left -->
+  <g class="anim-duck" opacity="0.88">
+    <ellipse cx="0" cy="0" rx="34" ry="26" fill="#F7EFC6"/>
+    <circle cx="0" cy="-30" r="20" fill="#F7EFC6"/>
+    <path d="M16,-30 L32,-26 L16,-20 Z" fill="#EDA97A"/>
+    <circle cx="-6" cy="-34" r="3" fill="#3F3835"/><circle cx="7" cy="-34" r="3" fill="#3F3835"/>
+  </g>
+
+  <!-- bear peeking bottom-right -->
+  <g class="anim-bear" opacity="0.88">
+    <ellipse cx="0" cy="0" rx="46" ry="34" fill="#E8C9A0"/>
+    <circle cx="-38" cy="-42" r="15" fill="#E8C9A0"/><circle cx="38" cy="-42" r="15" fill="#E8C9A0"/>
+    <circle cx="-14" cy="-20" r="3.5" fill="#3F3835"/><circle cx="14" cy="-20" r="3.5" fill="#3F3835"/>
+    <ellipse cx="0" cy="-10" rx="6" ry="4" fill="#8A6A3F"/>
+  </g>
+
+  <!-- gentle vignette so the center stays light and legible for the text card -->
+  <rect width="1600" height="900" fill="url(#o10-vignette)"/>
+</svg>

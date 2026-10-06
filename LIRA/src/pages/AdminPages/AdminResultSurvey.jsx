@@ -50,20 +50,46 @@ export default function AdminSurveyResults() {
   const overallScore = students.length ? students.reduce((sum, student) => sum + student.score, 0) / students.length : null
   const ready = !loading && !error
 
+  const interpretScore = (overallScore) => {
+    if (overallScore >= 84.1) return 'A+'
+    if (overallScore >= 80.8) return 'A'
+    if (overallScore >= 78.9) return 'A-'
+    if (overallScore >= 77.2) return 'B+'
+    if (overallScore >= 74.1) return 'B'
+    if (overallScore >= 72.6) return 'B-'
+    if (overallScore >= 71.1) return 'C+'
+    if (overallScore >= 65) return 'C'
+    if (overallScore >= 62.7) return 'C-'
+    if (overallScore >= 51.7) return 'D'
+    return 'F'
+  }
+
+  const interpretRank = (overallScore) => {
+    if (overallScore >= 84.1) return 'Best imaginable'
+    if (overallScore >= 77.2) return 'Excellent'
+    if (overallScore >= 71.1) return 'Good'
+    if (overallScore >= 51.7) return 'Okay'
+    return 'Poor'
+  }
+
   return (
     <div className="survey-results-page">
       <div className="survey-results-container">
         <div className="survey-page-header">
           <div><h1>Survey Results</h1><p>Student System Usability Scale (SUS) responses for LIRA.</p></div>
-          <button type="button" className="view-survey-btn" disabled={loading} onClick={() => { setSelected(null); setRefresh(value => value + 1) }}>Refresh</button>
+          <div className="survey-header-actions">
+            <button type="button" className="view-survey-btn survey-print-button" disabled={loading || !!error || !filteredStudents.length} onClick={() => window.print()}>Print Report</button>
+            <button type="button" className="view-survey-btn" disabled={loading} onClick={() => { setSelected(null); setRefresh(value => value + 1) }}>Refresh</button>
+          </div>
         </div>
         <div className="survey-summary-grid">
           <div className="survey-summary-card"><div><span className="summary-label">Total Responses</span><h2>{ready ? students.length : '?'}</h2><p>Students completed the survey</p></div></div>
           <div className="survey-summary-card"><div><span className="summary-label">Overall SUS Score</span><h2>{ready && overallScore !== null ? `${overallScore.toFixed(1)} / 100` : '?'}</h2><p>Scores account for positive and negative questions.</p></div></div>
+          <div className="survey-summary-card"><div><span className="summary-label">SUS Score Interpretation</span><h2>{ready && overallScore !== null ? interpretScore(overallScore) : '?'}</h2><p>{ready && overallScore !== null ? interpretRank(overallScore) : 'Rank'}</p></div></div>
         </div>
-        <section className="survey-results-card">
+        <section className="survey-results-card survey-list-card">
           <div className="survey-card-top">
-            <div><h2>Student Responses</h2><p>View each student's answers and SUS score.</p></div>
+            <div><h2>Student Responses</h2><p className="survey-results-caption">View each student's answers and SUS score.</p><p className="survey-print-caption">{sectionFilter ? `Section: ${sectionFilter} · ` : ''}{filteredStudents.length} response{filteredStudents.length === 1 ? '' : 's'} included</p></div>
             <div className="survey-results-controls">
               <div className="survey-search-box"><input type="search" aria-label="Search students or sections" placeholder="Search students or sections..." value={search} onChange={event => setSearch(event.target.value)} /></div>
               <div className="survey-section-select">

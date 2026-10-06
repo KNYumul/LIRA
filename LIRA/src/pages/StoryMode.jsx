@@ -1,5 +1,5 @@
 import { ReadingRecorder } from '../utils/readingRecorder';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import './StoryMode.css';
 import CompletionScreen from '../components/CompletionScreen';
@@ -7,7 +7,7 @@ import CompletionScreenNormal from '../components/CompletionScreenNormal';
 import { getSession } from '../utils/session';
 import { INACTIVITY_PAUSE_EVENT, isInactivityPaused } from '../utils/inactivityPause';
 import { liraAlert } from '../utils/alerts';
-import { readingWords, normalizedWord, matchedWordCount } from '../utils/readingTracking';
+import { readingWords, normalizedWord, readingProgress } from '../utils/readingTracking';
 import { storySlides } from '../utils/storySlides';
 
 /* Static story catalog retained for reference; Student Story Mode now loads from /api/stories.
@@ -579,7 +579,20 @@ function KoalaMascot() {
   );
 }
 
+const mobileStoryQuery = '(max-width: 900px)';
+
+function subscribeToStoryViewport(onChange) {
+  const media = window.matchMedia(mobileStoryQuery);
+  media.addEventListener('change', onChange);
+  return () => media.removeEventListener('change', onChange);
+}
+
+function getMobileStoryViewport() {
+  return window.matchMedia(mobileStoryQuery).matches;
+}
+
 function StoryMode({ onExit }) {
+  const isMobileStoryPicker = useSyncExternalStore(subscribeToStoryViewport, getMobileStoryViewport, () => false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [stories, setStories] = useState([]);
@@ -593,10 +606,11 @@ function StoryMode({ onExit }) {
   const [pageIndex, setPageIndex] = useState(0);
   const [isFlipping, setIsFlipping] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [speechReady, setSpeechReady] = useState(false);
   const [progress, setProgress] = useState(0);
   const [spokenWordCount, setSpokenWordCount] = useState(0);
   const [speechStatus, setSpeechStatus] = useState('Tap the microphone and read aloud.');
-  const [retryWordIndex, setRetryWordIndex] = useState(null);
+  const [incorrectWords, setIncorrectWords] = useState(() => new Set());
 
   const [quizIndex, setQuizIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -610,7 +624,7 @@ function StoryMode({ onExit }) {
   const [carouselDirection, setCarouselDirection] = useState('next');
   const recordingRef = useRef(new ReadingRecorder());
   const recognizerRef = useRef(null);
-  const recognizedTextRef = useRef('');
+  const committedReadingRef = useRef({ count: 0, incorrectWords: new Set() });
   const listeningRequestRef = useRef(0);
   const pageTransitionRef = useRef(null);
   const readingScrollRef = useRef(null);
@@ -619,7 +633,6 @@ function StoryMode({ onExit }) {
   const latestSpeechEndRef = useRef(0);
   const exitPromptRef = useRef(false);
   const readingWordStatsRef = useRef(Object.create(null));
-  const readingAccuracyRef = useRef({ sum: 0, count: 0 });
   const readingTimerRef = useRef({ elapsed: 0, startedAt: null });
   const pauseReadingTimer = () => {
     const timer = readingTimerRef.current;
@@ -661,7 +674,7 @@ function StoryMode({ onExit }) {
   useEffect(() => {
     const container = readingScrollRef.current;
     if (!container || !isListening || isFlipping) return;
-    const currentWord = container.querySelector('.sm-word-retry, .sm-word-current');
+    const currentWord = container.querySelector('.sm-word-current');
     if (!currentWord) return;
 
     const viewport = container.getBoundingClientRect();
@@ -673,7 +686,7 @@ function StoryMode({ onExit }) {
         behavior: 'instant',
       });
     }
-  }, [spokenWordCount, retryWordIndex, isListening, isFlipping, pageIndex, view]);
+  }, [spokenWordCount, isListening, isFlipping, pageIndex, view]);
 
   const selectLanguage = (nextLanguage) => {
     setLanguage(nextLanguage);
@@ -716,6 +729,7 @@ function StoryMode({ onExit }) {
     const recognizer = recognizerRef.current;
     recognizerRef.current = null;
     setIsListening(false);
+    setSpeechReady(false);
     if (recognizer) {
       recognizer.stopContinuousRecognitionAsync(
         () => recognizer.close(),
@@ -733,6 +747,7 @@ function StoryMode({ onExit }) {
       recognizerRef.current = null;
       if (recognizer) recognizer.stopContinuousRecognitionAsync(() => recognizer.close(), () => recognizer.close());
       setIsListening(false);
+      setSpeechReady(false);
       setSpeechStatus('Microphone paused. Tap it to continue recording your reading.');
     };
     document.addEventListener('visibilitychange', pauseMicrophone);
@@ -753,16 +768,17 @@ function StoryMode({ onExit }) {
   }, []);
 
   const startListening = async (pageText, readingPageIndex = pageIndex) => {
-    setRetryWordIndex(null);
     readingPageRef.current = { text: pageText, index: readingPageIndex };
     speechBoundaryRef.current = 0;
     latestSpeechEndRef.current = 0;
     const request = ++listeningRequestRef.current;
     setIsListening(true);
-    setSpeechStatus('Connecting to your reading helper…');
-    // A new recognizer starts with an empty transcript. Seed it with the
-    // accepted words so pausing and resuming preserves the visible position.
-    recognizedTextRef.current = readingWords(pageText).slice(0, spokenWordCount).join(' ');
+    setSpeechReady(false);
+    setSpeechStatus('Microphone Connecting...');
+    // Resume committed speech and preserve error marks across microphone sessions.
+    setSpokenWordCount(committedReadingRef.current.count);
+    setIncorrectWords(new Set(committedReadingRef.current.incorrectWords));
+    setProgress(Math.round(committedReadingRef.current.count / Math.max(1, readingWords(pageText).length) * 100));
     try {
       if (!getSession()?.token) throw new Error('Please sign in again before recording your reading.');
       if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) throw new Error('Recording requires a supported browser and HTTPS (or localhost).');
@@ -780,7 +796,7 @@ function StoryMode({ onExit }) {
       speechConfig.speechRecognitionLanguage = language === 'FIL' ? 'fil-PH' : 'en-US';
       speechConfig.outputFormat = SpeechSDK.OutputFormat.Detailed;
       speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceResponse_StablePartialResultThreshold, '1');
-      speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, language === 'FIL' ? '900' : '500');
+      speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, '300');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       if (request !== listeningRequestRef.current) {
         stream.getTracks().forEach((track) => track.stop());
@@ -816,13 +832,14 @@ function StoryMode({ onExit }) {
         latestSpeechEndRef.current = Math.max(latestSpeechEndRef.current, event.result.offset + event.result.duration);
         if (pageTransitionRef.current !== null || event.result.offset < speechBoundaryRef.current) return;
         const pageText = readingPageRef.current.text;
-        const combined = `${recognizedTextRef.current} ${event.result.text || ''}`;
-        const count = matchedWordCount(pageText, combined, language);
-        setRetryWordIndex((previous) => previous === count ? previous : null);
-        // Interim transcripts can be revised; every reading indicator must use
-        // the same match position, including when recognition moves backward.
+        const committed = committedReadingRef.current;
+        const words = readingWords(pageText);
+        const result = readingProgress(words.slice(committed.count), event.result.text || '', language);
+        const count = committed.count + result.count;
+        // Interim hypotheses can change; only final speech commits error marks.
+        setIncorrectWords(new Set([...committed.incorrectWords, ...result.incorrectWordIndices.map((index) => committed.count + index)]));
         setSpokenWordCount(count);
-        setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
+        setProgress(Math.round((count / Math.max(1, words.length)) * 100));
       };
       recognizer.recognized = (_, event) => {
         if (recognizerRef.current !== recognizer) return;
@@ -831,40 +848,25 @@ function StoryMode({ onExit }) {
         if (event.result.reason !== SpeechSDK.ResultReason.RecognizedSpeech) return;
         latestSpeechEndRef.current = Math.max(latestSpeechEndRef.current, event.result.offset + event.result.duration);
         if (pageTransitionRef.current !== null || event.result.offset < speechBoundaryRef.current) return;
-        if (language === 'ENG') {
-          const assessment = SpeechSDK.PronunciationAssessmentResult.fromResult(event.result);
-          // Segment omissions are not measurements of spoken-word pronunciation.
-          for (const word of assessment.detailResult?.Words || []) {
-            const result = word.PronunciationAssessment;
-            if (result?.ErrorType !== 'Omission' && Number.isFinite(result?.AccuracyScore)
-              && result.AccuracyScore >= 0 && result.AccuracyScore <= 100) {
-              readingAccuracyRef.current.sum += result.AccuracyScore;
-              readingAccuracyRef.current.count += 1;
-            }
-          }
-        }
         const { text: pageText, index: readingPageIndex } = readingPageRef.current;
-        const previousCount = matchedWordCount(pageText, recognizedTextRef.current, language);
-        recognizedTextRef.current = `${recognizedTextRef.current} ${event.result.text || ''}`.trim();
-        const count = matchedWordCount(pageText, recognizedTextRef.current, language);
+        const committed = committedReadingRef.current;
+        const previousCount = committed.count;
         const words = readingWords(pageText);
+        const result = readingProgress(words.slice(previousCount), event.result.text || '', language);
+        const count = previousCount + result.count;
+        const errors = new Set([...committed.incorrectWords, ...result.incorrectWordIndices.map((index) => previousCount + index)]);
+        committedReadingRef.current = { count, incorrectWords: errors };
+        setIncorrectWords(errors);
         const recordWord = (word, retry) => {
           const key = normalizedWord(word);
           const stat = readingWordStatsRef.current[key] ||= { word: key, attempts: 0, retries: 0 };
           stat.attempts += 1;
           if (retry) stat.retries += 1;
         };
-        for (let index = previousCount; index < count; index += 1) recordWord(words[index], false);
-        if (count === previousCount && event.result.text?.trim() && words[count]) recordWord(words[count], true);
+        for (let index = previousCount; index < count; index += 1) recordWord(words[index], errors.has(index));
         setSpokenWordCount(count);
-        setProgress(Math.round((count / Math.max(1, readingWords(pageText).length)) * 100));
-        if (count === previousCount && event.result.text) {
-          const expectedWord = readingWords(pageText)[count];
-          setRetryWordIndex(expectedWord ? count : null);
-        } else {
-          setRetryWordIndex(null);
-        }
-        if (count >= readingWords(pageText).length) goNextPage(true, readingPageIndex);
+        setProgress(Math.round((count / Math.max(1, words.length)) * 100));
+        if (count >= words.length) goNextPage(true, readingPageIndex);
       };
       recognizer.canceled = (_, event) => {
         if (recognizerRef.current !== recognizer) return;
@@ -881,6 +883,7 @@ function StoryMode({ onExit }) {
         () => {
           if (recognizerRef.current !== recognizer) return;
           setIsListening(true);
+          setSpeechReady(true);
           setSpeechStatus('Listening… Read the words at your own pace.');
         },
         (error) => {
@@ -889,6 +892,7 @@ function StoryMode({ onExit }) {
           recognizer.close();
           recognizerRef.current = null;
           setIsListening(false);
+          setSpeechReady(false);
           setSpeechStatus(String(error || 'Could not start the reading helper.'));
         }
       );
@@ -898,6 +902,7 @@ function StoryMode({ onExit }) {
       recognizerRef.current?.close();
       recognizerRef.current = null;
       setIsListening(false);
+      setSpeechReady(false);
       const denied = error?.name === 'NotAllowedError' || /permission|microphone/i.test(String(error?.message));
       setSpeechStatus(denied
         ? 'Microphone access is blocked. Allow it in your browser, then try again.'
@@ -912,14 +917,15 @@ function StoryMode({ onExit }) {
     recordingRef.current = new ReadingRecorder();
     readingTimerRef.current = { elapsed: 0, startedAt: null };
     readingWordStatsRef.current = Object.create(null);
-    readingAccuracyRef.current = { sum: 0, count: 0 };
-    setRetryWordIndex(null);
+    setIncorrectWords(new Set());
+    committedReadingRef.current = { count: 0, incorrectWords: new Set() };
     setActiveStory(story);
     setPageIndex(0);
     setProgress(0);
     setSpokenWordCount(0);
     setSpeechStatus('Tap the microphone and read aloud.');
     setIsListening(false);
+    setSpeechReady(false);
     setView('reading');
   };
 
@@ -933,13 +939,13 @@ function StoryMode({ onExit }) {
     pageTransitionRef.current = setTimeout(() => {
       pageTransitionRef.current = null;
       if (currentPageIndex < storyPages.length - 1) {
-        setRetryWordIndex(null);
+        setIncorrectWords(new Set());
+        committedReadingRef.current = { count: 0, incorrectWords: new Set() };
         setPageIndex(currentPageIndex + 1);
         setProgress(0);
         setSpokenWordCount(0);
         const nextPage = storyPages[currentPageIndex + 1];
         readingPageRef.current = { text: `${nextPage.highlight}${nextPage.rest}`, index: currentPageIndex + 1 };
-        recognizedTextRef.current = '';
         speechBoundaryRef.current = latestSpeechEndRef.current;
         setSpeechStatus(continueListening && recognizerRef.current
           ? 'Listening… Read the words at your own pace.'
@@ -970,7 +976,7 @@ function StoryMode({ onExit }) {
       const response = await fetch(`${API_URL}/api/story-results`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Learner-Id': learnerId || '', Authorization: `Bearer ${getSession()?.token || ''}` },
-        body: JSON.stringify({ recording: await recordingRef.current.serialize(), storyId: activeStory.id, language, answers, readingWordStats: Object.values(readingWordStatsRef.current), readingDurationSeconds: readingTimerRef.current.elapsed / 1000, readingAccuracy: readingAccuracyRef.current.count ? Math.round(readingAccuracyRef.current.sum / readingAccuracyRef.current.count) : null })
+        body: JSON.stringify({ recording: await recordingRef.current.serialize(), storyId: activeStory.id, language, answers, readingWordStats: Object.values(readingWordStatsRef.current), readingDurationSeconds: readingTimerRef.current.elapsed / 1000 })
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || 'Could not save your score.');
@@ -1056,7 +1062,7 @@ function StoryMode({ onExit }) {
 
   /* Selection View */
   if (view === 'selection') {
-    const visibleStories = filteredStories.slice(carouselOffset, carouselOffset + 3);
+    const visibleStories = isMobileStoryPicker ? filteredStories : filteredStories.slice(carouselOffset, carouselOffset + 3);
 
     return (
       <section className="story-mode sm-selection-bg">
@@ -1184,7 +1190,7 @@ function StoryMode({ onExit }) {
           <div className="sm-mic-control">
             <button
               type="button"
-              className={`sm-mic-btn ${isListening ? 'is-listening' : ''}`}
+              className={`sm-mic-btn ${isListening ? speechReady ? 'is-listening' : 'is-connecting' : ''}`}
               onClick={() => {
                 if (isListening) {
                   stopListening();
@@ -1213,15 +1219,12 @@ function StoryMode({ onExit }) {
                   if (!normalizedWord(part)) return <span key={`separator-${index}`}>{part}</span>;
                   const wordIndex = renderedWordIndex++;
                   return (
-                    <span key={`${part}-${index}`} className={wordIndex === retryWordIndex ? 'sm-word-retry' : wordIndex < spokenWordCount ? 'sm-word-read' : wordIndex === spokenWordCount && isListening ? 'sm-word-current' : ''}>
+                    <span key={`${part}-${index}`} className={incorrectWords.has(wordIndex) ? 'sm-word-incorrect' : wordIndex < spokenWordCount ? 'sm-word-read' : wordIndex === spokenWordCount && isListening && speechReady ? 'sm-word-current' : ''}>
                       {part}
                     </span>
                   );
                 })}
               </p>
-              {retryWordIndex !== null && (
-                <p className="sm-reading-retry" role="status">Try: “{readingWords(pageText)[retryWordIndex]}”</p>
-              )}
             </div>
             <span className="sm-page-fold" aria-hidden="true" />
           </div>

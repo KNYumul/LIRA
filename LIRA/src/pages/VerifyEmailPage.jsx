@@ -25,6 +25,10 @@ export default function VerifyEmailPage() {
         navigate("/login?portal=teacher", { replace: true, state: { emailVerified: true } });
         return;
       }
+      if (data.code === "LINK_USED") {
+        navigate("/login?portal=teacher", { replace: true });
+        return;
+      }
       setResult(data);
     } catch {
       setResult({ code: "NETWORK_ERROR", message: "Unable to reach the server. Please try again." });

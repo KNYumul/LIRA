@@ -71,10 +71,6 @@ function Footer() {
               How It Works
             </Link>
 
-            <Link to="/#flow">
-              The Flow
-            </Link>
-
             <Link to="/login">
               Login
             </Link>
@@ -124,12 +120,12 @@ function Footer() {
               Navotas Elementary School - Central, Philippines
             </span>
 
-            <Link
+            {/* <Link
               className="lira-footer__portal"
               to="/admin/login"
             >
               Admin Portal
-            </Link>
+            </Link> */}
           </address>
 
         </div>

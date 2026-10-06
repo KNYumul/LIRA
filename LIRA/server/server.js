@@ -34,7 +34,8 @@ app.use("/api/surveys", require("./routes/survey"));
 
 mongoose
   .connect(process.env.MONGO_URI, {dbname: "LIRA"} )
-  .then(() => {
+  .then(async () => {
+    await require("./utils/learnerIndexes")();
     console.log("MongoDB connected!");
     // console.log("Database:", mongoose.connection.name);
 

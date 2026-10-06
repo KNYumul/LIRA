@@ -14,14 +14,34 @@ const englishNumberWords = new Map([
     .map((word, index) => [word, String((index + 2) * 10)]),
 ]);
 
+const filipinoNumberWords = new Map([
+  ['sero', '0'], ['zero', '0'],
+  ['isa', '1'], ['isang', '1'],
+  ['dalawa', '2'], ['dalawang', '2'],
+  ['tatlo', '3'], ['tatlong', '3'],
+  ['apat', '4'],
+  ['lima', '5'], ['limang', '5'],
+  ['anim', '6'],
+  ['pito', '7'], ['pitong', '7'],
+  ['walo', '8'], ['walong', '8'],
+  ['siyam', '9'],
+  ['sampu', '10'], ['sampung', '10'],
+]);
+
+function normalizeReadingWord(word, language) {
+  const value = normalizedWord(word);
+  // Match number words when speech transcripts format them as digits.
+  if (language === 'ENG') return englishNumberWords.get(value) ?? value;
+  // Written stress marks are normally absent from speech transcripts. Keep ñ.
+  if (language === 'FIL') {
+    const unaccented = value.normalize('NFD').replace(/[\u0300\u0301\u0302]/g, '').normalize('NFC');
+    return filipinoNumberWords.get(unaccented) ?? unaccented;
+  }
+  return value;
+}
+
 export function matchedWordCount(reference, spoken, language = 'ENG') {
-  const normalize = (word) => {
-    const value = normalizedWord(word);
-    // Match number words when speech transcripts format them as digits.
-    if (language === 'ENG') return englishNumberWords.get(value) ?? value;
-    // Written stress marks are normally absent from speech transcripts. Keep ñ.
-    return language === 'FIL' ? value.normalize('NFD').replace(/[\u0300\u0301\u0302]/g, '').normalize('NFC') : value;
-  };
+  const normalize = (word) => normalizeReadingWord(word, language);
   const expectedWords = readingWords(reference);
   const heardWords = readingWords(spoken);
   const expected = expectedWords.map(normalize);
@@ -51,3 +71,62 @@ export function matchedWordCount(reference, spoken, language = 'ENG') {
   return Math.min(expectedIndex, expected.length);
 }
 
+// Align speech to a prefix of the remaining story. Unspoken trailing words are
+// not errors; substitutions and omissions before later speech are errors.
+export function readingProgress(reference, spoken, language = 'ENG') {
+  const expected = Array.isArray(reference) ? reference : readingWords(reference);
+  const heard = readingWords(spoken);
+  if (!expected.length || !heard.length) return { count: 0, incorrectWordIndices: [] };
+  // Normalize once per word, not once per cell of the alignment matrix.
+  const expectedKeys = expected.map((word) => normalizeReadingWord(word, language));
+  const heardKeys = heard.map((word) => normalizeReadingWord(word, language));
+  const heardLiteralKeys = heard.map(normalizedWord);
+  const expectedParts = language === 'FIL' ? expected.map((word) => readingWords(word.replace(/[-'’]/g, ' '))) : [];
+  const heardParts = language === 'FIL' ? heard.map((word) => readingWords(word.replace(/[-'’]/g, ' '))) : [];
+  const rows = Array.from({ length: expected.length + 1 }, () =>
+    Array.from({ length: heard.length + 1 }, () => ({ cost: Infinity })));
+  rows[0][0] = { cost: 0 };
+  const update = (i, j, nextI, nextJ, cost, wrong = []) => {
+    const total = rows[i][j].cost + cost;
+    if (total < rows[nextI][nextJ].cost) {
+      rows[nextI][nextJ] = { cost: total, previous: [i, j], wrong };
+    }
+  };
+  for (let i = 0; i <= expected.length; i += 1) {
+    for (let j = 0; j <= heard.length; j += 1) {
+      if (i < expected.length && j < heard.length) {
+        const matches = expectedKeys[i] === heardKeys[j];
+        update(i, j, i + 1, j + 1, matches ? 0 : 1, matches ? [] : [i]);
+        if (language === 'FIL') {
+          const expectedPartCount = expectedParts[i].length;
+          const heardPartCount = heardParts[j].length;
+          if (expectedPartCount > 1 && j + expectedPartCount <= heard.length
+            && matchedWordCount(expected[i], heard.slice(j, j + expectedPartCount).join(' '), language) === 1) {
+            update(i, j, i + 1, j + expectedPartCount, 0);
+          }
+          if (heardPartCount > 1 && i + heardPartCount <= expected.length
+            && matchedWordCount(expected.slice(i, i + heardPartCount).join(' '), heard[j], language) === heardPartCount) {
+            update(i, j, i + heardPartCount, j + 1, 0);
+          }
+        }
+      }
+      if (i < expected.length) update(i, j, i + 1, j, 1, [i]);
+      if (j < heard.length) {
+        const repeated = j > 0 && heardLiteralKeys[j] === heardLiteralKeys[j - 1];
+        update(i, j, i, j + 1, repeated ? 0 : 1.1);
+      }
+    }
+  }
+  let count = 0;
+  for (let i = 1; i <= expected.length; i += 1) {
+    if (rows[i][heard.length].cost < rows[count][heard.length].cost) count = i;
+  }
+  const incorrectWordIndices = [];
+  let i = count;
+  let j = heard.length;
+  while (rows[i][j].previous) {
+    incorrectWordIndices.push(...rows[i][j].wrong);
+    [i, j] = rows[i][j].previous;
+  }
+  return { count, incorrectWordIndices: incorrectWordIndices.sort((a, b) => a - b) };
+}

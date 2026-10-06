@@ -8,6 +8,7 @@ const Teacher = require("../models/Teacher");
 
 const { recordingSession } = require("../utils/recordingSession");
 const { parseRecording } = require("../utils/recording");
+const { calculateReadingAccuracy } = require("../utils/readingAccuracy");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
@@ -34,15 +35,12 @@ router.post("/", async (req, res) => {
       const session = await recordingSession(req, 'student');
       if (!session || String(session.userId) !== learnerId) return res.status(401).json({ message: 'Please sign in again to submit your recording.' });
     }
-    const { storyId, language, answers, readingDurationSeconds, readingAccuracy, readingWordStats = [] } = req.body;
+    const { storyId, language, answers, readingDurationSeconds, readingWordStats = [] } = req.body;
     if (!mongoose.isValidObjectId(learnerId) || !mongoose.isValidObjectId(storyId)) {
       return res.status(400).json({ message: "A valid learner and story are required." });
     }
     if (!Array.isArray(answers)) return res.status(400).json({ message: "Quiz answers are required." });
 
-    if (readingAccuracy != null && (typeof readingAccuracy !== "number" || !Number.isFinite(readingAccuracy) || readingAccuracy < 0 || readingAccuracy > 100)) {
-      return res.status(400).json({ message: "Reading accuracy must be a number from 0 to 100." });
-    }
     if (readingDurationSeconds != null && (typeof readingDurationSeconds !== "number" || !Number.isFinite(readingDurationSeconds) || readingDurationSeconds < 0.001)) {
       return res.status(400).json({ message: "Reading duration must be a positive number of seconds." });
     }
@@ -87,7 +85,7 @@ router.post("/", async (req, res) => {
       readingWordCount,
       readingWordStats,
       readingWpm,
-      readingAccuracy: story.lang === "ENG" ? readingAccuracy : null,
+      readingAccuracy: calculateReadingAccuracy(story.pages, readingWordStats),
       recording,
       recordingSegmentCount: recording.length,
       selectedForAverage: true
@@ -147,7 +145,7 @@ router.get('/:id/recording/:segment', async (req, res) => {
       return res.status(403).json({ message: 'You can only listen to learners in your sections.' });
     }
     const index = Number(req.params.segment);
-    if (index >= result.recordingSegmentCount) return res.sendStatus(404);
+    if (result.recordingDeletedAt || index >= result.recordingSegmentCount) return res.sendStatus(404);
     const stored = await StoryResult.findById(result._id).select('+recording');
     const segment = stored?.recording[index];
     if (!segment) return res.sendStatus(404);
@@ -157,6 +155,28 @@ router.get('/:id/recording/:segment', async (req, res) => {
   } catch (error) {
     console.error('Could not load recording:', error);
     res.status(500).json({ message: 'Could not load the recording.' });
+  }
+});
+
+router.delete('/:id/recording', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    const session = await recordingSession(req, 'teacher');
+    if (!session || !(await Teacher.exists({ _id: session.userId, active: true }))) {
+      return res.status(401).json({ message: 'Please sign in as a teacher to delete recordings.' });
+    }
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ message: 'Story attempt not found.' });
+    const result = await StoryResult.findById(req.params.id);
+    if (!result) return res.status(404).json({ message: 'Story attempt not found.' });
+    const learner = await Learner.findById(result.learnerId).select('sectionId');
+    if (!learner || !(await Section.exists({ _id: learner.sectionId, teacherId: session.userId }))) {
+      return res.status(403).json({ message: 'You can only delete recordings for learners in your sections.' });
+    }
+    await StoryResult.updateOne({ _id: result._id }, { $set: { recordingDeletedAt: new Date(), recordingSegmentCount: 0 } });
+    res.json({ message: 'Recording deleted.' });
+  } catch (error) {
+    console.error('Could not delete recording:', error);
+    res.status(500).json({ message: 'Could not delete the recording.' });
   }
 });
 

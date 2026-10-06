@@ -1849,10 +1849,8 @@ button:focus-visible,
    RECHARTS
    ============================================================ */
 
-.dashboard-chart-wrapper
-.recharts-wrapper {
-  max-width: 100%;
-}
+/* Recharts measures its chart inside a zero-width, overflow-visible
+   wrapper. A percentage max-width here collapses the SVG to zero. */
 
 .dashboard-chart-wrapper
 .recharts-surface {

@@ -46,7 +46,7 @@ async function ownerTeacherId(req, res) {
 async function ownedFlashcard(req, res) {
   const teacher = await currentTeacher(req, res);
   if (!teacher) return null;
-  const flashcard = await Flashcard.findById(req.params.id);
+  const flashcard = await Flashcard.findOne({ _id: req.params.id, deletedAt: null });
   if (!flashcard) {
     res.status(404).json({ message: "Flashcard not found." });
     return null;
@@ -79,6 +79,7 @@ router.get("/", async (req, res) => {
     const teacherId = await ownerTeacherId(req, res);
     if (!teacherId) return;
     const query = {
+      deletedAt: null,
       $or: [
         { isLibrary: true },
         { teacherId }
@@ -98,7 +99,7 @@ router.post("/", async (req, res) => {
     const teacher = await currentTeacher(req, res);
     if (!teacher) return;
     const data = validated(req.body);
-    if (!Object.hasOwn(req.body, "order")) data.order = await Flashcard.countDocuments({ teacherId: teacher._id, category: data.category });
+    if (!Object.hasOwn(req.body, "order")) data.order = await Flashcard.countDocuments({ teacherId: teacher._id, category: data.category, deletedAt: null });
     const flashcard = await Flashcard.create({
       ...data,
       teacherId: teacher._id,
@@ -125,7 +126,8 @@ router.delete("/:id", async (req, res) => {
   try {
     const flashcard = await ownedFlashcard(req, res);
     if (!flashcard) return;
-    await flashcard.deleteOne();
+    flashcard.deletedAt = new Date();
+    await flashcard.save();
     res.status(204).send();
   } catch {
     res.status(400).json({ message: "Could not delete flashcard." });
