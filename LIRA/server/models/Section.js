@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const softDeleteSchema = require("./softDelete");
 
 const sectionSchema = new mongoose.Schema(
   {
@@ -12,5 +13,7 @@ sectionSchema.index(
   { name: 1 },
   { unique: true, collation: { locale: "en", strength: 2 } }
 );
+
+softDeleteSchema(sectionSchema);
 
 module.exports = mongoose.model("Section", sectionSchema, "Sections");

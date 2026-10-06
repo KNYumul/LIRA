@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const softDeleteSchema = require("./softDelete");
 
 const pageSchema = new mongoose.Schema(
   {
@@ -36,5 +37,7 @@ const storySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+softDeleteSchema(storySchema);
 
 module.exports = mongoose.model("Story", storySchema, "Stories");

@@ -7,6 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 
 export default function FlashcardReader({ text, language }) {
   const [listening, setListening] = useState(false);
+  const [speechReady, setSpeechReady] = useState(false);
   const [count, setCount] = useState(0);
   const [incorrectWords, setIncorrectWords] = useState(new Set());
   const [status, setStatus] = useState('Tap the microphone to read aloud.');
@@ -27,6 +28,7 @@ export default function FlashcardReader({ text, language }) {
     const recognizer = recognizerRef.current;
     recognizerRef.current = null;
     setListening(false);
+    setSpeechReady(false);
     setStatus(message);
     if (recognizer) recognizer.stopContinuousRecognitionAsync(() => recognizer.close(), () => recognizer.close());
   };
@@ -37,9 +39,10 @@ export default function FlashcardReader({ text, language }) {
       committedRef.current = { count: 0, incorrectWords: new Set() };
     }
     setListening(true);
+    setSpeechReady(false);
     setCount(committedRef.current.count);
     setIncorrectWords(new Set(committedRef.current.incorrectWords));
-    setStatus('Connecting to your reading helper…');
+    setStatus('Microphone Connecting…');
     // Interim revisions replace provisional marks; only final results commit them.
     const updateReading = (transcript, final) => {
       const committed = committedRef.current;
@@ -86,20 +89,23 @@ export default function FlashcardReader({ text, language }) {
         if (event.result.reason !== SDK.ResultReason.RecognizedSpeech) return;
         const matched = updateReading(event.result.text || '', true);
         if (matched >= words.length) stop(committedRef.current.incorrectWords.size
-          ? 'You finished this flashcard. Words to practice are marked in red. Tap the microphone to try again.'
+          ? 'You finished this flashcard. Words to practice are marked in purple. Tap the microphone to try again.'
           : 'Great job! You finished this flashcard.');
       };
       recognizer.canceled = (_, event) => {
         if (recognizerRef.current !== recognizer) return;
         stop(event.reason === SDK.CancellationReason.Error
           ? 'Could not continue listening. Check microphone access and your connection, then try again.'
-          : 'Listening stopped. Tap the microphone to try again.');
+          : 'Microphone listening stopped. Tap the microphone to try again.');
       };
       recognizer.sessionStopped = () => {
         if (recognizerRef.current === recognizer) stop();
       };
       recognizer.startContinuousRecognitionAsync(() => {
-        if (recognizerRef.current === recognizer) setStatus('Listening… Read the words at your own pace.');
+        if (recognizerRef.current === recognizer) {
+          setSpeechReady(true);
+          setStatus('Microphone Listening… Read the words at your own pace.');
+        }
       }, (error) => {
         if (recognizerRef.current === recognizer) stop(String(error || 'Could not start the reading helper.'));
       });
@@ -112,6 +118,7 @@ export default function FlashcardReader({ text, language }) {
   };
 
   const progress = Math.round(count / Math.max(1, words.length) * 100);
+  const connecting = listening && !speechReady;
   const parts = String(text || '').match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*|[^\p{L}\p{N}]+/gu) || [];
   let wordIndex = 0;
   return <>
@@ -121,9 +128,9 @@ export default function FlashcardReader({ text, language }) {
     <p className="fs-sentence">{parts.map((part, index) => {
       if (!normalizedWord(part)) return <span key={index}>{part}</span>;
       const position = wordIndex++;
-      return <span key={index} className={incorrectWords.has(position) ? 'fs-word-incorrect' : position < count ? 'fs-sentence__read' : position === count && listening ? 'fs-word-current' : 'fs-sentence__rest'}>{part}</span>;
+      return <span key={index} className={incorrectWords.has(position) ? 'fs-word-incorrect' : position < count ? 'fs-sentence__read' : position === count && listening && speechReady ? 'fs-word-current' : 'fs-sentence__rest'}>{part}</span>;
     })}</p>
-    <button type="button" className={`fs-mic ${listening ? status.startsWith('Connecting') ? 'fs-mic--connecting' : 'fs-mic--active' : ''}`} onClick={() => listening ? stop() : start()} disabled={!words.length} aria-pressed={listening} aria-label={listening ? 'Stop listening' : 'Start listening'}>🎤</button>
+    <button type="button" className={`fs-mic ${listening ? connecting ? 'fs-mic--connecting' : 'fs-mic--active' : ''}`} onClick={() => listening ? stop() : start()} disabled={!words.length} aria-pressed={listening} aria-label={listening ? 'Stop listening' : 'Start listening'}>🎤</button>
     <span className="fs-mic__status" role="status">{status}</span>
   </>;
 }

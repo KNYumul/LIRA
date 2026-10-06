@@ -115,6 +115,13 @@
   border-radius: 50%;
 }
 
+.lira-header__user-info {
+  color: #5f5a58;
+  font-size: 0.76rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .lira-header__login {
   border-radius: 999px;
   padding: 6px 18px;
@@ -155,6 +162,10 @@
 
   .lira-header__links {
     gap: 16px;
+  }
+
+  .lira-header__user-info {
+    font-size: 0.7rem;
   }
 }
 
