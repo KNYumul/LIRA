@@ -141,6 +141,36 @@ router.put("/change-password", async (req, res) => {
   }
 });
 
+// Re-authenticate a teacher before allowing a sensitive client-side action,
+// such as printing or downloading a section report.  Keep this above /:id so
+// Express does not treat "verify-password" as a teacher id.
+router.post("/verify-password", async (req, res) => {
+  try {
+    const teacherId = req.get("X-Teacher-Id");
+    const password = req.body?.password;
+
+    if (!teacherId) {
+      return res.status(401).json({ message: "Please sign in again to download the report." });
+    }
+    if (typeof password !== "string" || !password) {
+      return res.status(400).json({ message: "Enter your password to continue." });
+    }
+
+    const teacher = await Teacher.findById(teacherId).select("+passwordHash");
+    if (!teacher || !teacher.active) {
+      return res.status(401).json({ message: "Your teacher account could not be verified." });
+    }
+    if (!(await verifyPassword(password, teacher.passwordHash))) {
+      return res.status(401).json({ message: "Password is incorrect." });
+    }
+
+    return res.json({ message: "Password verified." });
+  } catch (error) {
+    console.error("Teacher password verification failed:", error);
+    return res.status(500).json({ message: "Could not verify your password." });
+  }
+});
+
 // UPDATE a teacher account from the admin dashboard.
 router.put("/:id", async (req, res) => {
   try {

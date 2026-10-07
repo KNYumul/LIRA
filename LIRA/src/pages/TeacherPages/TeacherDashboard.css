@@ -1049,9 +1049,12 @@ button:focus-visible,
 
   .student-print-report {
     display: block !important;
-    position: absolute;
-    inset: 0;
-    width: 100%;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    min-height: 100vh;
+    z-index: 2147483647;
     color: #222;
     background: #fff;
     font-family: 'Poppins', 'Segoe UI', sans-serif;
