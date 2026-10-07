@@ -2298,7 +2298,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
               <th>Reading Accuracy</th>
               <th>History</th>
               <th>Risk Level</th>
-              <th>Action</th>
+              <th>AI Recommendation</th>
             </tr>
           </thead>
           <tbody>
