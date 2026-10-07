@@ -598,7 +598,7 @@ function Dashboard({
 
 
 
-  const hasChartData = students.length > 0;
+  const hasChartData = chartData.some((student) => student.score != null);
 
 
   // ---------------------------------------------------------
@@ -1202,22 +1202,11 @@ function Dashboard({
               ) : (
 
                 <div className="dashboard-empty">
-
                   <div
                     className="dashboard-empty-title"
-                    style={{
-                      color: C.text,
-                    }}
+                    style={{ color: C.text }}
                   >
-                    No learners in this section yet
-                  </div>
-
-                  <div
-                    style={{
-                      color: C.textMuted,
-                    }}
-                  >
-                    Learner comprehension scores will appear here once learners are added.
+                    No Data available yet
                   </div>
 
                 </div>
