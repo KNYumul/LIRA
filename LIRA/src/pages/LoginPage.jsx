@@ -47,6 +47,9 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [hasReadTerms, setHasReadTerms] = useState(false);
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const googleCallbackHandled = useRef(false);
 
   const isStudent = portal === "student";
@@ -301,6 +304,11 @@ const handleEmailChange = (e) => {
       }
 
       if (isSignUp) {
+        if (!hasAcceptedTerms) {
+          setError("Please read and accept the Terms and Conditions before signing up.");
+          return;
+        }
+
         if (trimmedFirstName.length > 50 || trimmedLastName.length > 50) {
           const warning = {
             status: 400,
@@ -426,6 +434,79 @@ const handleEmailChange = (e) => {
     <main className="login-page">
       {!isStudent && verificationPrompt !== null && (
         <VerificationPopup {...verificationPrompt} onClose={() => setVerificationPrompt(null)} />
+      )}
+      {termsOpen && (
+        <div
+          className="terms-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="terms-modal-title"
+          aria-describedby="terms-modal-instruction"
+        >
+          <div className="terms-modal__panel">
+            <div className="terms-modal__header">
+              <div>
+                <p className="terms-modal__eyebrow">LIRA</p>
+                <h2 id="terms-modal-title">Terms and Conditions</h2>
+              </div>
+              <span className="terms-modal__status" aria-live="polite">
+                {hasReadTerms ? "Read" : "Scroll to the end"}
+              </span>
+            </div>
+            <p id="terms-modal-instruction" className="terms-modal__instruction">
+              Please read the complete terms. You can close this window after reaching the end.
+            </p>
+            <div
+              className="terms-modal__content"
+              tabIndex="0"
+              onScroll={(event) => {
+                const { scrollTop, clientHeight, scrollHeight } = event.currentTarget;
+                if (scrollTop + clientHeight >= scrollHeight - 2) setHasReadTerms(true);
+              }}
+            >
+              <section>
+                <h3>1. Accounts</h3>
+                <p>Teacher accounts are created with a valid DepEd email address and are intended for use by the registered educator only. Student accounts are provisioned by a teacher through a class masterlist upload and are not intended to be created directly by learners.</p>
+                <p>You are responsible for keeping your login credentials confidential and for any activity that happens under your account.</p>
+              </section>
+              <section>
+                <h3>2. Acceptable Use</h3>
+                <p>LIRA is built for early literacy screening and instructional support in Grade 3 classrooms. Please use it only for that purpose. You agree not to:</p>
+                <ul>
+                  <li>Upload content that is harmful, obscene, or inappropriate for young learners.</li>
+                  <li>Attempt to access another teacher's section or another learner's data without authorization.</li>
+                  <li>Use the platform to collect or process data unrelated to reading assessment.</li>
+                </ul>
+              </section>
+              <section>
+                <h3>3. Content and Stories</h3>
+                <p>Stories and flashcards you upload or generate remain associated with your section and are used only to deliver reading activities to your learners. AI-generated stories are created based on the theme and difficulty you select, and should be reviewed by the teacher before assigning.</p>
+              </section>
+              <section>
+                <h3>4. Learner Data</h3>
+                <p>Reading recordings, accuracy scores, and risk levels are used solely to support literacy screening and are visible only to the learner's teacher. See our Privacy Policy for full details on how learner data is handled.</p>
+              </section>
+              <section>
+                <h3>5. Availability</h3>
+                <p>We aim to keep LIRA available during school hours but cannot guarantee uninterrupted access. Scheduled maintenance will be communicated to schools in advance where possible.</p>
+              </section>
+              <section>
+                <h3>6. Changes to These Terms</h3>
+                <p>We may update these terms from time to time as the platform grows. Continued use of LIRA after changes are posted means you accept the updated terms.</p>
+              </section>
+              <section>
+                <h3>7. Contact</h3>
+                <p>Questions about these terms can be sent to <strong>support.lira3@gmail.com</strong>.</p>
+              </section>
+            </div>
+            <div className="terms-modal__footer">
+              <span>{hasReadTerms ? "You can now accept the terms." : "Read to the bottom to continue."}</span>
+              <button type="button" disabled={!hasReadTerms} onClick={() => setTermsOpen(false)}>
+                Close and continue
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       <section className="login-hero">
         <div className="login-choice" aria-labelledby="login-choice-title">
@@ -695,6 +776,24 @@ const handleEmailChange = (e) => {
                   )}
                 </label>
               </div>
+              {isSignUp && (
+                <div className="terms-consent">
+                  <input
+                    id="teacher-terms"
+                    name="teacherTerms"
+                    type="checkbox"
+                    checked={hasAcceptedTerms}
+                    disabled={!hasReadTerms}
+                    onChange={(event) => setHasAcceptedTerms(event.target.checked)}
+                  />
+                  <label htmlFor="teacher-terms">I agree to LIRA's</label>
+                  <button type="button" className="terms-consent__link" onClick={() => setTermsOpen(true)}>
+                    Terms and Conditions
+                  </button>
+                  <span>.</span>
+                  {!hasReadTerms && <span className="terms-consent__hint">Open and read the terms to enable this checkbox.</span>}
+                </div>
+              )}
               {!isSignUp && <div className="forgot-password-link"><Link to="/forgot-password">Forgot password?</Link></div>}
               <button className="portal-submit" type="submit" disabled={teacherSubmitting} aria-busy={teacherSubmitting}>
                 {teacherSubmitting ? (isSignUp ? "Creating account…" : "Logging in…") : (isSignUp ? "Sign up" : "Log in")}
@@ -707,6 +806,10 @@ const handleEmailChange = (e) => {
                 type="button"
                 disabled={teacherSubmitting}
                 onClick={() => {
+                  if (isSignUp && !hasAcceptedTerms) {
+                    setError("Please read and accept the Terms and Conditions before signing up.");
+                    return;
+                  }
                   sessionStorage.setItem("google_teacher_auth_mode", teacherMode);
                   window.location.assign(`${API_URL}/api/auth/google?role=teacher`);
                 }}
