@@ -1,306 +1,153 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700&display=swap");
-
-/* =========================================================
-   LOGIN PAGE
-   ========================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Quicksand:wght@500;600;700&display=swap');
 
 .login-page {
-  width: 100%;
-  min-width: 0;
-  min-height: 100vh;
-
   color: #575757;
   font-family: "Poppins", "Segoe UI", sans-serif;
   font-weight: 300;
-
-  overflow-x: hidden;
 }
-
-
-/* =========================================================
-   LOGIN HERO
-   ========================================================= */
 
 .login-hero {
-  width: 100%;
-  min-width: 0;
   min-height: 650px;
-
-  padding: clamp(32px, 5vw, 50px) 20px 40px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
+  padding: 50px 20px 40px;
   border-bottom: 1px solid #757575;
-
-  background:
-    #fbf5e9
-    url("/UI_Designs/BACKGROUND/background_forest.svg")
-    center bottom / cover no-repeat;
-
-  overflow-x: hidden;
+  background: #fbf5e9 url("/UI_Designs/BACKGROUND/background_forest.svg") center bottom / cover no-repeat;
 }
 
-
-/* =========================================================
-   READY TO GET STARTED CARD
-   ========================================================= */
-
+/* ============ login-choice ============ */
 .login-choice {
   width: min(100%, 620px);
-  min-width: 0;
-
   margin: 0 auto 40px;
-  padding: clamp(24px, 4vw, 32px) clamp(20px, 5vw, 40px);
-
+  padding: 32px 40px;
   border-radius: 40px;
-
-  background: rgba(255, 255, 255, 0.96);
-
-  box-shadow:
-    0 4px 12px rgba(80, 72, 60, 0.08);
-
+  background: linear-gradient(120deg, rgba(210, 244, 204, 0.92), rgba(154, 219, 205, 0.88));
   text-align: center;
-
-  box-sizing: border-box;
 }
 
 .login-choice h1 {
   margin: 0;
-
-  color: #575757;
-
   font-family: "Quicksand", sans-serif;
-  font-size: clamp(1.45rem, 3vw, 1.9rem);
   font-weight: 700;
-
-  line-height: 1.2;
+  font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+  line-height: 1.15;
 }
 
 .login-choice p {
-  width: 100%;
   max-width: 500px;
-
-  margin: 10px auto 0;
-
-  color: #777;
-
-  font-size: clamp(0.72rem, 1.8vw, 0.82rem);
-  line-height: 1.6;
-
-  overflow-wrap: break-word;
+  margin: 14px auto 20px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
-
-/* =========================================================
-   TEACHER / STUDENT CHOICE BUTTONS
-   ========================================================= */
-
-.login-choice__actions {
-  width: 100%;
-
-  margin-top: 22px;
-
+.login-choice__actions,
+.teacher-tabs {
   display: flex;
   justify-content: center;
-  align-items: center;
-
-  gap: 12px;
-
-  flex-wrap: wrap;
+  gap: 14px;
 }
 
-.login-choice__actions button {
-  min-width: 130px;
-
-  padding: 9px 18px;
-
-  border: 1px solid #b8b8b8;
-  border-radius: 20px;
-
+.login-choice button,
+.teacher-tabs button {
+  padding: 8px 24px;
+  border: 1.5px solid #aadbc9;
+  border-radius: 999px;
   background: #fff;
-
-  color: #6c6c6c;
-
-  font-family: "Quicksand", sans-serif;
-  font-size: 0.76rem;
-  font-weight: 700;
-
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
+  color: #5d6860;
+  cursor: pointer;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition: transform 160ms ease, background 160ms ease;
 }
 
-.login-choice__actions button:hover {
-  transform: translateY(-1px);
+.login-choice button.is-active {
+  border-color: #78977e;
+  background: #78977e;
+  color: #fff;
 }
 
-.login-choice__actions button.is-active {
-  border-color: #e7948c;
-  background: #f9d6d1;
-  color: #575757;
-}
-
-.login-choice__actions button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-
-/* =========================================================
-   PORTAL CARD — BASE
-   ========================================================= */
-
+/* ============ portal-card (Scales compactly with Admin reference) ============ */
+/* ============ portal-card (Compact Inner Content) ============ */
 .portal-card {
   position: relative;
-
   width: min(100%, 620px);
-  min-width: 0;
-
   margin: 0 auto;
   padding: 24px 34px 26px;
-
   border: 2px solid #e7948c;
   border-radius: 28px;
-
   background: rgba(255, 255, 255, 0.98);
-
-  box-shadow:
-    0 3px 8px rgba(80, 72, 60, 0.08);
-
-  box-sizing: border-box;
-
-  overflow: hidden;
+  box-shadow: 0 3px 8px rgba(80, 72, 60, 0.08);
 }
 
-
-/* =========================================================
-   STUDENT PORTAL
-   ========================================================= */
-
 .portal-card--student {
-  width: 100%;
   max-width: 620px;
-  min-width: 0;
-
   border-color: #a6d9c0;
 }
 
-
-/* =========================================================
-   PORTAL HEADING
-   ========================================================= */
-
+/* Header & Mascot */
 .portal-card__heading {
-  width: 100%;
-  min-width: 0;
-
-  min-height: 42px;
-
   display: flex;
   align-items: center;
-
   gap: 12px;
+  min-height: 42px;
 }
 
 .portal-card__heading img {
-  flex: 0 0 auto;
-
   width: 42px;
   height: 42px;
-
   object-fit: contain;
-}
-
-.portal-card__heading > div {
-  min-width: 0;
 }
 
 .portal-card__heading h2 {
   margin: 0;
-
-  color: #575757;
-
   font-family: "Quicksand", sans-serif;
-  font-size: clamp(1.15rem, 3vw, 1.4rem);
   font-weight: 700;
-
-  line-height: 1.2;
-
-  overflow-wrap: break-word;
+  font-size: 1.15rem;
+  line-height: 1.1;
 }
 
 .portal-card__heading p {
-  margin: 3px 0 0;
-
-  color: #888;
-
-  font-size: 0.7rem;
-  line-height: 1.3;
-
-  overflow-wrap: break-word;
+  margin: 2px 0 0;
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  font-size: 0.65rem;
+  color: #777;
 }
 
-
-/* =========================================================
-   STUDENT BUNTING
-   ========================================================= */
-
-.student-bunting {
+/* Tabs */
+.teacher-tabs {
   position: absolute;
-
-  top: 0;
-  right: 28px;
-
-  display: flex;
-  gap: 5px;
-
-  pointer-events: none;
+  top: 22px;
+  right: 34px;
+  gap: 0;
+  width: 210px;
+  padding: 2.5px;
+  border-radius: 999px;
+  background: #ffe5c9;
 }
 
-.student-bunting i {
-  display: block;
-
-  width: 0;
-  height: 0;
-
-  border-left: 7px solid transparent;
-  border-right: 7px solid transparent;
-  border-top: 12px solid #a6d9c0;
+.teacher-tabs button {
+  flex: 1;
+  padding: 5px 10px;
+  border: 0;
+  background: transparent;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 0.68rem;
 }
 
-.student-bunting i:nth-child(2) {
-  border-top-color: #f3c7bd;
+.teacher-tabs button.is-active {
+  background: #e59088;
+  color: #fff;
+  border-radius: 999px;
 }
 
-.student-bunting i:nth-child(3) {
-  border-top-color: #f2dc94;
-}
-
-.student-bunting i:nth-child(4) {
-  border-top-color: #a6d9c0;
-}
-
-.student-bunting i:nth-child(5) {
-  border-top-color: #f3c7bd;
-}
-
-
-/* =========================================================
-   PORTAL FIELDS — BASE
-   ========================================================= */
-
+/* Form Fields */
 .portal-fields {
-  width: 100%;
-  min-width: 0;
-
-  margin-top: 22px;
-
   display: grid;
-
   gap: 14px 20px;
+  margin-top: 22px;
 }
 
 .portal-fields--two,
@@ -308,95 +155,44 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-
-/* =========================================================
-   FIELD
-   ========================================================= */
+.portal-fields--student {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 
 .portal-fields label,
 .portal-fields .portal-field {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-
   display: flex;
   flex-direction: column;
-
   gap: 5px;
-
-  box-sizing: border-box;
+  color: #6e6e6e;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.64rem;
+  font-weight: 600;
 }
 
-.field-label {
-  width: 100%;
-  min-width: 0;
-
-  color: #606060;
-
-  font-size: 0.68rem;
-  font-weight: 500;
-
-  line-height: 1.3;
-
-  overflow-wrap: break-word;
+.portal-fields .field-label {
+  display: inline;
 }
 
-.field-label em {
+.portal-fields .field-label em {
+  color: #df7e78;
   font-style: normal;
 }
 
-
-/* =========================================================
-   INPUTS
-   ========================================================= */
-
 .portal-fields input,
 .portal-fields select {
-  display: block;
-
   width: 100%;
-  max-width: 100%;
-  min-width: 0;
-
   height: 34px;
-
   padding: 0 10px;
-
   border: 1px solid #e2b6a8;
   border-radius: 8px;
-
-  background: #fff;
-
-  color: #575757;
-
-  font-family: "Poppins", sans-serif;
-  font-size: 0.7rem;
-
   outline: none;
-
-  box-sizing: border-box;
-
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  background: #ffe7cc;
+  color: #4d4d4d;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-size: 0.75rem;
 }
-
-.portal-fields input:focus,
-.portal-fields select:focus {
-  border-color: #d99b91;
-
-  box-shadow:
-    0 0 0 2px rgba(217, 155, 145, 0.14);
-}
-
-.portal-fields input::placeholder {
-  color: #aaa;
-}
-
-
-/* =========================================================
-   STUDENT INPUTS
-   ========================================================= */
 
 .portal-card--student .portal-fields input,
 .portal-card--student .portal-fields select {
@@ -404,332 +200,284 @@
   background: #eef7f1;
 }
 
-.portal-card--student .portal-fields input:focus,
-.portal-card--student .portal-fields select:focus {
-  border-color: #8fb89d;
-
-  box-shadow:
-    0 0 0 2px rgba(143, 184, 157, 0.16);
+.portal-fields input:focus,
+.portal-fields select:focus {
+  border-color: #78977e;
+  box-shadow: 0 0 0 2px rgba(120, 151, 126, 0.18);
 }
 
-
-/* =========================================================
-   DATE INPUT
-   ========================================================= */
-
-.portal-card--student input[type="date"] {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-
-  box-sizing: border-box;
-}
-
-
-/* =========================================================
-   ROUNDED SELECT
-   ========================================================= */
-
-.portal-card--student .portal-field {
-  width: 100%;
-  min-width: 0;
-}
-
-.portal-card--student .portal-field > * {
-  max-width: 100%;
-  min-width: 0;
-}
-
-
-/* =========================================================
-   TEACHER TABS
-   ========================================================= */
-
-.teacher-tabs {
-  position: absolute;
-
-  top: 22px;
-  right: 34px;
-
-  width: 210px;
-
-  display: flex;
-
-  gap: 0;
-
-  border-bottom: 1px solid #ddd;
-
-  box-sizing: border-box;
-}
-
-.teacher-tabs button {
-  flex: 1 1 0;
-
-  min-width: 0;
-
-  padding: 6px 8px;
-
-  border: 0;
-  border-bottom: 2px solid transparent;
-
-  background: transparent;
-
-  color: #999;
-
-  font-family: "Quicksand", sans-serif;
-  font-size: 0.7rem;
-  font-weight: 700;
-
-  cursor: pointer;
-
-  white-space: nowrap;
-
-  transition:
-    color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.teacher-tabs button.is-active {
-  border-bottom-color: #e7948c;
-
-  color: #d37d73;
-}
-
-.teacher-tabs button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-
-/* =========================================================
-   FORGOT PASSWORD
-   ========================================================= */
-
-.forgot-password-link {
-  width: 100%;
-
-  margin-top: 8px;
-
-  text-align: right;
-}
-
-.forgot-password-link a {
-  color: #8b8b8b;
-
-  font-size: 0.65rem;
-
-  text-decoration: none;
-
-  transition: color 0.2s ease;
-}
-
-.forgot-password-link a:hover {
-  color: #d37d73;
-  text-decoration: underline;
-}
-
-
-/* =========================================================
-   SUBMIT BUTTON
-   ========================================================= */
-
+/* Action Buttons */
 .portal-submit {
   display: block;
-
   width: min(100%, 150px);
-  min-width: 0;
-
   height: 36px;
-
   margin: 20px auto 0;
-
-  padding: 0 18px;
-
   border: 0;
-  border-radius: 18px;
-
-  background: #e7948c;
-
+  border-radius: 10px;
+  background: #e59088;
   color: #fff;
-
-  font-family: "Quicksand", sans-serif;
-  font-size: 0.75rem;
-  font-weight: 700;
-
   cursor: pointer;
-
-  box-sizing: border-box;
-
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.portal-submit:hover {
-  background: #db8279;
-  transform: translateY(-1px);
-}
-
-.portal-submit:active {
-  transform: translateY(0);
+  font-family: "Poppins", sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  transition: transform 140ms ease, opacity 140ms ease;
 }
 
 .portal-submit:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.65;
+  cursor: wait;
 }
 
-
-/* Student submit button */
+.portal-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  opacity: 0.95;
+}
 
 .portal-card--student .portal-submit {
-  background: #8fb89d;
+  background: #78977e;
 }
 
-.portal-card--student .portal-submit:hover {
-  background: #789f86;
+.terms-consent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 16px;
+  color: #626262;
+  font-size: 0.72rem;
 }
 
+.terms-consent input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #78977e;
+}
 
-/* =========================================================
-   DIVIDER
-   ========================================================= */
+.terms-consent input:disabled {
+  cursor: not-allowed;
+}
 
-.portal-divider {
+.terms-consent label {
+  display: inline;
+  font-weight: 400;
+}
+
+.terms-consent__link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #4e6b45;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.terms-consent__hint {
   width: 100%;
+  margin-left: 20px;
+  color: #8b6a55;
+  font-size: 0.64rem;
+}
 
-  margin: 18px 0;
+.terms-modal {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(37, 48, 42, 0.62);
+}
 
+.terms-modal__panel {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 680px);
+  max-height: min(760px, calc(100vh - 40px));
+  overflow: hidden;
+  border: 2px solid #e2b6a8;
+  border-radius: 20px;
+  background: #fffdf9;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.24);
+  color: #4d4d4d;
+}
+
+.terms-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 26px 8px;
+}
+
+.terms-modal__eyebrow {
+  margin: 0 0 2px;
+  color: #78977e;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.terms-modal__header h2 {
+  margin: 0;
+  color: #3d3d3d;
+  font-family: "Quicksand", sans-serif;
+  font-size: 1.35rem;
+}
+
+.terms-modal__status {
+  flex: none;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #e7f1e5;
+  color: #55775a;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.terms-modal__instruction {
+  margin: 0;
+  padding: 0 26px 14px;
+  color: #777;
+  font-size: 0.72rem;
+}
+
+.terms-modal__content {
+  max-height: 390px;
+  overflow-y: auto;
+  margin: 0 18px;
+  padding: 4px 8px 8px;
+  border-top: 1px solid #eadfd1;
+  border-bottom: 1px solid #eadfd1;
+  font-size: 0.78rem;
+  line-height: 1.58;
+}
+
+.terms-modal__content section {
+  padding: 13px 0;
+}
+
+.terms-modal__content h3 {
+  margin: 0 0 5px;
+  color: #4e6b45;
+  font-size: 0.86rem;
+}
+
+.terms-modal__content p,
+.terms-modal__content ul {
+  margin: 0 0 9px;
+}
+
+.terms-modal__content p:last-child,
+.terms-modal__content ul:last-child {
+  margin-bottom: 0;
+}
+
+.terms-modal__content ul {
+  padding-left: 20px;
+}
+
+.terms-modal__content li + li {
+  margin-top: 4px;
+}
+
+.terms-modal__footer {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 26px;
+  color: #757575;
+  font-size: 0.7rem;
+}
 
-  gap: 10px;
+.terms-modal__footer button {
+  flex: none;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #78977e;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
 
-  color: #aaa;
+.terms-modal__footer button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
 
+/* Divider & Social Login */
+.portal-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 12px;
+  color: #999;
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
   font-size: 0.62rem;
 }
 
 .portal-divider::before,
 .portal-divider::after {
   content: "";
-
   flex: 1;
-
-  height: 1px;
-
-  background: #e4e4e4;
+  border-top: 1px solid #e5e5e5;
 }
-
-.portal-divider span {
-  flex: 0 0 auto;
-}
-
-
-/* =========================================================
-   GOOGLE BUTTON
-   ========================================================= */
 
 .google-button {
   display: flex;
-
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-
-  min-height: 36px;
-
-  margin: 0 auto;
-
-  padding: 8px 12px;
-
   align-items: center;
   justify-content: center;
-
   gap: 7px;
-
-  border: 1px solid #d8d8d8;
-  border-radius: 18px;
-
+  width: max-content;
+  max-width: 100%;
+  white-space: nowrap;
+  margin: 0 auto;
+  padding: 8px 20px;
+  border: 1px solid #f1c6b6;
+  border-radius: 999px;
   background: #fff;
-
   color: #666;
-
+  cursor: pointer;
   font-family: "Poppins", sans-serif;
   font-size: 0.68rem;
-  font-weight: 500;
-
-  text-align: center;
-
-  cursor: pointer;
-
-  box-sizing: border-box;
-
-  white-space: normal;
-
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.google-button:hover {
-  background: #fafafa;
-  border-color: #c8c8c8;
-}
-
-.google-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+  font-weight: 600;
 }
 
 .google-button b {
-  flex: 0 0 auto;
-
-  font-size: 0.75rem;
+  color: #4285f4;
+  font-size: 1rem;
+  line-height: 0;
+  vertical-align: middle;
 }
 
-
-/* =========================================================
-   TABLET
-   ========================================================= */
-
+/* ============ Responsive ============ */
 @media (max-width: 800px) {
-
   .login-hero {
-    min-height: 100vh;
-
-    padding:
-      36px
-      16px
-      30px;
+    padding: 36px 16px 28px;
   }
 
   .login-choice {
     margin-bottom: 28px;
-
-    padding:
-      26px
-      20px;
-
+    padding: 26px 20px;
     border-radius: 30px;
   }
 
   .portal-card {
-    padding:
-      24px
-      20px
-      26px;
-
+    padding: 24px 20px;
     border-radius: 24px;
   }
 
   .teacher-tabs {
     position: static;
-
     width: 100%;
-
-    margin-top: 16px;
+    margin: 16px 0 0;
   }
 
   .student-bunting {
@@ -737,118 +485,30 @@
   }
 }
 
-
-/* =========================================================
-   STUDENT PORTAL — TABLET
-   ========================================================= */
-
-@media (max-width: 760px) {
-
-  .portal-card--student {
-    width: 100%;
-    max-width: 620px;
-
-    padding:
-      24px
-      20px
-      26px;
-  }
-
-  .portal-card--student .portal-fields--student {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-
-    gap: 14px;
-  }
-
-  /* Section takes the entire row */
-  .portal-card--student
-  .portal-fields--student
-  > :nth-child(3) {
-    grid-column: 1 / -1;
-  }
+.forgot-password-link {
+  margin-top: 8px;
+  text-align: right;
 }
 
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
+.forgot-password-link a {
+  font-size: 0.75rem;
+  color: #0066cc;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 
 @media (max-width: 560px) {
-
   .login-hero {
-    min-height: 100vh;
-
-    padding:
-      28px
-      12px
-      24px;
-  }
-
-  .login-choice {
-    width: 100%;
-
-    margin-bottom: 22px;
-
-    padding:
-      22px
-      16px;
-
-    border-radius: 26px;
-  }
-
-  .login-choice h1 {
-    font-size: 1.35rem;
-  }
-
-  .login-choice p {
-    font-size: 0.7rem;
-
-    line-height: 1.55;
+    min-height: 580px;
   }
 
   .login-choice__actions {
     gap: 8px;
-
-    margin-top: 18px;
   }
 
-  .login-choice__actions button {
-    flex: 1 1 120px;
-
-    min-width: 0;
-
-    padding:
-      8px
-      12px;
-
-    font-size: 0.7rem;
-  }
-
-
-  /* -----------------------------------------
-     Portal card
-     ----------------------------------------- */
-
-  .portal-card {
-    width: 100%;
-    max-width: 100%;
-
-    padding:
-      20px
-      16px
-      24px;
-
-    border-radius: 22px;
-  }
-
-
-  /* -----------------------------------------
-     Portal heading
-     ----------------------------------------- */
-
-  .portal-card__heading {
-    gap: 10px;
+  .login-choice button {
+    padding: 8px 14px;
+    font-size: 0.72rem;
   }
 
   .portal-card__heading img {
@@ -860,308 +520,52 @@
     font-size: 1.15rem;
   }
 
-  .portal-card__heading p {
-    font-size: 0.67rem;
+  .portal-fields--two,
+  .portal-fields--student,
+  .portal-fields--teacher {
+    grid-template-columns: 1fr;
   }
-
-
-  /* -----------------------------------------
-     Student fields
-     ----------------------------------------- */
-
-  .portal-card--student {
-    width: 100%;
-    max-width: 100%;
-
-    padding:
-      20px
-      16px
-      24px;
-  }
-
-  .portal-card--student .portal-fields--student {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-
-    grid-template-columns:
-      minmax(0, 1fr);
-
-    gap: 14px;
-  }
-
-  .portal-card--student
-  .portal-fields--student
-  > :nth-child(3) {
-    grid-column: auto;
-  }
-
-
-  /* -----------------------------------------
-     All fields
-     ----------------------------------------- */
 
   .portal-fields {
     gap: 12px;
-
     margin-top: 18px;
   }
-
-  .portal-fields--two,
-  .portal-fields--teacher {
-    grid-template-columns:
-      minmax(0, 1fr);
-  }
-
-  .portal-fields label,
-  .portal-fields .portal-field {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
-
-  .portal-fields input,
-  .portal-fields select {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-
-    height: 38px;
-
-    font-size: 0.72rem;
-  }
-
-
-  /* -----------------------------------------
-     Teacher tabs
-     ----------------------------------------- */
-
-  .teacher-tabs {
-    width: 100%;
-
-    margin-top: 14px;
-  }
-
-  .teacher-tabs button {
-    padding:
-      7px
-      6px;
-
-    font-size: 0.68rem;
-  }
-
-
-  /* -----------------------------------------
-     Submit
-     ----------------------------------------- */
 
   .portal-submit {
-    width: 100%;
-    max-width: 220px;
-
-    height: 38px;
-
+    min-width: 100%;
     margin-top: 18px;
   }
-
-
-  /* -----------------------------------------
-     Google
-     ----------------------------------------- */
-
+  
   .google-button {
     width: 100%;
-    max-width: 100%;
-
-    min-height: 38px;
-
-    padding:
-      8px
-      10px;
-
-    font-size: 0.65rem;
-
     white-space: normal;
   }
-}
 
-
-/* =========================================================
-   VERY SMALL PHONES
-   ========================================================= */
-
-@media (max-width: 400px) {
-
-  .login-hero {
-    padding:
-      22px
-      8px
-      20px;
+  .terms-modal {
+    padding: 10px;
   }
 
-  .login-choice {
-    padding:
-      20px
-      12px;
-
-    border-radius: 22px;
+  .terms-modal__header,
+  .terms-modal__footer {
+    padding-right: 16px;
+    padding-left: 16px;
   }
 
-  .login-choice h1 {
-    font-size: 1.25rem;
+  .terms-modal__instruction {
+    padding-right: 16px;
+    padding-left: 16px;
   }
 
-  .login-choice p {
-    font-size: 0.66rem;
-  }
-
-  .login-choice__actions {
+  .terms-modal__footer {
+    align-items: flex-start;
     flex-direction: column;
   }
 
-  .login-choice__actions button {
+  .terms-modal__footer button {
     width: 100%;
-    flex: none;
   }
 
-
-  .portal-card {
-    padding:
-      18px
-      12px
-      22px;
-
-    border-radius: 20px;
+  .terms-modal__content {
+    max-height: 42vh;
   }
-
-  .portal-card--student {
-    padding:
-      18px
-      12px
-      22px;
-  }
-
-  .portal-card__heading img {
-    width: 36px;
-    height: 36px;
-  }
-
-  .portal-card__heading h2 {
-    font-size: 1.08rem;
-  }
-
-  .portal-card__heading p {
-    font-size: 0.63rem;
-  }
-
-  .portal-fields {
-    gap: 12px;
-  }
-
-  .portal-card--student
-  .portal-fields--student {
-    gap: 12px;
-  }
-
-  .portal-fields input,
-  .portal-fields select {
-    height: 40px;
-  }
-
-  .portal-submit {
-    width: 100%;
-    max-width: none;
-  }
-
-  .google-button {
-    font-size: 0.61rem;
-  }
-}
-
-
-/* =========================================================
-   EXTRA SMALL PHONES
-   ========================================================= */
-
-@media (max-width: 340px) {
-
-  .login-hero {
-    padding-left: 6px;
-    padding-right: 6px;
-  }
-
-  .login-choice {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  .portal-card,
-  .portal-card--student {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  .portal-card__heading {
-    gap: 8px;
-  }
-
-  .portal-card__heading img {
-    width: 34px;
-    height: 34px;
-  }
-
-  .portal-card__heading h2 {
-    font-size: 1rem;
-  }
-
-  .portal-card__heading p {
-    font-size: 0.6rem;
-  }
-
-  .field-label {
-    font-size: 0.64rem;
-  }
-
-  .portal-fields input,
-  .portal-fields select {
-    font-size: 0.68rem;
-  }
-}
-
-
-/* =========================================================
-   ACCESSIBILITY / SAFETY
-   ========================================================= */
-
-.portal-card *,
-.portal-card *::before,
-.portal-card *::after {
-  box-sizing: border-box;
-}
-
-.portal-card img,
-.portal-card svg {
-  max-width: 100%;
-}
-
-.portal-card button,
-.portal-card input,
-.portal-card select,
-.portal-card textarea {
-  max-width: 100%;
-}
-
-.login-page a,
-.login-page button,
-.login-page input,
-.login-page select {
-  -webkit-tap-highlight-color: transparent;
-}
-
-.login-page button:focus-visible,
-.login-page a:focus-visible,
-.login-page input:focus-visible,
-.login-page select:focus-visible {
-  outline: 2px solid #78977e;
-  outline-offset: 2px;
 }
