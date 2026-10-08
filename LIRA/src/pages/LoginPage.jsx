@@ -577,30 +577,29 @@ const handleEmailChange = (e) => {
                     required
                   />
                 </label>
-            <label>
-  <span className="field-label">
-    Type your LRN <em style={{ color: "#d9534f" }}>*</em>
-  </span>
-
-  <input
-    type="text"
-    name="lrn"
-    value={LRN}
-    onChange={(e) => setLRN(e.target.value)}
-    maxLength={12}
-    autoComplete="off"
-    onKeyDown={(e) => {
-      if (
-        !/[0-9]/.test(e.key) &&
-        !["Backspace", "Tab", "Delete", "ArrowLeft", "ArrowRight"].includes(e.key)
-      ) {
-        e.preventDefault();
-      }
-    }}
-    required
-  />
-</label>
-            
+                <label>
+                  <span className="field-label">
+                    Type your LRN <em style={{ color: "#d9534f" }}>*</em>
+                  </span>
+                  <input
+                    name="lrn"
+                    value={LRN}
+                    onChange={(e) => setLRN(e.target.value)}
+                    maxLength={50}
+                    autoComplete="off"
+                    required
+                  />
+                {/* </label>
+                    onChange={handleBirthdateChange}
+                    max={todayString}
+                    onKeyDown={(e) => {
+                      if (!/[0-9]/.test(e.key) && !["Backspace", "Tab", "Delete", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    required
+                  />
+                </label> */}
                 <div className="portal-field">
                   <span className="field-label">
                     Select your Section <em style={{ color: "#d9534f" }}>*</em>
