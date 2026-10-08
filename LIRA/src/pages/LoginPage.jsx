@@ -498,12 +498,17 @@ const handleEmailChange = (e) => {
                 </label>
                 <label>
                   <span className="field-label">
-                    Type your Birthdate <em style={{ color: "#d9534f" }}>*</em>
+                    Type your LRN <em style={{ color: "#d9534f" }}>*</em>
                   </span>
                   <input
-                    name="birthdate"
-                    type="date"
-                    value={birthdate}
+                    name="lrn"
+                    value={LRN}
+                    onChange={(e) => setLRN(e.target.value)}
+                    maxLength={50}
+                    autoComplete="off"
+                    required
+                  />
+                {/* </label>
                     onChange={handleBirthdateChange}
                     max={todayString}
                     onKeyDown={(e) => {
@@ -513,7 +518,7 @@ const handleEmailChange = (e) => {
                     }}
                     required
                   />
-                </label>
+                </label> */}
                 <div className="portal-field">
                   <span className="field-label">
                     Select your Section <em style={{ color: "#d9534f" }}>*</em>
