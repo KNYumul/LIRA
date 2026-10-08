@@ -145,7 +145,7 @@ router.get('/:id/recording/:segment', async (req, res) => {
       return res.status(403).json({ message: 'You can only listen to learners in your sections.' });
     }
     const index = Number(req.params.segment);
-    if (index >= result.recordingSegmentCount) return res.sendStatus(404);
+    if (result.recordingDeletedAt || index >= result.recordingSegmentCount) return res.sendStatus(404);
     const stored = await StoryResult.findById(result._id).select('+recording');
     const segment = stored?.recording[index];
     if (!segment) return res.sendStatus(404);
@@ -172,7 +172,7 @@ router.delete('/:id/recording', async (req, res) => {
     if (!learner || !(await Section.exists({ _id: learner.sectionId, teacherId: session.userId }))) {
       return res.status(403).json({ message: 'You can only delete recordings for learners in your sections.' });
     }
-    await StoryResult.updateOne({ _id: result._id }, { $set: { recording: [], recordingSegmentCount: 0 } });
+    await StoryResult.updateOne({ _id: result._id }, { $set: { recordingDeletedAt: new Date(), recordingSegmentCount: 0 } });
     res.json({ message: 'Recording deleted.' });
   } catch (error) {
     console.error('Could not delete recording:', error);

@@ -43,8 +43,8 @@ const SECTIONS = [
     content: (
       <p>
         Data is retained for as long as the learner is enrolled in an active
-        section, plus one school year for continuity of records, after which
-        it can be deleted on request from the school.
+        section, after which it will be deleted automatically or can be 
+        deleted on request from the school.
       </p>
     ),
   },

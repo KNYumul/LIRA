@@ -181,7 +181,8 @@ router.delete("/:id", async (req, res) => {
     if (!teacher) return;
     const learner = await ownedLearner(req.params.id, teacher._id);
     if (!learner) return res.status(404).json({ message: "Learner not found in your sections." });
-    await learner.deleteOne();
+    learner.deletedAt = new Date();
+    await learner.save();
     res.status(204).send();
   } catch (error) {
     res.status(400).json({ message: error.message });

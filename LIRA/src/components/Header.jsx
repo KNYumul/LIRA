@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import foxIcon from "../assets/icons/cat.svg";
 const defaultLogo = "/UI_Designs/LOGO/lira_logo_horizontal.svg";
 
-function Header({ logoSrc, links, actionLabel, onAction }) {
+function Header({ logoSrc, links, actionLabel, onAction, userInfo }) {
   return (
     <header className="lira-header">
       <div className="lira-header__inner">
@@ -42,6 +42,7 @@ function Header({ logoSrc, links, actionLabel, onAction }) {
           </nav>
 
           <div className="lira-header__actions">
+            {userInfo && <span className="lira-header__user-info">{userInfo}</span>}
             <img src={foxIcon} alt="" className="lira-header__icon" />
             {onAction ? (
               <button className="lira-header__login" onClick={onAction}>

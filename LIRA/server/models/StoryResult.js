@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const softDeleteSchema = require("./softDelete");
 
 const storyResultSchema = new mongoose.Schema(
   {
@@ -22,10 +23,13 @@ const storyResultSchema = new mongoose.Schema(
       data: Buffer,
     }, { _id: false })], select: false, default: [] },
     recordingSegmentCount: { type: Number, default: 0 },
+    recordingDeletedAt: { type: Date, default: null },
     answers: { type: [Number], default: [] },
     selectedForAverage: { type: Boolean, default: true, index: true }
   },
   { timestamps: true }
 );
+
+softDeleteSchema(storyResultSchema);
 
 module.exports = mongoose.model("StoryResult", storyResultSchema, "StoryResults");

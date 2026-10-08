@@ -598,7 +598,7 @@ function Dashboard({
 
 
 
-  const hasChartData = students.length > 0;
+  const hasChartData = chartData.some((student) => student.score != null);
 
 
   // ---------------------------------------------------------
@@ -1202,22 +1202,11 @@ function Dashboard({
               ) : (
 
                 <div className="dashboard-empty">
-
                   <div
                     className="dashboard-empty-title"
-                    style={{
-                      color: C.text,
-                    }}
+                    style={{ color: C.text }}
                   >
-                    No learners in this section yet
-                  </div>
-
-                  <div
-                    style={{
-                      color: C.textMuted,
-                    }}
-                  >
-                    Learner comprehension scores will appear here once learners are added.
+                    No Data available yet
                   </div>
 
                 </div>
@@ -1771,6 +1760,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState(null);
   const fileRef = useRef(null);
+  const reportRef = useRef(null);
 
   const filtered = students.filter((s) => s.displayName.toLowerCase().includes(search.toLowerCase()));
 
@@ -2088,7 +2078,87 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     reader.readAsText(file);
   };
 
-  const printReport = () => window.print();
+  const printReport = async () => {
+    if (!sectionName) {
+      await showWarning("Select a section before downloading its report.", "Section required");
+      return;
+    }
+
+    const confirmation = await liraAlert.fire({
+      icon: "info",
+      title: "Confirm report download",
+      text: `Enter your password to download the report for Section ${sectionName}.`,
+      input: "password",
+      inputPlaceholder: "Your password",
+      inputAttributes: {
+        autocapitalize: "off",
+        autocorrect: "off",
+        // Do not let the browser reuse a saved login in this confirmation.
+        autocomplete: "one-time-code",
+        name: "report-verification-password",
+        "aria-label": "Password",
+      },
+      showCancelButton: true,
+      confirmButtonText: "Download report",
+      cancelButtonText: "Cancel",
+      preConfirm: async (password) => {
+        if (!password) {
+          liraAlert.showValidationMessage("Enter your password to continue.");
+          return false;
+        }
+
+        try {
+          const response = await fetch(`${API_URL}/api/teachers/verify-password`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Teacher-Id": currentTeacher?.id || "",
+            },
+            body: JSON.stringify({ password }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(data.message || "Could not verify your password.");
+          return true;
+        } catch (requestError) {
+          liraAlert.showValidationMessage(requestError.message);
+          return false;
+        }
+      },
+    });
+
+    if (!confirmation.isConfirmed || !reportRef.current) return;
+
+    // Print from an isolated document. Other pages load global @media print
+    // rules that hide their own content, which can otherwise hide this report.
+    const printFrame = document.createElement("iframe");
+    printFrame.setAttribute("aria-hidden", "true");
+    printFrame.style.cssText = "position:fixed;width:0;height:0;border:0;right:0;bottom:0;";
+    const reportMarkup = reportRef.current.outerHTML;
+    printFrame.srcdoc = `<!doctype html>
+      <html><head><title>Section Report</title><style>
+        @page { size: landscape; margin: 14mm; }
+        * { box-sizing: border-box; }
+        body { margin: 0; color: #222; background: #fff; font-family: Poppins, Segoe UI, sans-serif; }
+        .student-print-report { display: block; width: 100%; }
+        .student-report-letterhead { margin-bottom: 20px; text-align: center; }
+        .student-report-school { font-size: 18px; font-weight: 700; }
+        .student-report-system { max-width: 900px; margin: 5px auto 12px; font-size: 10px; line-height: 1.4; }
+        .student-report-letterhead h1 { margin: 0 0 10px; font-size: 22px; }
+        .student-report-details { display: flex; justify-content: center; gap: 40px; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { padding: 8px; border: 1px solid #999; text-align: left; vertical-align: top; }
+        th { background: #eee; font-weight: 700; print-color-adjust: exact; }
+      </style></head><body>${reportMarkup}</body></html>`;
+    printFrame.onload = () => {
+      const printWindow = printFrame.contentWindow;
+      if (!printWindow) return;
+      const removeFrame = () => printFrame.remove();
+      printWindow.addEventListener("afterprint", removeFrame, { once: true });
+      requestAnimationFrame(() => printWindow.print());
+      window.setTimeout(removeFrame, 60000);
+    };
+    document.body.appendChild(printFrame);
+  };
 
   return (
     <div>
@@ -2150,6 +2220,8 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         <div className="flex items-center gap-2 flex-1 min-w-[200px] rounded-full px-4 py-2" style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}>
           <Search size={16} color={C.textMuted} />
           <input
+            name="learner-search"
+            autoComplete="off"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search learners..."
@@ -2157,7 +2229,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           />
         </div>
         <button onClick={printReport} className="px-5 py-2 rounded-full font-semibold text-white" style={{ background: C.coral }}>
-          Print a Report
+          Download Report
         </button>
 
         <button
@@ -2193,7 +2265,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         <div className="text-center py-10 text-sm" style={{ color: C.textMuted }}>No learners match your search.</div>
       )}
 
-      <section className="student-print-report" aria-hidden="true">
+      <section ref={reportRef} className="student-print-report">
         <header className="student-report-letterhead">
           <div className="student-report-school">Navotas Elementary School - Central</div>
           <div className="student-report-system">
@@ -2215,7 +2287,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
               <th>Reading Accuracy</th>
               <th>History</th>
               <th>Risk Level</th>
-              <th>Action</th>
+              <th>AI Recommendation</th>
             </tr>
           </thead>
           <tbody>

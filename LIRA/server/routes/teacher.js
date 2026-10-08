@@ -141,6 +141,36 @@ router.put("/change-password", async (req, res) => {
   }
 });
 
+// Re-authenticate a teacher before allowing a sensitive client-side action,
+// such as printing or downloading a section report.  Keep this above /:id so
+// Express does not treat "verify-password" as a teacher id.
+router.post("/verify-password", async (req, res) => {
+  try {
+    const teacherId = req.get("X-Teacher-Id");
+    const password = req.body?.password;
+
+    if (!teacherId) {
+      return res.status(401).json({ message: "Please sign in again to download the report." });
+    }
+    if (typeof password !== "string" || !password) {
+      return res.status(400).json({ message: "Enter your password to continue." });
+    }
+
+    const teacher = await Teacher.findById(teacherId).select("+passwordHash");
+    if (!teacher || !teacher.active) {
+      return res.status(401).json({ message: "Your teacher account could not be verified." });
+    }
+    if (!(await verifyPassword(password, teacher.passwordHash))) {
+      return res.status(401).json({ message: "Password is incorrect." });
+    }
+
+    return res.json({ message: "Password verified." });
+  } catch (error) {
+    console.error("Teacher password verification failed:", error);
+    return res.status(500).json({ message: "Could not verify your password." });
+  }
+});
+
 // UPDATE a teacher account from the admin dashboard.
 router.put("/:id", async (req, res) => {
   try {
@@ -183,8 +213,38 @@ router.put("/:id", async (req, res) => {
 // DELETE a teacher account from the admin dashboard.
 router.delete("/:id", async (req, res) => {
   try {
-    const teacher = await Teacher.findByIdAndDelete(req.params.id);
+    const teacher = await Teacher.findById(req.params.id);
     if (!teacher) return res.status(404).json({ message: "Teacher not found." });
+
+    const sections = await Section.find({ teacherId: teacher._id });
+    const { replacementTeacherId } = req.body || {};
+
+    if (replacementTeacherId) {
+      if (replacementTeacherId === teacher._id.toString()) {
+        return res.status(400).json({ message: "Choose a different teacher to receive the sections." });
+      }
+
+      const replacementTeacher = await Teacher.findById(replacementTeacherId);
+      if (!replacementTeacher || !replacementTeacher.active) {
+        return res.status(400).json({ message: "Choose an active teacher to receive the sections." });
+      }
+
+      if (sections.length) {
+        await Section.updateMany(
+          { _id: { $in: sections.map((section) => section._id) } },
+          { $set: { teacherId: replacementTeacher._id } }
+        );
+      }
+    } else if (sections.length) {
+      const deletedAt = new Date();
+      await Section.updateMany(
+        { _id: { $in: sections.map((section) => section._id) } },
+        { $set: { deletedAt } }
+      );
+    }
+
+    teacher.deletedAt = new Date();
+    await teacher.save();
     res.status(204).send();
   } catch {
     res.status(400).json({ message: "Could not delete teacher account." });

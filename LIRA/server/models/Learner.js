@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const softDeleteSchema = require("./softDelete");
 
 function formatLastName(value) {
   const lastName = String(value || "").trim().toLocaleLowerCase();
@@ -41,5 +42,7 @@ learnerSchema.index(
   { sectionId: 1, lastName: 1, birthdate: 1, firstName: 1 },
   { unique: true, collation: { locale: "en", strength: 2 } }
 );
+
+softDeleteSchema(learnerSchema);
 
 module.exports = mongoose.model("Learner", learnerSchema, "Learners");

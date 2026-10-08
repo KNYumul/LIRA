@@ -76,7 +76,8 @@ router.delete("/:id", async (req, res) => {
       });
     }
 
-    await section.deleteOne();
+    section.deletedAt = new Date();
+    await section.save();
     res.status(204).send();
   } catch (error) {
     if (error.name === "CastError") return res.status(404).json({ message: "Section not found in your classes." });

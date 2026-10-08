@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import "./Category.css";
-import { clearSession } from "../utils/session";
+import { clearSession, getSession } from "../utils/session";
 
 const penguinIcon = "/UI_Designs/ANIMALS/H_Penguin.png";
 const catIcon = "/UI_Designs/ANIMALS/D_Cat.png";
@@ -13,6 +13,9 @@ const bgDashboard =
 export default function Category() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const student = getSession()?.user;
+  const studentSurname = student?.lastName || student?.surname;
+  const studentSection = student?.section;
 
   const [lang, setLang] = useState(() =>
     searchParams.get("lang") === "FIL" ? "FIL" : "ENG"
@@ -38,6 +41,7 @@ export default function Category() {
         links={[]}
         actionLabel="Logout"
         onAction={handleLogout}
+        userInfo={[studentSurname, studentSection].filter(Boolean).join(" · ")}
       />
 
       <main className="dash-main">
