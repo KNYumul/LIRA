@@ -10,32 +10,53 @@
   min-height: 650px;
   padding: 50px 20px 40px;
   border-bottom: 1px solid #757575;
-  background: #fbf5e9 url("/UI_Designs/BACKGROUND/background_forest.svg") center bottom / cover no-repeat;
+  background: #fbf5e9
+    url("/UI_Designs/BACKGROUND/background_forest.svg")
+    center bottom / cover no-repeat;
 }
 
-/* ============ login-choice ============ */
+/* ============================================================
+   LOGIN CHOICE
+   ============================================================ */
+
 .login-choice {
   width: min(100%, 620px);
   margin: 0 auto 40px;
   padding: 32px 40px;
   border-radius: 40px;
-  background: linear-gradient(120deg, rgba(210, 244, 204, 0.92), rgba(154, 219, 205, 0.88));
+
+  background: linear-gradient(
+    120deg,
+    rgba(210, 244, 204, 0.92),
+    rgba(154, 219, 205, 0.88)
+  );
+
   text-align: center;
 }
 
 .login-choice h1 {
   margin: 0;
+
   font-family: "Quicksand", sans-serif;
   font-weight: 700;
-  font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+
+  font-size: clamp(
+    1.6rem,
+    3.2vw,
+    2.2rem
+  );
+
   line-height: 1.15;
 }
 
 .login-choice p {
   max-width: 500px;
+
   margin: 14px auto 20px;
+
   font-family: "Poppins", sans-serif;
   font-weight: 300;
+
   font-size: 0.85rem;
   line-height: 1.4;
 }
@@ -50,15 +71,22 @@
 .login-choice button,
 .teacher-tabs button {
   padding: 8px 24px;
+
   border: 1.5px solid #aadbc9;
   border-radius: 999px;
+
   background: #fff;
   color: #5d6860;
+
   cursor: pointer;
+
   font-family: "Poppins", sans-serif;
   font-size: 0.78rem;
   font-weight: 600;
-  transition: transform 160ms ease, background 160ms ease;
+
+  transition:
+    transform 160ms ease,
+    background 160ms ease;
 }
 
 .login-choice button.is-active {
@@ -67,17 +95,35 @@
   color: #fff;
 }
 
-/* ============ portal-card (Scales compactly with Admin reference) ============ */
-/* ============ portal-card (Compact Inner Content) ============ */
+/* ============================================================
+   PORTAL CARD
+   ============================================================ */
+
 .portal-card {
   position: relative;
+
   width: min(100%, 620px);
+
   margin: 0 auto;
   padding: 24px 34px 26px;
+
   border: 2px solid #e7948c;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 3px 8px rgba(80, 72, 60, 0.08);
+
+  background: rgba(
+    255,
+    255,
+    255,
+    0.98
+  );
+
+  box-shadow:
+    0 3px 8px rgba(
+      80,
+      72,
+      60,
+      0.08
+    );
 }
 
 .portal-card--student {
@@ -85,53 +131,75 @@
   border-color: #a6d9c0;
 }
 
-/* Header & Mascot */
+/* ============================================================
+   CARD HEADING
+   ============================================================ */
+
 .portal-card__heading {
   display: flex;
   align-items: center;
   gap: 12px;
+
   min-height: 42px;
 }
 
 .portal-card__heading img {
   width: 42px;
   height: 42px;
+
   object-fit: contain;
 }
 
 .portal-card__heading h2 {
   margin: 0;
+
   font-family: "Quicksand", sans-serif;
   font-weight: 700;
+
   font-size: 1.15rem;
   line-height: 1.1;
 }
 
 .portal-card__heading p {
   margin: 2px 0 0;
+
   font-family: "Poppins", sans-serif;
   font-weight: 300;
+
   font-size: 0.65rem;
+
   color: #777;
 }
 
-/* Tabs */
+/* ============================================================
+   TEACHER TABS
+   ============================================================ */
+
 .teacher-tabs {
   position: absolute;
+
   top: 22px;
   right: 34px;
+
   gap: 0;
+
   width: 210px;
+
   padding: 2.5px;
+
   border-radius: 999px;
+
   background: #ffe5c9;
 }
 
 .teacher-tabs button {
   flex: 1;
+
   padding: 5px 10px;
+
   border: 0;
   background: transparent;
+
   font-family: "Poppins", sans-serif;
   font-weight: 600;
   font-size: 0.68rem;
@@ -140,31 +208,52 @@
 .teacher-tabs button.is-active {
   background: #e59088;
   color: #fff;
+
   border-radius: 999px;
 }
 
-/* Form Fields */
+/* ============================================================
+   FORM FIELDS
+   ============================================================ */
+
 .portal-fields {
   display: grid;
+
   gap: 14px 20px;
+
   margin-top: 22px;
 }
 
 .portal-fields--two,
 .portal-fields--teacher {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
 }
 
+/*
+   STUDENT:
+   LRN + PASSWORD
+*/
 .portal-fields--student {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
 }
 
 .portal-fields label,
 .portal-fields .portal-field {
   display: flex;
   flex-direction: column;
+
   gap: 5px;
+
   color: #6e6e6e;
+
   font-family: "Poppins", sans-serif;
   font-size: 0.64rem;
   font-weight: 600;
@@ -183,19 +272,30 @@
 .portal-fields select {
   width: 100%;
   height: 34px;
+
   padding: 0 10px;
+
   border: 1px solid #e2b6a8;
   border-radius: 8px;
+
   outline: none;
+
   background: #ffe7cc;
   color: #4d4d4d;
+
   font-family: "Poppins", sans-serif;
   font-weight: 400;
   font-size: 0.75rem;
+
+  box-sizing: border-box;
 }
 
-.portal-card--student .portal-fields input,
-.portal-card--student .portal-fields select {
+.portal-card--student
+  .portal-fields
+  input,
+.portal-card--student
+  .portal-fields
+  select {
   border-color: #b7c9bc;
   background: #eef7f1;
 }
@@ -203,24 +303,57 @@
 .portal-fields input:focus,
 .portal-fields select:focus {
   border-color: #78977e;
-  box-shadow: 0 0 0 2px rgba(120, 151, 126, 0.18);
+
+  box-shadow:
+    0 0 0 2px
+    rgba(
+      120,
+      151,
+      126,
+      0.18
+    );
 }
 
-/* Action Buttons */
+/* ============================================================
+   STUDENT LRN
+   ============================================================ */
+
+.portal-fields--student
+  input[name="lrn"] {
+  letter-spacing: 0.04em;
+}
+
+/* ============================================================
+   SUBMIT BUTTON
+   ============================================================ */
+
 .portal-submit {
   display: block;
-  width: min(100%, 150px);
+
+  width: min(
+    100%,
+    150px
+  );
+
   height: 36px;
+
   margin: 20px auto 0;
+
   border: 0;
   border-radius: 10px;
+
   background: #e59088;
   color: #fff;
+
   cursor: pointer;
+
   font-family: "Poppins", sans-serif;
   font-size: 0.76rem;
   font-weight: 600;
-  transition: transform 140ms ease, opacity 140ms ease;
+
+  transition:
+    transform 140ms ease,
+    opacity 140ms ease;
 }
 
 .portal-submit:disabled {
@@ -233,17 +366,25 @@
   opacity: 0.95;
 }
 
-.portal-card--student .portal-submit {
+.portal-card--student
+  .portal-submit {
   background: #78977e;
 }
 
-/* Divider & Social Login */
+/* ============================================================
+   DIVIDER
+   ============================================================ */
+
 .portal-divider {
   display: flex;
   align-items: center;
+
   gap: 8px;
+
   margin: 16px 0 12px;
+
   color: #999;
+
   font-family: "Poppins", sans-serif;
   font-weight: 300;
   font-size: 0.62rem;
@@ -252,25 +393,39 @@
 .portal-divider::before,
 .portal-divider::after {
   content: "";
+
   flex: 1;
+
   border-top: 1px solid #e5e5e5;
 }
+
+/* ============================================================
+   GOOGLE BUTTON
+   ============================================================ */
 
 .google-button {
   display: flex;
   align-items: center;
   justify-content: center;
+
   gap: 7px;
+
   width: max-content;
   max-width: 100%;
+
   white-space: nowrap;
+
   margin: 0 auto;
   padding: 8px 20px;
+
   border: 1px solid #f1c6b6;
   border-radius: 999px;
+
   background: #fff;
   color: #666;
+
   cursor: pointer;
+
   font-family: "Poppins", sans-serif;
   font-size: 0.68rem;
   font-weight: 600;
@@ -278,38 +433,16 @@
 
 .google-button b {
   color: #4285f4;
+
   font-size: 1rem;
   line-height: 0;
+
   vertical-align: middle;
 }
 
-/* ============ Responsive ============ */
-@media (max-width: 800px) {
-  .login-hero {
-    padding: 36px 16px 28px;
-  }
-
-  .login-choice {
-    margin-bottom: 28px;
-    padding: 26px 20px;
-    border-radius: 30px;
-  }
-
-  .portal-card {
-    padding: 24px 20px;
-    border-radius: 24px;
-  }
-
-  .teacher-tabs {
-    position: static;
-    width: 100%;
-    margin: 16px 0 0;
-  }
-
-  .student-bunting {
-    display: none;
-  }
-}
+/* ============================================================
+   FORGOT PASSWORD
+   ============================================================ */
 
 .forgot-password-link {
   margin-top: 8px;
@@ -318,10 +451,52 @@
 
 .forgot-password-link a {
   font-size: 0.75rem;
+
   color: #0066cc;
+
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 800px) {
+  .login-hero {
+    padding: 36px 16px 28px;
+  }
+
+  .login-choice {
+    margin-bottom: 28px;
+
+    padding: 26px 20px;
+
+    border-radius: 30px;
+  }
+
+  .portal-card {
+    padding: 24px 20px;
+
+    border-radius: 24px;
+  }
+
+  .teacher-tabs {
+    position: static;
+
+    width: 100%;
+
+    margin: 16px 0 0;
+  }
+
+  .student-bunting {
+    display: none;
+  }
+}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
 
 @media (max-width: 560px) {
   .login-hero {
@@ -334,6 +509,7 @@
 
   .login-choice button {
     padding: 8px 14px;
+
     font-size: 0.72rem;
   }
 
@@ -354,16 +530,19 @@
 
   .portal-fields {
     gap: 12px;
+
     margin-top: 18px;
   }
 
   .portal-submit {
     min-width: 100%;
+
     margin-top: 18px;
   }
-  
+
   .google-button {
     width: 100%;
+
     white-space: normal;
   }
 }
