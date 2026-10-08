@@ -8,7 +8,7 @@ const SECTIONS = [
     content: (
       <p>
         For Teachers: Name, DepEd email, and School/Section information. For
-        learners: Last name, Birthdate, and Section (from the masterlist your teacher
+        learners: LRN, Last name, and Section (from the masterlist your teacher
         uploads), and reading activity such as audio captured during
         flashcard and story sessions, accuracy scores, and quiz answers.
       </p>

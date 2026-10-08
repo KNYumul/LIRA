@@ -312,7 +312,6 @@ function averageReadingAccuracy(results) {
 }
 
 function learnerToStudent(learner) {
-  const [birthYear = "", birthMonth = "", birthDay = ""] = (learner.birthdate || "").split("-");
   const result = learner.latestStoryResult;
   const storyResults = (learner.storyResults || []).map((storyResult) => ({
     id: storyResult._id,
@@ -334,13 +333,10 @@ function learnerToStudent(learner) {
   const accuracy = pointsPossible ? Math.round((pointsEarned / pointsPossible) * 100) : null;
   return {
     id: learner._id,
+    lrn: learner.lrn || "",
     lastName: learner.lastName,
-    firstName: learner.firstName || "",
-    displayName: [learner.lastName, learner.firstName].filter(Boolean).join(", "),
+    displayName: learner.lastName,
     section: learner.section,
-    birthMonth,
-    birthDay,
-    birthYear,
     wpm: storyResults.find((attempt) => attempt.readingWpm != null)?.readingWpm ?? null,
     accuracy,
     readingAccuracy: averageReadingAccuracy(storyResults),
@@ -1489,17 +1485,12 @@ const selectStyle = { border: `1px solid #D8E8D0`, background: "#F5FAF2" };
 
 function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
   const [lastName, setLastName] = useState(initial?.lastName || "");
-  const [firstName, setFirstName] = useState(initial?.firstName || "");
+  const [lrn, setLrn] = useState(initial?.lrn || "");
   const [submitting, setSubmitting] = useState(false);
-  const [month, setMonth] = useState(initial?.birthMonth || "");
-  const [day, setDay] = useState(initial?.birthDay || "");
-  const [year, setYear] = useState(initial?.birthYear || "");
 
-  const clear = () => { setLastName(""); setFirstName(""); setMonth(""); setDay(""); setYear(""); };
-  const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
-  const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0"));
+  const clear = () => { setLastName(""); setLrn(""); };
 
-  const valid = lastName.trim() && month && day && /^\d{4}$/.test(year);
+  const valid = lastName.trim() && /^\d{12}$/.test(lrn);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: "rgba(60,50,45,0.35)" }}>
@@ -1530,29 +1521,10 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
           />
         </Field>
 
-        {initial?.firstName && <Field label="First Name" required>
-          <input value={firstName} maxLength={50} onChange={(e) => setFirstName(e.target.value)}
+        <Field label="LRN" required>
+          <input value={lrn} inputMode="numeric" maxLength={12} placeholder="12-digit LRN"
+            onChange={(e) => setLrn(e.target.value.replace(/\D/g, "").slice(0, 12))}
             className="w-full rounded-lg px-3 py-2 outline-none" style={selectStyle} />
-        </Field>}
-        <Field label="Birthdate" required>
-          <div className="flex gap-2">
-            <RoundedSelect label="Birth month" hideLabel value={month} onChange={setMonth}
-              options={[{ value: '', label: 'Month' }, ...months.map(value => ({ value, label: value }))]} />
-            <RoundedSelect label="Birth day" hideLabel value={day} onChange={setDay}
-              options={[{ value: '', label: 'Day' }, ...days.map(value => ({ value, label: value }))]} />
-            <input
-              type="text"
-              inputMode="numeric"
-              value={year}
-              onChange={(e) => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))}
-              placeholder="Year"
-              maxLength={4}
-              className="flex-1 min-w-0 w-0 rounded-lg px-2 py-2 outline-none"
-              style={selectStyle}
-              aria-label="Birth year"
-              size={4}
-            />
-          </div>
         </Field>
 
         <div
@@ -1573,7 +1545,7 @@ function LearnerFormModal({ mode, initial, sectionName, onCancel, onSubmit }) {
             onClick={async () => {
               if (!valid || submitting) return;
               setSubmitting(true);
-              try { await onSubmit({ firstName, lastName: formatStudentName(lastName), birthMonth: month, birthDay: day, birthYear: year }); }
+              try { await onSubmit({ lrn, lastName: formatStudentName(lastName) }); }
               finally { setSubmitting(false); }
             }}
             className="flex-1 rounded-full py-2 font-semibold text-white"
@@ -1663,7 +1635,7 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore, onRecordingD
         }}
         onClick={() => onToggle(s.id)}
       >
-        <div className="font-semibold">{s.displayName}</div>
+        <div className="font-semibold">{s.lastName}<div className="text-xs font-normal opacity-70">LRN: {s.lrn || "--"}</div></div>
         <div className="font-semibold">{s.wpm == null ? "--" : `${s.wpm} wpm`}</div>
         <div className="font-semibold text-center tabular-nums">{s.accuracy == null ? "--" : `${s.accuracy}%`}</div>
         <div className="font-semibold text-center tabular-nums">{s.readingAccuracy == null ? "--" : `${s.readingAccuracy}%`}</div>
@@ -1794,9 +1766,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
   const saveLearner = async (data, id) => {
     const payload = {
       lastName: data.lastName,
-      firstName: data.firstName,
-      existingFirstNames: data.existingFirstNames,
-      birthdate: `${data.birthYear}-${data.birthMonth}-${data.birthDay}`,
+      lrn: data.lrn,
       section: data.section || sectionName,
     };
     const response = await fetch(`${API_URL}/api/learners${id ? `/${id}` : ""}`, {
@@ -1806,22 +1776,6 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     });
     if (!response.ok) {
       const failure = await response.json();
-      if (failure.code === "FIRST_NAMES_REQUIRED") {
-        const askName = async (title, text, value = "") => {
-          const answer = await liraAlert.fire({ title, text, input: "text", inputValue: value,
-            inputLabel: "First name", inputAttributes: { maxlength: 50 }, showCancelButton: true,
-            confirmButtonText: "Continue", cancelButtonText: "Cancel / skip",
-            inputValidator: (name) => /^[\p{L}]+(?:[ '-][\p{L}]+)*$/u.test(name.trim()) ? undefined : "Enter a valid first name." });
-          if (!answer.isConfirmed) throw Object.assign(new Error("Duplicate learner skipped."), { cancelled: true });
-          return answer.value.trim();
-        };
-        const firstName = await askName("Duplicate details found", `${payload.lastName}, born ${payload.birthdate}, is already listed in ${payload.section}. Enter the first name of the learner you are saving, or cancel if this is the same student.`, data.firstName || "");
-        const existingFirstNames = {};
-        for (const existing of failure.unnamedLearners) {
-          existingFirstNames[existing.id] = await askName("Existing learner's first name", "Enter the first name of " + existing.lastName + " already listed in " + payload.section + ".");
-        }
-        return saveLearner({ ...data, firstName, existingFirstNames }, id);
-      }
       throw new Error(failure.message || "Could not save learner.");
     }
     return learnerToStudent(await response.json());
@@ -1956,17 +1910,15 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       const headers = parseCsvLine(lines[0] || "").map(csvHeaderKey);
       const nameColumn = findCsvNameColumn(headers);
       const lastNameColumn = nameColumn.index;
-      const birthdateColumn = headers.findIndex((header) =>
-        ["birthdate", "dateofbirth", "dob", "studentbirthdate", "learnerbirthdate"].includes(header)
-      );
+      const lrnColumn = headers.findIndex((header) => ["lrn", "learnerreferencenumber", "studentlrn"].includes(header));
       const sectionColumn = headers.findIndex((header) =>
         ["section", "sectionname", "classsection", "studentsection", "learnersection"].includes(header)
       );
-      const hasHeaders = lastNameColumn >= 0 && birthdateColumn >= 0 && sectionColumn >= 0;
+      const hasHeaders = lastNameColumn >= 0 && lrnColumn >= 0 && sectionColumn >= 0;
       if (!hasHeaders) {
         const missingHeaders = [];
         if (lastNameColumn < 0) missingHeaders.push("Last Name or Full Name");
-        if (birthdateColumn < 0) missingHeaders.push("Birthdate");
+        if (lrnColumn < 0) missingHeaders.push("LRN");
         if (sectionColumn < 0) missingHeaders.push("Section");
         await showWarning(
           `The CSV header is not recognizable. Missing required column${missingHeaders.length === 1 ? "" : "s"}: ${missingHeaders.join(", ")}. Columns may be in any order, and additional columns are allowed.`,
@@ -1974,7 +1926,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         );
         return;
       }
-      const columns = { lastName: lastNameColumn, birthdate: birthdateColumn, section: sectionColumn };
+      const columns = { lastName: lastNameColumn, lrn: lrnColumn, section: sectionColumn };
       const startIdx = 1;
       if (lines.length === startIdx) {
         await showWarning("The CSV contains column headers but no learner records.", "Empty CSV file");
@@ -1986,27 +1938,16 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       for (let i = startIdx; i < lines.length; i++) {
         const row = parseCsvLine(lines[i]);
         const lastName = formatStudentName(extractCsvLastName(row[columns.lastName], nameColumn.fullName));
-        const birthdate = String(row[columns.birthdate] || "").trim();
+        const lrn = String(row[columns.lrn] || "").replace(/\D/g, "");
         const section = String(row[columns.section] || "").trim();
-        const usesSpaceSeparatedDate = /^\d{1,2}\s+\d{1,2}\s+\d{4}$/.test(birthdate);
-        const dateParts = (birthdate || "").split(usesSpaceSeparatedDate ? /\s+/ : /[-/]/).map((part) => part.trim());
-        const isIsoDate = /^\d{4}$/.test(dateParts[0]);
-        const [by, bm, bd] = isIsoDate
-          ? dateParts
-          : usesSpaceSeparatedDate
-            ? [dateParts[2], dateParts[1], dateParts[0]]
-            : [dateParts[2], dateParts[0], dateParts[1]];
-
         if (!lastName) continue;
-        if (!section || !/^\d{4}$/.test(by || "") || !/^\d{1,2}$/.test(bm || "") || !/^\d{1,2}$/.test(bd || "")) {
+        if (!section || !/^\d{12}$/.test(lrn)) {
           invalidRows.push(i + 1);
           continue;
         }
         newRows.push({
           lastName,
-          birthMonth: bm.padStart(2, "0"),
-          birthDay: bd.padStart(2, "0"),
-          birthYear: by,
+          lrn,
           section,
         });
       }
@@ -2187,7 +2128,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
   style={{ color: C.textMuted }}
 >
   <div className="mx-auto max-w-5xl">
-    Columns expected: Last Name (or Full Name / Name), Birthdate, and Section.
+    Columns expected: LRN, Last Name (or Full Name / Name), and Section.
   </div>
 
   <div className="mx-auto max-w-5xl mt-1">
@@ -2282,6 +2223,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
             <tr>
               <th>No.</th>
               <th>Learner</th>
+              <th>LRN</th>
               <th>WPM</th>
               <th>Comprehension Score</th>
               <th>Reading Accuracy</th>
@@ -2305,7 +2247,8 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
               return (
                 <tr key={`print-${student.id}`}>
                   <td>{index + 1}</td>
-                  <td>{student.displayName}</td>
+                  <td>{student.lastName}</td>
+                  <td>{student.lrn || "--"}</td>
                   <td>{student.wpm == null ? "--" : student.wpm}</td>
                   <td>{student.accuracy == null ? "--" : `${student.accuracy}%`}</td>
                   <td>{student.readingAccuracy == null ? "--" : `${student.readingAccuracy}%`}</td>

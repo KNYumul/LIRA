@@ -53,6 +53,8 @@ export default function FlashcardDifficulty() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const learner = getSession()?.user;
+  const learnerInfo = [learner?.lastName || learner?.surname, learner?.section].filter(Boolean).join(" · ");
 
   useEffect(() => {
     let cancelled = false;
@@ -138,12 +140,9 @@ export default function FlashcardDifficulty() {
           </h1>
         </div>
 
-        {/* LANGUAGE TOGGLE */}
-        <div
-          className="sm-lang-toggle"
-          role="group"
-          aria-label="Language"
-        >
+        <div className="flex items-center gap-4">
+          {learnerInfo && <span className="text-sm font-semibold text-slate-600">{learnerInfo}</span>}
+          <div className="sm-lang-toggle" role="group" aria-label="Language">
           {["ENG", "FIL"].map((value) => (
             <button
               key={value}
@@ -155,6 +154,7 @@ export default function FlashcardDifficulty() {
               {value}
             </button>
           ))}
+          </div>
         </div>
 
       </header>

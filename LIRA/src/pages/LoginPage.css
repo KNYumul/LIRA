@@ -323,6 +323,44 @@
   letter-spacing: 0.04em;
 }
 
+.student-password-input {
+  position: relative;
+}
+
+.student-password-input input[name="studentPassword"] {
+  padding-right: 44px;
+}
+
+.student-password-toggle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 8px;
+  border: 0;
+  background: transparent;
+  color: #55765c;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  transform: none;
+}
+
+.student-password-toggle:hover {
+  transform: none;
+}
+
+.student-password-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.student-password-toggle:focus-visible {
+  outline: 2px solid #78977e;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
 /* ============================================================
    SUBMIT BUTTON
    ============================================================ */

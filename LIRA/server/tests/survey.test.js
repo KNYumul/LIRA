@@ -13,7 +13,7 @@ before(async () => {
   mongo = await MongoMemoryServer.create();
   await mongoose.connect(mongo.getUri());
   await SurveyResponse.init();
-  learner = await Learner.create({ lastName: 'Student', birthdate: '2015-01-01', section: 'Earth' });
+  learner = await Learner.create({ lrn: '123456789012', lastName: 'Student', section: 'Earth' });
   const admin = await Admin.create({ firstName: 'Test', lastName: 'Admin', email: 'admin@example.com', passwordHash: 'unused' });
   studentToken = await issueSession(learner._id, 'student');
   adminToken = await issueSession(admin._id, 'admin');

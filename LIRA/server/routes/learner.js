@@ -50,48 +50,13 @@ async function ownedLearner(learnerId, teacherId) {
   return Learner.findOne({ _id: learnerId, sectionId: { $in: sectionIds } });
 }
 
-async function resolveNames(req, res, scope, excludeId) {
-  if (!String(scope.lastName || "").trim() || !String(scope.birthdate || "").trim()) {
-    res.status(400).json({ message: "Last name and birthdate are required." });
-    return null;
-  }
-  const matches = await Learner.find({ ...scope, ...(excludeId ? { _id: { $ne: excludeId } } : {}) })
-    .collation({ locale: "en", strength: 2 });
-  const firstName = String(req.body.firstName || "").trim();
-  const supplied = req.body.existingFirstNames || {};
-  const unnamed = matches.filter(learner => !learner.firstName);
-  if (matches.length && (!firstName || unnamed.some(learner => !String(supplied[learner.id] || "").trim()))) {
-    res.status(409).json({ code: "FIRST_NAMES_REQUIRED", message: "A learner with the same last name, birthdate, and section already exists. Enter first names to distinguish them.",
-      unnamedLearners: unnamed.map(learner => ({ id: learner.id, lastName: learner.lastName })) });
-    return null;
-  }
-  const names = [firstName, ...matches.map(learner => learner.firstName || String(supplied[learner.id] || "").trim())];
-  if (names.some(name => name && (name.length > 50 || !/^[\p{L}]+(?:[ '-][\p{L}]+)*$/u.test(name)))) {
-    res.status(400).json({ message: "Enter a valid first name using letters, spaces, apostrophes, or hyphens (up to 50 characters)." });
-    return null;
-  }
-  if (new Set(names.map(name => name.toLocaleLowerCase())).size !== names.length) {
-    res.status(409).json({ message: "That learner is already listed with the same first name, last name, birthdate, and section." });
-    return null;
-  }
-  for (const learner of unnamed) {
-    const updated = await Learner.updateOne({ _id: learner._id, $or: [{ firstName: "" }, { firstName: null }] },
-      { $set: { firstName: String(supplied[learner.id]).trim() } });
-    if (!updated.modifiedCount) {
-      res.status(409).json({ message: "This learner was updated by another request. Please try again." });
-      return null;
-    }
-  }
-  return { firstName };
-}
-
 router.get("/", async (req, res) => {
   try {
     const teacher = await currentTeacher(req, res);
     if (!teacher) return;
     const sectionIds = await Section.find({ teacherId: teacher._id }).distinct("_id");
     const learners = await Learner.find({ sectionId: { $in: sectionIds } })
-      .select("lastName firstName birthdate section sectionId")
+      .select("lrn lastName section sectionId")
       .sort({ lastName: 1 });
     const learnerIds = learners.map((learner) => learner._id);
     const results = await StoryResult.find({ learnerId: { $in: learnerIds } })
@@ -122,7 +87,8 @@ router.post("/", async (req, res) => {
     if (!teacher) return;
     const section = await teacherSection(teacher, req.body, true);
     const lastName = String(req.body.lastName || "").trim();
-    const birthdate = String(req.body.birthdate || "").trim();
+    const lrn = String(req.body.lrn || "").trim();
+    if (!lastName || !/^\d{12}$/.test(lrn)) return res.status(400).json({ message: "A last name and a 12-digit LRN are required." });
     if (!section) {
       const requestedSection = String(req.body.section || "").trim();
       const ownedSection = await Section.findOne({ name: requestedSection })
@@ -136,18 +102,15 @@ router.post("/", async (req, res) => {
         code: "SECTION_OWNED_BY_ANOTHER_TEACHER"
       });
     }
-    const names = await resolveNames(req, res, { lastName, birthdate, sectionId: section._id });
-    if (!names) return;
     const learner = await Learner.create({
-      ...names,
       lastName,
-      birthdate,
+      lrn,
       section: section.name,
       sectionId: section._id
     });
     res.status(201).json(learner);
   } catch (error) {
-    if (error.code === 11000) return res.status(409).json({ message: "That learner is already listed in this section." });
+    if (error.code === 11000) return res.status(409).json({ message: "That LRN is already assigned to a learner." });
     res.status(400).json({ message: error.message });
   }
 });
@@ -160,12 +123,11 @@ router.put("/:id", async (req, res) => {
     if (!learner) return res.status(404).json({ message: "Learner not found in your sections." });
     const section = await teacherSection(teacher, req.body);
     if (!section) return res.status(403).json({ message: "That section is not assigned to you." });
-    if (req.body.firstName === undefined) req.body.firstName = learner.firstName;
-    const names = await resolveNames(req, res, { lastName: req.body.lastName, birthdate: req.body.birthdate, sectionId: section._id }, learner._id);
-    if (!names) return;
-    learner.firstName = names.firstName;
+    const lrn = String(req.body.lrn || "").trim();
+    const lastName = String(req.body.lastName || "").trim();
+    if (!lastName || !/^\d{12}$/.test(lrn)) return res.status(400).json({ message: "A last name and a 12-digit LRN are required." });
     learner.lastName = req.body.lastName;
-    learner.birthdate = req.body.birthdate;
+    learner.lrn = lrn;
     learner.section = section.name;
     learner.sectionId = section._id;
     await learner.save();
@@ -191,36 +153,28 @@ router.delete("/:id", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   try {
-    const lastName = String(req.body.lastName || "").trim();
-    const birthdate = String(req.body.birthdate || "").trim();
-    const section = String(req.body.section || "").trim();
-    if (!lastName || !birthdate || !section) {
-      return res.status(400).json({ message: "Last name, birthdate, and section are required." });
+    const lrn = String(req.body.lrn || "").trim();
+    const password = String(req.body.password || "").trim();
+    if (!/^\d{12}$/.test(lrn) || !password) {
+      return res.status(400).json({ message: "A 12-digit LRN and password are required." });
     }
 
     const key = loginKey(req, "learner");
     const status = cooldownStatus(key);
     if (status.locked) return sendCooldown(res, status.retryAfterSeconds);
 
-    const matches = await Learner.find({ lastName, birthdate, section })
-      .collation({ locale: "en", strength: 2 });
-    const firstName = String(req.body.firstName || "").trim();
-    if (matches.length > 1 && !firstName) {
-      return res.status(409).json({ code: "FIRST_NAME_REQUIRED", message: "Please enter your first name to identify your account." });
-    }
-    const learner = firstName
-      ? matches.find(candidate => candidate.firstName?.toLocaleLowerCase() === firstName.toLocaleLowerCase())
-      : matches[0];
-    if (!learner) {
+    const learner = await Learner.findOne({ lrn });
+    const passwordMatches = learner && learner.lastName.localeCompare(password, undefined, { sensitivity: "accent" }) === 0;
+    if (!passwordMatches) {
       const failure = failedLogin(key);
       if (failure.locked) return sendCooldown(res, failure.retryAfterSeconds);
-      return res.status(401).json({ message: `Invalid last name, birthdate, or section. ${failure.remainingAttempts} attempt${failure.remainingAttempts === 1 ? "" : "s"} remaining.` });
+      return res.status(401).json({ message: `Invalid LRN or password. ${failure.remainingAttempts} attempt${failure.remainingAttempts === 1 ? "" : "s"} remaining.` });
     }
     clearFailedLogins(key);
     res.json({
       message: "Login successful!",
       token: await issueSession(learner._id, "student"),
-      learner: { id: learner._id, lastName: learner.lastName, firstName: learner.firstName, birthdate: learner.birthdate, section: learner.section }
+      learner: { id: learner._id, lrn: learner.lrn, lastName: learner.lastName, section: learner.section }
     });
   } catch (error) {
     console.error(error);

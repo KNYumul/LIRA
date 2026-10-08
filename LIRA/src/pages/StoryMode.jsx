@@ -1063,6 +1063,8 @@ function StoryMode({ onExit }) {
   /* Selection View */
   if (view === 'selection') {
     const visibleStories = isMobileStoryPicker ? filteredStories : filteredStories.slice(carouselOffset, carouselOffset + 3);
+    const learner = getSession()?.user;
+    const learnerInfo = [learner?.lastName || learner?.surname, learner?.section].filter(Boolean).join(' · ');
 
     return (
       <section className="story-mode sm-selection-bg">
@@ -1092,7 +1094,7 @@ function StoryMode({ onExit }) {
             <span className="sm-choose-label">Choose a story ↓</span>
           </div>
 
-          <div className="sm-header-right" />
+          <div className="sm-header-right">{learnerInfo && <span className="text-sm font-semibold">{learnerInfo}</span>}</div>
         </div>
 
         <div className="sm-decor-dot sm-decor-dot--red" />

@@ -16,11 +16,12 @@ const learnerSchema = new mongoose.Schema({
     set: formatLastName
   },
 
-  firstName: { type: String, trim: true, default: "", set: formatLastName },
-
-  birthdate: {
+  // LRN is the learner's account identifier. Birthdates are intentionally not
+  // stored or used for authentication.
+  lrn: {
     type: String,
-    required: true
+    trim: true,
+    match: /^\d{12}$/
   },
 
   section: {
@@ -37,11 +38,9 @@ const learnerSchema = new mongoose.Schema({
   }
 });
 
-// First names distinguish learners with the same surname, birthdate, and section.
-learnerSchema.index(
-  { sectionId: 1, lastName: 1, birthdate: 1, firstName: 1 },
-  { unique: true, collation: { locale: "en", strength: 2 } }
-);
+// Keep this sparse while old records are being replaced through a new roster
+// upload. All new records are validated by the learner routes.
+learnerSchema.index({ lrn: 1 }, { unique: true, sparse: true });
 
 softDeleteSchema(learnerSchema);
 
