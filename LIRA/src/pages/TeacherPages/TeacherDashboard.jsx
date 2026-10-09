@@ -347,12 +347,45 @@ function learnerToStudent(learner) {
   };
 }
 
-function riskOf(student) {
-  if (student.hasReadingData === false || student.accuracy == null) return "noData";
-  if (student.accuracy >= 80) return "gradeReady";
-  if (student.accuracy >= 70) return "lightRefresher";
-  if (student.accuracy >= 60) return "moderateRefresher";
+function levelForReadingAccuracy(value) {
+  if (value == null) return null;
+  if (value >= 90) return "gradeReady";
+  if (value >= 80) return "lightRefresher";
+  if (value >= 65) return "moderateRefresher";
   return "fullRefresher";
+}
+
+function levelForComprehension(value) {
+  if (value == null) return null;
+  if (value >= 80) return "gradeReady";
+  if (value >= 70) return "lightRefresher";
+  if (value >= 60) return "moderateRefresher";
+  return "fullRefresher";
+}
+
+function levelForWpm(value) {
+  if (value == null) return null;
+  if (value >= 60) return "gradeReady";
+  if (value >= 45) return "lightRefresher";
+  if (value >= 30) return "moderateRefresher";
+  return "fullRefresher";
+}
+
+function riskOf(student) {
+  if (student.hasReadingData === false) return "noData";
+
+  // CRLA framework: Reading Accuracy, Comprehension, then WPM. A matching
+  // pair decides the level; when all available criteria differ, the stated
+  // priority order resolves it.
+  const levels = [
+    levelForReadingAccuracy(student.readingAccuracy),
+    levelForComprehension(student.accuracy),
+    levelForWpm(student.wpm),
+  ].filter(Boolean);
+  if (!levels.length) return "noData";
+
+  const matchingLevel = levels.find((level) => levels.filter((item) => item === level).length >= 2);
+  return matchingLevel || levels[0];
 }
 const riskLabel = {
   gradeReady: "Grade Ready (GR)",
