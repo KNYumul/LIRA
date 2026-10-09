@@ -23,6 +23,10 @@ before(async () => {
   mongo = await MongoMemoryServer.create();
   await mongoose.connect(mongo.getUri());
   await Promise.all([Learner.init(), Teacher.init(), Section.init()]);
+  await Learner.collection.createIndex(
+    { lrnLookup: 1 },
+    { unique: true, partialFilterExpression: { dataEncryptionVersion: 1 } }
+  );
   teacher = await Teacher.create({ firstName: 'Test', lastName: 'Teacher', email: 'names@test.com', passwordHash: 'unused', active: true });
   await Section.create({ name: 'Earth', teacherId: teacher._id });
   const app = express();

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const softDeleteSchema = require("./softDelete");
+const { decrypt, encrypt, lrnLookup } = require("../utils/learnerEncryption");
 
 function formatLastName(value) {
   const lastName = String(value || "").trim().toLocaleLowerCase();
@@ -8,12 +9,21 @@ function formatLastName(value) {
     : "";
 }
 
+function encryptedLastName(value) {
+  return encrypt(formatLastName(value));
+}
+
+function encryptedLrn(value) {
+  return encrypt(String(value || "").trim());
+}
+
 const learnerSchema = new mongoose.Schema({
   lastName: {
     type: String,
     required: true,
     trim: true,
-    set: formatLastName
+    set: encryptedLastName,
+    get: decrypt
   },
 
   // LRN is the learner's account identifier. Birthdates are intentionally not
@@ -21,8 +31,16 @@ const learnerSchema = new mongoose.Schema({
   lrn: {
     type: String,
     trim: true,
-    match: /^\d{12}$/
+    get: decrypt,
+    set: encryptedLrn
   },
+
+  // A keyed one-way digest supports login and uniqueness without storing a
+  // searchable plaintext LRN.
+  lrnLookup: { type: String, select: false },
+  // Marks records created after learner encryption was enabled. Legacy roster
+  // records intentionally remain untouched.
+  dataEncryptionVersion: { type: Number, select: false },
 
   section: {
     type: String,
@@ -36,11 +54,16 @@ const learnerSchema = new mongoose.Schema({
     ref: "Section",
     index: true
   }
-});
+}, { toJSON: { getters: true }, toObject: { getters: true } });
 
-// Keep this sparse while old records are being replaced through a new roster
-// upload. All new records are validated by the learner routes.
-learnerSchema.index({ lrn: 1 }, { unique: true, sparse: true });
+learnerSchema.pre("validate", function setLrnLookup() {
+  const plainLrn = this.get("lrn", null, { getters: true });
+  if (plainLrn) {
+    if (!/^\d{12}$/.test(plainLrn)) throw new Error("LRN must contain exactly 12 digits.");
+    this.lrnLookup = lrnLookup(plainLrn);
+    this.dataEncryptionVersion = 1;
+  }
+});
 
 softDeleteSchema(learnerSchema);
 

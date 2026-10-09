@@ -4,6 +4,7 @@ const Section = require("../models/Section");
 const Teacher = require("../models/Teacher");
 const StoryResult = require("../models/StoryResult");
 const { loginKey, cooldownStatus, failedLogin, clearFailedLogins, sendCooldown } = require("../utils/loginCooldown");
+const { lrnLookup } = require("../utils/learnerEncryption");
 
 const { issueSession } = require("../utils/recordingSession");
 const router = express.Router();
@@ -57,7 +58,8 @@ router.get("/", async (req, res) => {
     const sectionIds = await Section.find({ teacherId: teacher._id }).distinct("_id");
     const learners = await Learner.find({ sectionId: { $in: sectionIds } })
       .select("lrn lastName section sectionId")
-      .sort({ lastName: 1 });
+      .sort({ _id: 1 });
+    learners.sort((a, b) => a.lastName.localeCompare(b.lastName));
     const learnerIds = learners.map((learner) => learner._id);
     const results = await StoryResult.find({ learnerId: { $in: learnerIds } })
       .sort({ createdAt: -1 })
@@ -163,7 +165,10 @@ router.post("/login", async (req, res) => {
     const status = cooldownStatus(key);
     if (status.locked) return sendCooldown(res, status.retryAfterSeconds);
 
-    const learner = await Learner.findOne({ lrn });
+    const learner = await Learner.findOne({
+      lrnLookup: lrnLookup(lrn),
+      dataEncryptionVersion: 1
+    }).select("+lrnLookup +dataEncryptionVersion");
     const passwordMatches = learner && learner.lastName.localeCompare(password, undefined, { sensitivity: "accent" }) === 0;
     if (!passwordMatches) {
       const failure = failedLogin(key);
