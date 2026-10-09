@@ -372,12 +372,26 @@ function levelForWpm(value) {
   return "fullRefresher";
 }
 
+const RISK_LEVEL_VALUE = {
+  fullRefresher: 1,
+  moderateRefresher: 2,
+  lightRefresher: 3,
+  gradeReady: 4,
+};
+
+const RISK_VALUE_LEVEL = {
+  1: "fullRefresher",
+  2: "moderateRefresher",
+  3: "lightRefresher",
+  4: "gradeReady",
+};
+
 function riskOf(student) {
   if (student.hasReadingData === false) return "noData";
 
-  // CRLA framework: Reading Accuracy, Comprehension, then WPM. A matching
-  // pair decides the level; when all available criteria differ, the stated
-  // priority order resolves it.
+  // CRLA framework: a matching pair decides the level. When all three
+  // measures differ, average their categorical levels (FR=1, MR=2, LR=3,
+  // GR=4) and use the nearest resulting level.
   const levels = [
     levelForReadingAccuracy(student.readingAccuracy),
     levelForComprehension(student.accuracy),
@@ -386,7 +400,17 @@ function riskOf(student) {
   if (!levels.length) return "noData";
 
   const matchingLevel = levels.find((level) => levels.filter((item) => item === level).length >= 2);
-  return matchingLevel || levels[0];
+  if (matchingLevel) return matchingLevel;
+  const averageLevel = levels.reduce((sum, level) => sum + RISK_LEVEL_VALUE[level], 0) / levels.length;
+  return RISK_VALUE_LEVEL[Math.round(averageLevel)];
+}
+
+function belowGradeReadyCriteria(student) {
+  return [
+    { label: "reading accuracy", value: student.readingAccuracy, suffix: "%", level: levelForReadingAccuracy(student.readingAccuracy) },
+    { label: "comprehension", value: student.accuracy, suffix: "%", level: levelForComprehension(student.accuracy) },
+    { label: "reading fluency", value: student.wpm, suffix: " WPM", level: levelForWpm(student.wpm) },
+  ].filter((criterion) => criterion.value != null && criterion.level !== "gradeReady");
 }
 
 // Overall risk is useful for grouping learners, but it can hide a weakness
@@ -399,6 +423,18 @@ function recommendationFor(student) {
   }
 
   const { accuracy: comprehension, readingAccuracy, wpm } = student;
+
+  const supportCriteria = belowGradeReadyCriteria(student);
+  if (supportCriteria.length) {
+    const areas = supportCriteria
+      .map(({ label, value, suffix }) => `${label} (${value}${suffix})`)
+      .join(" and ");
+    const isOverallGradeReady = riskOf(student) === "gradeReady";
+    const prefix = isOverallGradeReady
+      ? "Overall Grade Ready; continue targeted practice in"
+      : "Provide targeted support in";
+    return `${prefix} ${areas}, which ${supportCriteria.length === 1 ? "remains" : "remain"} below the Grade Ready benchmark.`;
+  }
 
   if (comprehension == null) {
     return "Assess comprehension to identify the learner's next reading goal.";

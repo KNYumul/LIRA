@@ -143,7 +143,8 @@ router.post("/recommendations", async (req, res) => {
     const prompt = [
       "Create one concise, practical literacy recommendation for each Grade 3 learner metric below.",
       "Use only the supplied metrics. Do not diagnose, make predictions, or mention AI. Address the teacher directly, in one sentence of at most 28 words.",
-      "Prioritize low comprehension even when reading accuracy and WPM are high or the risk level is Grade Ready. If a score is missing, recommend collecting that assessment.",
+      "Use these CRLA benchmarks: Reading Accuracy—Grade Ready >=90%, Light Refresher 80-89%, Moderate Refresher 65-79%, Full Refresher <65%; Comprehension—Grade Ready >=80%, Light Refresher 70-79%, Moderate Refresher 60-69%, Full Refresher <60%; WPM—Grade Ready >=60, Light Refresher 45-59, Moderate Refresher 30-44, Full Refresher <30.",
+      "Explicitly name every available metric below its Grade Ready benchmark and recommend practice for it, even when the overall risk level is Grade Ready because two other metrics are Grade Ready. If a score is missing, recommend collecting that assessment.",
       "Return exactly one recommendation for every id, retaining each id exactly as supplied.",
       "LEARNER METRICS (identifiers only; no names or LRN):",
       JSON.stringify(metrics)
