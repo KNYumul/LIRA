@@ -347,6 +347,7 @@ function learnerToStudent(learner) {
   };
 }
 
+// Grading System
 function levelForReadingAccuracy(value) {
   if (value == null) return null;
   if (value >= 90) return "gradeReady";
@@ -386,6 +387,52 @@ function riskOf(student) {
 
   const matchingLevel = levels.find((level) => levels.filter((item) => item === level).length >= 2);
   return matchingLevel || levels[0];
+}
+
+// Overall risk is useful for grouping learners, but it can hide a weakness
+// when two stronger measures agree. Build the report comment from each
+// available measure so that, for example, strong accuracy and pace do not
+// mask low comprehension.
+function recommendationFor(student) {
+  if (student.hasReadingData === false) {
+    return "Record a reading and comprehension assessment.";
+  }
+
+  const { accuracy: comprehension, readingAccuracy, wpm } = student;
+
+  if (comprehension == null) {
+    return "Assess comprehension to identify the learner's next reading goal.";
+  }
+
+  if (comprehension < 60) {
+    return `Prioritize comprehension support (${comprehension}%): reread short passages and discuss key details and main ideas.`;
+  }
+
+  if (comprehension < 70) {
+    return `Strengthen comprehension (${comprehension}%): use guided questions about the main idea, details, and inferences.`;
+  }
+
+  if (readingAccuracy != null && readingAccuracy < 65) {
+    return `Build word-reading accuracy (${readingAccuracy}%): practise decoding and rereading familiar passages.`;
+  }
+
+  if (wpm != null && wpm < 30) {
+    return `Build reading fluency (${wpm} WPM): use short, supported repeated-reading practice.`;
+  }
+
+  if (readingAccuracy != null && readingAccuracy < 80) {
+    return `Continue targeted word-reading practice to improve accuracy (${readingAccuracy}%).`;
+  }
+
+  if (wpm != null && wpm < 45) {
+    return `Continue guided repeated reading to improve fluency (${wpm} WPM).`;
+  }
+
+  if (comprehension < 80) {
+    return `Maintain reading practice and review comprehension strategies (${comprehension}%).`;
+  }
+
+  return "Maintain regular reading practice and extend learning with deeper comprehension questions.";
 }
 const riskLabel = {
   gradeReady: "Grade Ready (GR)",
@@ -2052,6 +2099,28 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     reader.readAsText(file);
   };
 
+  const generateAiRecommendations = async () => {
+    const response = await fetch(`${API_URL}/api/learners/recommendations`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Teacher-Id": currentTeacher?.id || "",
+      },
+      body: JSON.stringify({
+        learners: students.map((student) => ({
+          id: student.id,
+          comprehension: student.accuracy,
+          readingAccuracy: student.readingAccuracy,
+          wpm: student.wpm,
+          riskLevel: riskLabel[riskOf(student)],
+        })),
+      }),
+    });
+    if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not generate AI recommendations."));
+    const result = await response.json();
+    return new Map(result.recommendations.map(({ id, recommendation }) => [String(id), recommendation]));
+  };
+
   const printReport = async () => {
     if (!sectionName) {
       await showWarning("Select a section before downloading its report.", "Section required");
@@ -2102,12 +2171,25 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
 
     if (!confirmation.isConfirmed || !reportRef.current) return;
 
+    let aiRecommendations;
+    try {
+      aiRecommendations = await generateAiRecommendations();
+    } catch (requestError) {
+      await showError(requestError.message, "AI recommendations unavailable");
+      return;
+    }
+
     // Print from an isolated document. Other pages load global @media print
     // rules that hide their own content, which can otherwise hide this report.
     const printFrame = document.createElement("iframe");
     printFrame.setAttribute("aria-hidden", "true");
     printFrame.style.cssText = "position:fixed;width:0;height:0;border:0;right:0;bottom:0;";
-    const reportMarkup = reportRef.current.outerHTML;
+    const reportClone = reportRef.current.cloneNode(true);
+    reportClone.querySelectorAll("[data-recommendation-id]").forEach((cell) => {
+      const recommendation = aiRecommendations.get(cell.dataset.recommendationId);
+      if (recommendation) cell.textContent = recommendation;
+    });
+    const reportMarkup = reportClone.outerHTML;
     printFrame.srcdoc = `<!doctype html>
       <html><head><title>Section Report</title><style>
         @page { size: landscape; margin: 14mm; }
@@ -2268,15 +2350,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
           <tbody>
             {students.map((student, index) => {
               const risk = riskOf(student);
-              const action = risk === "fullRefresher"
-                ? "Provide a full comprehension refresher"
-                : risk === "moderateRefresher"
-                  ? "Provide targeted guided practice"
-                  : risk === "lightRefresher"
-                    ? "Provide a light comprehension review"
-                    : risk === "gradeReady"
-                      ? "Continue regular reading practice"
-                    : "Record a reading assessment";
+              const action = recommendationFor(student);
               return (
                 <tr key={`print-${student.id}`}>
                   <td>{index + 1}</td>
@@ -2287,7 +2361,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
                   <td>{student.readingAccuracy == null ? "--" : `${student.readingAccuracy}%`}</td>
                   <td>{student.historyDate}</td>
                   <td>{riskLabel[risk]}</td>
-                  <td>{action}</td>
+                  <td data-recommendation-id={student.id}>{action}</td>
                 </tr>
               );
             })}

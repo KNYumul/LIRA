@@ -9,6 +9,60 @@ const { lrnLookup } = require("../utils/learnerEncryption");
 const { issueSession } = require("../utils/recordingSession");
 const router = express.Router();
 
+// AI Recommended Actions
+function responseText(response) {
+  if (typeof response.output_text === "string") return response.output_text;
+  return (response.output || [])
+    .flatMap((item) => item.content || [])
+    .filter((item) => item.type === "output_text")
+    .map((item) => item.text)
+    .join("");
+}
+
+function geminiSchema(schema) {
+  if (Array.isArray(schema)) return schema.map(geminiSchema);
+  if (!schema || typeof schema !== "object") return schema;
+  return Object.fromEntries(
+    Object.entries(schema)
+      .filter(([key]) => key !== "additionalProperties")
+      .map(([key, value]) => [key, geminiSchema(value)])
+  );
+}
+
+async function generateRecommendationsWithOpenAI(prompt, schema) {
+  if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured on the server.");
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: process.env.OPENAI_RECOMMENDATION_MODEL || process.env.OPENAI_STORY_MODEL || "gpt-5.6-terra",
+      input: prompt,
+      text: { format: { type: "json_schema", name: "learner_recommendations", strict: true, schema } }
+    })
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error?.message || "OpenAI could not generate recommendations.");
+  return responseText(result);
+}
+
+async function generateRecommendationsWithGemini(prompt, schema) {
+  if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured on the server.");
+  const model = process.env.GEMINI_RECOMMENDATION_MODEL || process.env.GEMINI_STORY_MODEL || "gemini-3.5-flash-lite";
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+    method: "POST",
+    headers: { "x-goog-api-key": process.env.GEMINI_API_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: "application/json", responseSchema: geminiSchema(schema) }
+    })
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error?.message || "Gemini could not generate recommendations.");
+  const text = (result.candidates || []).flatMap((candidate) => candidate.content?.parts || []).map((part) => part.text || "").join("");
+  if (!text) throw new Error("Gemini returned no recommendations.");
+  return text;
+}
+
 async function currentTeacher(req, res) {
   const teacherId = req.get("X-Teacher-Id");
   if (!teacherId) {
@@ -50,6 +104,72 @@ async function ownedLearner(learnerId, teacherId) {
   const sectionIds = await Section.find({ teacherId }).distinct("_id");
   return Learner.findOne({ _id: learnerId, sectionId: { $in: sectionIds } });
 }
+
+router.post("/recommendations", async (req, res) => {
+  try {
+    const teacher = await currentTeacher(req, res);
+    if (!teacher) return;
+
+    const learners = Array.isArray(req.body.learners) ? req.body.learners.slice(0, 100) : [];
+    if (!learners.length) return res.status(400).json({ message: "Add at least one learner before generating recommendations." });
+
+    const metrics = learners.map((learner) => ({
+      id: String(learner.id || "").slice(0, 100),
+      comprehension: Number.isFinite(learner.comprehension) ? learner.comprehension : null,
+      readingAccuracy: Number.isFinite(learner.readingAccuracy) ? learner.readingAccuracy : null,
+      wpm: Number.isFinite(learner.wpm) ? learner.wpm : null,
+      riskLevel: String(learner.riskLevel || "No Data").slice(0, 50),
+    })).filter((learner) => learner.id);
+    if (!metrics.length) return res.status(400).json({ message: "Learner metrics are missing." });
+
+    const schema = {
+      type: "object",
+      additionalProperties: false,
+      required: ["recommendations"],
+      properties: {
+        recommendations: {
+          type: "array",
+          minItems: metrics.length,
+          maxItems: metrics.length,
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["id", "recommendation"],
+            properties: { id: { type: "string" }, recommendation: { type: "string" } }
+          }
+        }
+      }
+    };
+    const prompt = [
+      "Create one concise, practical literacy recommendation for each Grade 3 learner metric below.",
+      "Use only the supplied metrics. Do not diagnose, make predictions, or mention AI. Address the teacher directly, in one sentence of at most 28 words.",
+      "Prioritize low comprehension even when reading accuracy and WPM are high or the risk level is Grade Ready. If a score is missing, recommend collecting that assessment.",
+      "Return exactly one recommendation for every id, retaining each id exactly as supplied.",
+      "LEARNER METRICS (identifiers only; no names or LRN):",
+      JSON.stringify(metrics)
+    ].join("\n\n");
+    const provider = String(process.env.AI_PROVIDER || (process.env.GEMINI_API_KEY ? "gemini" : "openai")).toLowerCase();
+    if (!new Set(["openai", "gemini"]).has(provider)) return res.status(503).json({ message: `Unsupported AI_PROVIDER: ${provider}.` });
+    if (!(provider === "gemini" ? process.env.GEMINI_API_KEY : process.env.OPENAI_API_KEY)) {
+      return res.status(503).json({ message: "AI recommendations are not configured on the server." });
+    }
+    const text = provider === "gemini"
+      ? await generateRecommendationsWithGemini(prompt, schema)
+      : await generateRecommendationsWithOpenAI(prompt, schema);
+    const result = JSON.parse(text);
+    const ids = new Set(metrics.map((learner) => learner.id));
+    const recommendationIds = new Set((result.recommendations || []).map((item) => item?.id));
+    if (!Array.isArray(result.recommendations) || result.recommendations.length !== metrics.length
+      || recommendationIds.size !== ids.size || [...ids].some((id) => !recommendationIds.has(id))
+      || result.recommendations.some((item) => !ids.has(item?.id) || typeof item.recommendation !== "string" || !item.recommendation.trim())) {
+      return res.status(502).json({ message: "The AI returned invalid recommendations. Please try again." });
+    }
+    res.json({ recommendations: result.recommendations });
+  } catch (error) {
+    console.error("Could not generate learner recommendations:", error);
+    res.status(502).json({ message: "Could not generate AI recommendations. Please try again." });
+  }
+});
 
 router.get("/", async (req, res) => {
   try {
