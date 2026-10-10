@@ -18,6 +18,27 @@ body {
   margin: 0;
   padding: 0;
   width: 100%;
+  min-width: 320px;
+}
+
+/*
+ * Viewport-scale tokens.  Page styles use these for the parts of a screen
+ * whose visual size should follow the available space (rather than only
+ * changing at a breakpoint).  The lower bounds keep controls usable on small
+ * phones; the upper bounds keep ultra-wide displays from becoming oversized.
+ */
+:root {
+  --viewport-gutter: clamp(1rem, 3.33vw, 3.75rem);
+  --viewport-section-space: clamp(3rem, 5vw, 5.625rem);
+  --viewport-control: clamp(2.5rem, 3.1vw, 3.75rem);
+  --viewport-title: clamp(1.65rem, 2.7vw, 3.2rem);
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
 }
 
 #root {

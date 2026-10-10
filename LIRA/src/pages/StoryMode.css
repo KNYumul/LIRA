@@ -11,9 +11,9 @@
   --text-muted: #7a7a7a;
 
   position: relative;
-  width: 100vw;
+  width: 100%;
   min-height: 100vh;
-  padding: 32px 48px 0;
+  padding: clamp(1.5rem, 2.2vw, 2rem) var(--viewport-gutter) 0;
   font-family: 'Poppins', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-x: hidden;
   box-sizing: border-box;
@@ -67,8 +67,8 @@
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 24px;
-  margin-bottom: 40px;
+  gap: clamp(0.875rem, 1.7vw, 1.5rem);
+  margin-bottom: clamp(1.75rem, 2.8vw, 2.5rem);
   position: relative;
   z-index: 3;
 }
@@ -93,8 +93,8 @@
 }
 
 .sm-back-btn {
-  width: 44px;
-  height: 44px;
+  width: var(--viewport-control);
+  height: var(--viewport-control);
   border-radius: 50%;
   background: #ffffff;
   border: none;

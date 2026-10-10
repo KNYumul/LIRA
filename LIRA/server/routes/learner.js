@@ -313,10 +313,19 @@ router.post("/login", async (req, res) => {
     const status = cooldownStatus(key);
     if (status.locked) return sendCooldown(res, status.retryAfterSeconds);
 
-    const learner = await Learner.findOne({
-      lrnLookup: lrnLookup(lrn),
-      dataEncryptionVersion: 1
-    }).select("+lrnLookup +dataEncryptionVersion");
+    let learner = await Learner.findOne({
+      lrnLookup: lrnLookup(lrn)
+    }).select("+lrnLookup");
+    // Some rosters predate the keyed lookup and store their LRN in plaintext.
+    // Use the native collection for that fallback so the model's encryption
+    // setter does not transform the legacy LRN query value.
+    if (!learner) {
+      learner = await Learner.collection.findOne({
+        lrn,
+        dataEncryptionVersion: { $ne: 1 },
+        deletedAt: null
+      });
+    }
     const passwordMatches = learner && learner.lastName.localeCompare(password, undefined, { sensitivity: "accent" }) === 0;
     if (!passwordMatches) {
       const failure = failedLogin(key);

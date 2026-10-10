@@ -51,6 +51,28 @@ test('LRN uniquely identifies a learner and surname authentication ignores case'
   assert.equal((await request('', { ...details, lastName: 'Cruz' })).status, 409);
 });
 
+test('legacy plaintext roster records can still log in', async () => {
+  await Learner.collection.insertOne({
+    lrn: '123456789015',
+    lastName: 'Legacy',
+    section: 'Earth',
+    deletedAt: null,
+  });
+
+  assert.equal((await request('/login', { lrn: '123456789015', password: 'lEgAcY' })).status, 200);
+});
+
+test('encrypted roster records with a lookup remain sign-in capable without a migration version', async () => {
+  const learner = await Learner.create({
+    lrn: '123456789016',
+    lastName: 'Migrated',
+    section: 'Earth',
+  });
+  await Learner.collection.updateOne({ _id: learner._id }, { $unset: { dataEncryptionVersion: '' } });
+
+  assert.equal((await request('/login', { lrn: '123456789016', password: 'mIgRaTeD' })).status, 200);
+});
+
 test('learner management requires a 12-digit LRN and surname', async () => {
   assert.equal((await request('', { lastName: 'Cruz', section: 'Earth' })).status, 400);
   const added = await request('', { lrn: '123456789013', lastName: 'Cruz', section: 'Earth' });

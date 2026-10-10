@@ -26,13 +26,13 @@
 .fs-header {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 32px 48px 0;
+  gap: clamp(0.875rem, 1.4vw, 1.25rem);
+  padding: clamp(1.5rem, 2.2vw, 2rem) var(--viewport-gutter) 0;
 }
 
 .fs-back {
-  width: 44px;
-  height: 44px;
+  width: var(--viewport-control);
+  height: var(--viewport-control);
   border-radius: 50%;
   border: none;
   background: #fff;
@@ -53,7 +53,7 @@
 /* Header Title: Quicksand */
 .fs-title {
   font-family: "Quicksand", sans-serif;
-  font-size: 1.6rem;
+  font-size: clamp(1.35rem, 1.8vw, 1.6rem);
   font-weight: 700;
   margin: 0;
 }
@@ -62,7 +62,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 60px 24px 100px;
+  padding: clamp(2.5rem, 4vw, 3.75rem) var(--viewport-gutter) clamp(4.5rem, 6vw, 6.25rem);
 }
 
 .fs-card-stack {
@@ -85,7 +85,7 @@
   background: #fdf6ee;
   border: 2px solid var(--accent-blue);
   border-radius: 25px;
-  padding: 28px 32px 36px;
+  padding: clamp(1.375rem, 2vw, 1.75rem) clamp(1.375rem, 2.2vw, 2rem) clamp(1.75rem, 2.5vw, 2.25rem);
   display: flex;
   flex-direction: column;
 }
@@ -122,7 +122,7 @@
 /* Flashcard Target Sentence: Quicksand */
 .fs-sentence {
   font-family: "Quicksand", sans-serif;
-  font-size: 1.4rem;
+  font-size: clamp(1.15rem, 1.7vw, 1.4rem);
   font-weight: 700;
   line-height: 1.4;
   margin: 0 0 30px;
@@ -137,8 +137,8 @@
 }
 
 .fs-mic {
-  width: 60px;
-  height: 60px;
+  width: clamp(3.25rem, 4vw, 3.75rem);
+  height: clamp(3.25rem, 4vw, 3.75rem);
   border-radius: 50%;
   border: none;
   background: var(--accent-blue);

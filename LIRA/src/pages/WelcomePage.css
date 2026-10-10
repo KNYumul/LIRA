@@ -42,6 +42,7 @@
   max-width: 1280px;
   margin: 0 auto;
   width: 100%;
+  padding-inline: var(--viewport-gutter);
 }
 
 /* ============ Shared bits ============ */
@@ -110,7 +111,7 @@
 /* ============ Hero ============ */
 .lira-hero {
   position: relative;
-  padding: 90px 48px 60px;
+  padding: var(--viewport-section-space) var(--viewport-gutter) clamp(3.75rem, 4.2vw, 5.625rem);
   text-align: center;
   background-color: #fdf6ec;
   background-size: cover;
@@ -147,7 +148,7 @@
 }
 
 .lira-hero__title {
-  font-size: 3.2rem;
+  font-size: var(--viewport-title);
   font-weight: 700;
   line-height: 1.15;
   color: var(--ink);
@@ -162,7 +163,7 @@
 .lira-hero__desc {
   font-family: "Poppins", sans-serif;
   font-weight: 300;
-  font-size: 1.1rem;
+  font-size: clamp(0.95rem, 1.05vw, 1.1rem);
   color: var(--ink-soft);
   line-height: 1.6;
   max-width: 600px;
@@ -181,7 +182,7 @@
   position: absolute;
   top: 45%;
   transform: translateY(-50%);
-  width: 260px;
+  width: clamp(10rem, 13.5vw, 16.25rem);
   z-index: 1;
   opacity: 0.95;
 }
@@ -232,12 +233,12 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  padding: 70px 48px 90px;
+  padding: clamp(3.5rem, 4vw, 4.375rem) var(--viewport-gutter) var(--viewport-section-space);
   text-align: center;
 }
 
 .lira-about__title {
-  font-size: 2.3rem;
+  font-size: clamp(1.8rem, 2.4vw, 2.3rem);
   line-height: 1.3;
   margin-bottom: 18px;
 }
@@ -298,12 +299,12 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  padding: 70px 48px 100px;
+  padding: clamp(3.5rem, 4vw, 4.375rem) var(--viewport-gutter) clamp(3.75rem, 5.2vw, 6.25rem);
   text-align: center;
 }
 
 .lira-flow__title {
-  font-size: 2.3rem;
+  font-size: clamp(1.8rem, 2.4vw, 2.3rem);
   line-height: 1.3;
   margin-bottom: 18px;
 }
