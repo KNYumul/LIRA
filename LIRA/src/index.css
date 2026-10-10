@@ -46,3 +46,35 @@ canvas {
   min-height: 100svh;
 }
 
+.session-check {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.875rem;
+  color: #4f3527;
+  font-weight: 600;
+}
+
+.session-check__spinner {
+  width: 2.5rem;
+  aspect-ratio: 1;
+  border: 0.28rem solid #eadfcb;
+  border-top-color: #d87930;
+  border-radius: 50%;
+  animation: session-check-spin 0.8s linear infinite;
+}
+
+@keyframes session-check-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .session-check__spinner {
+    animation-duration: 1.6s;
+  }
+}
+

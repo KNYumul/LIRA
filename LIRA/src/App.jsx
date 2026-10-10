@@ -129,7 +129,12 @@ function ProtectedRoute({ role, children }) {
 
   if (!token) return <Navigate to={role === "student" ? "/login" : "/"} replace />;
   if (verification?.token !== token || verification?.role !== role || verification?.pathname !== pathname) {
-    return <p role="status">Checking session...</p>;
+    return (
+      <div className="session-check" role="status" aria-live="polite">
+        <span className="session-check__spinner" aria-hidden="true" />
+        <span>Checking session...</span>
+      </div>
+    );
   }
   return verification.allowed ? children : <Navigate to={role === "student" ? "/login" : "/"} replace />;
 }
