@@ -12,7 +12,10 @@
   position: relative;
 
   width: 100%;
-  min-height: 100vh;
+  min-height: 100dvh;
+
+  display: flex;
+  flex-direction: column;
 
   padding: clamp(1.5rem, 2.2vw, 2rem) var(--viewport-gutter) 0;
 
@@ -220,15 +223,13 @@
 ======================================== */
 
 .fc-main {
+  flex: 1;
   display: flex;
-
-  justify-content: center;
-
-  align-items: center;
-
   flex-direction: column;
-
-  padding: 0 24px 100px;
+  justify-content: center;
+  width: min(100%, 78rem);
+  margin-inline: auto;
+  padding: 0 var(--viewport-gutter) clamp(4rem, 7vw, 6.25rem);
 }
 
 
@@ -248,14 +249,9 @@
 ======================================== */
 
 .fc-cards {
-  display: flex;
-
-  gap: 24px;
-
-  flex-wrap: wrap;
-
-  justify-content: center;
-
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16.25rem), 1fr));
+  gap: clamp(1rem, 2vw, 2rem);
   align-items: stretch;
 }
 
@@ -265,13 +261,15 @@
 ======================================== */
 
 .fc-card {
-  width: 260px;
+  width: 100%;
+  max-width: 24rem;
+  justify-self: center;
 
   background: #fdf6ee;
 
   border-radius: 20px;
 
-  padding: 28px 22px 20px;
+  padding: clamp(1.25rem, 2vw, 1.75rem) clamp(1rem, 1.7vw, 1.375rem) clamp(1rem, 1.6vw, 1.25rem);
 
   display: flex;
 
@@ -320,9 +318,9 @@
 ======================================== */
 
 .fc-card__icon {
-  width: 56px;
+  width: clamp(3.25rem, 4vw, 4rem);
 
-  height: 56px;
+  height: clamp(3.25rem, 4vw, 4rem);
 
   object-fit: contain;
 
@@ -339,7 +337,7 @@
 .fc-card h2 {
   font-family: "Quicksand", sans-serif;
 
-  font-size: 1.5rem;
+  font-size: clamp(1.35rem, 1.6vw, 1.7rem);
 
   font-weight: 700;
 
@@ -358,7 +356,7 @@
 
   font-weight: 400;
 
-  font-size: 0.8rem;
+  font-size: clamp(0.8rem, 0.85vw, 0.95rem);
 
   color: var(--ink-soft);
 
@@ -366,7 +364,8 @@
 
   margin: 0 0 18px;
 
-  height: 58px;
+  min-height: 3.625rem;
+  height: auto;
 
   width: 100%;
 
@@ -387,7 +386,7 @@
 
   font-weight: 600 !important;
 
-  font-size: 0.8rem;
+  font-size: clamp(0.8rem, 0.85vw, 0.95rem);
 
   color: var(--ink-soft);
 
@@ -412,8 +411,7 @@
 .fc-card__start {
   margin-top: auto;
 
-  /* PUT START BUTTON ON RIGHT SIDE */
-  align-self: flex-end;
+  align-self: center;
 
   border: none;
 

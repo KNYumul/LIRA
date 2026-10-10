@@ -45,7 +45,7 @@
   min-height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
-  padding-bottom: 80px;
+  padding-bottom: 0;
 }
 
 .sm-selection-bg::before {
@@ -166,6 +166,13 @@
   max-width: 1200px;
   margin: 0 auto 100px;
   padding-bottom: 60px;
+}
+
+/* The selection view is a single desktop screen. The former stacked bottom
+   padding and margin created an empty scrollable strip below the story cards. */
+.sm-selection-bg .sm-categories {
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 .sm-category-block {
