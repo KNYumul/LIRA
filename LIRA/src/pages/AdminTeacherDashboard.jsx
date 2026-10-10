@@ -36,6 +36,7 @@ export default function AdminTeacherDashboard() {
   const navigate = useNavigate()
 
   const [teachers, setTeachers] = useState([])
+  const [archivedTeachers, setArchivedTeachers] = useState([])
   const [loadError, setLoadError] = useState('')
 
   // ADDED "survey" HERE
@@ -82,6 +83,34 @@ export default function AdminTeacherDashboard() {
       cancelled = true
     }
   }, [])
+
+  async function loadArchivedTeachers() {
+    const response = await fetch(`${API_URL}/api/teachers?archived=true`)
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.message || 'Could not load archived teacher accounts.')
+    setArchivedTeachers(data.map(toDashboardTeacher))
+  }
+
+  async function restoreTeacher(id) {
+    try {
+      const response = await fetch(`${API_URL}/api/teachers/${id}/restore`, { method: 'POST' })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || 'Could not restore teacher account.')
+      const teacher = toDashboardTeacher(data.teacher)
+      setArchivedTeachers(prev => prev.filter(item => item.id !== id))
+      setTeachers(prev => [teacher, ...prev])
+    } catch (error) { await showError(error.message) }
+  }
+
+  async function permanentlyDeleteTeacher(id) {
+    const result = await liraAlert.fire({ icon: 'warning', title: 'Permanently delete teacher?', text: 'This cannot be undone.', showCancelButton: true, confirmButtonText: 'Delete permanently' })
+    if (!result.isConfirmed) return
+    try {
+      const response = await fetch(`${API_URL}/api/teachers/${id}/permanent`, { method: 'DELETE' })
+      if (!response.ok) throw new Error((await response.json().catch(() => ({}))).message || 'Could not permanently delete teacher account.')
+      setArchivedTeachers(prev => prev.filter(item => item.id !== id))
+    } catch (error) { await showError(error.message) }
+  }
 
   async function handleDelete(id) {
     const teacher = teachers.find(t => t.id === id)
@@ -265,6 +294,10 @@ export default function AdminTeacherDashboard() {
         {activeNav === 'teachers' && (
           <AdminTeachersPage
             teachers={teachers}
+            archivedTeachers={archivedTeachers}
+            onLoadArchived={loadArchivedTeachers}
+            onRestore={restoreTeacher}
+            onPermanentDelete={permanentlyDeleteTeacher}
             onDelete={handleDelete}
             onSaveEdit={handleSaveEdit}
           />

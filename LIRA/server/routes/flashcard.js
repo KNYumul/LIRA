@@ -78,7 +78,10 @@ router.get("/", async (req, res) => {
   try {
     const teacherId = await ownerTeacherId(req, res);
     if (!teacherId) return;
-    const query = {
+    const archived = req.query.archived === "true";
+    const query = archived ? {
+      deletedAt: { $ne: null }, teacherId
+    } : {
       deletedAt: null,
       $or: [
         { isLibrary: true },
@@ -87,7 +90,7 @@ router.get("/", async (req, res) => {
     };
     if (["easy", "medium", "hard"].includes(req.query.category)) query.category = req.query.category;
     if (["ENG", "FIL"].includes(req.query.lang)) query.lang = req.query.lang;
-    res.json(await Flashcard.find(query).sort({ category: 1, order: 1, createdAt: 1 }));
+    res.json(await Flashcard.find(query).setOptions({ withDeleted: archived }).sort({ category: 1, order: 1, createdAt: 1 }));
   } catch (error) {
     console.error("Could not load flashcards:", error);
     res.status(500).json({ message: "Could not load flashcards." });
@@ -132,6 +135,32 @@ router.delete("/:id", async (req, res) => {
   } catch {
     res.status(400).json({ message: "Could not delete flashcard." });
   }
+});
+
+async function ownedArchivedFlashcard(req, res) {
+  const teacher = await currentTeacher(req, res);
+  if (!teacher) return null;
+  const flashcard = await Flashcard.findOne({ _id: req.params.id, teacherId: teacher._id, isLibrary: { $ne: true }, deletedAt: { $ne: null } }).setOptions({ withDeleted: true });
+  if (!flashcard) res.status(404).json({ message: "Archived flashcard not found." });
+  return flashcard;
+}
+
+router.post("/:id/restore", async (req, res) => {
+  try {
+    const flashcard = await ownedArchivedFlashcard(req, res);
+    if (!flashcard) return;
+    flashcard.deletedAt = null;
+    res.json(await flashcard.save());
+  } catch { res.status(400).json({ message: "Could not restore flashcard." }); }
+});
+
+router.delete("/:id/permanent", async (req, res) => {
+  try {
+    const flashcard = await ownedArchivedFlashcard(req, res);
+    if (!flashcard) return;
+    await flashcard.deleteOne();
+    res.status(204).send();
+  } catch { res.status(400).json({ message: "Could not permanently delete flashcard." }); }
 });
 
 module.exports = router;

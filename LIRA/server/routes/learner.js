@@ -176,8 +176,10 @@ router.get("/", async (req, res) => {
   try {
     const teacher = await currentTeacher(req, res);
     if (!teacher) return;
+    const archived = req.query.archived === "true";
     const sectionIds = await Section.find({ teacherId: teacher._id }).distinct("_id");
-    const learners = await Learner.find({ sectionId: { $in: sectionIds } })
+    const learners = await Learner.find({ sectionId: { $in: sectionIds }, ...(archived ? { deletedAt: { $ne: null } } : {}) })
+      .setOptions({ withDeleted: archived })
       .select("lrn lastName section sectionId")
       .sort({ _id: 1 });
     learners.sort((a, b) => a.lastName.localeCompare(b.lastName));
@@ -272,6 +274,31 @@ router.delete("/:id", async (req, res) => {
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
+});
+
+router.post("/:id/restore", async (req, res) => {
+  try {
+    const teacher = await currentTeacher(req, res);
+    if (!teacher) return;
+    const sectionIds = await Section.find({ teacherId: teacher._id }).distinct("_id");
+    const learner = await Learner.findOne({ _id: req.params.id, sectionId: { $in: sectionIds }, deletedAt: { $ne: null } }).setOptions({ withDeleted: true });
+    if (!learner) return res.status(404).json({ message: "Archived learner not found in your sections." });
+    learner.deletedAt = null;
+    await learner.save();
+    res.json(learner);
+  } catch (error) { res.status(400).json({ message: error.message || "Could not restore learner." }); }
+});
+
+router.delete("/:id/permanent", async (req, res) => {
+  try {
+    const teacher = await currentTeacher(req, res);
+    if (!teacher) return;
+    const sectionIds = await Section.find({ teacherId: teacher._id }).distinct("_id");
+    const learner = await Learner.findOne({ _id: req.params.id, sectionId: { $in: sectionIds }, deletedAt: { $ne: null } }).setOptions({ withDeleted: true });
+    if (!learner) return res.status(404).json({ message: "Archived learner not found in your sections." });
+    await learner.deleteOne();
+    res.status(204).send();
+  } catch (error) { res.status(400).json({ message: error.message || "Could not permanently delete learner." }); }
 });
 
 router.post("/login", async (req, res) => {

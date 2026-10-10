@@ -1,7 +1,7 @@
 import RoundedSelect from '../../components/RoundedSelect';
 import TeacherRecording from '../../components/TeacherRecording';
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Heart, Pencil, MinusCircle, ChevronDown, ChevronUp, Upload, Search, X, Plus, CheckCircle2, Sparkles, FileText, ScanLine, Loader2, ArrowLeft, Lock, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Heart, Pencil, MinusCircle, ChevronDown, ChevronUp, Upload, Search, X, Plus, CheckCircle2, Sparkles, FileText, ScanLine, Loader2, ArrowLeft, Lock, Eye, EyeOff, Trash2, Undo2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell, Tooltip } from "recharts";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker&url";
@@ -25,6 +25,12 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 function countWords(str) {
   return (str || "").trim().split(/\s+/).filter(Boolean).length;
+}
+
+function ArchiveSwitch({ checked, onChange, label = "Show archived" }) {
+  return <button type="button" role="switch" aria-checked={checked} onClick={onChange} className="flex items-center gap-2 text-sm font-semibold" style={{ color: C.text }}>
+    <span>{label}</span><span className="relative inline-flex h-6 w-11 rounded-full" style={{ background: checked ? C.coral : "#9CA3AF" }}><span className="absolute top-1 h-4 w-4 rounded-full bg-white" style={{ left: checked ? "24px" : "4px", transition: "left .2s" }} /></span>
+  </button>;
 }
 
 // ---------- OCR a scanned/photographed page (Scan Documents) ----------
@@ -1846,6 +1852,10 @@ function StudentRow({ s, onEdit, onDelete, onToggle, onSelectScore, onRecordingD
 
 function Students({ students, setStudents, sections, sectionName, onSectionChange, onSectionDeleted, loading, error, onRefresh, currentTeacher }) {
   const [search, setSearch] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
+  const [archivedStudents, setArchivedStudents] = useState([]);
+  const [showArchivedSections, setShowArchivedSections] = useState(false);
+  const [archivedSections, setArchivedSections] = useState([]);
   const [modal, setModal] = useState(null);
   const fileRef = useRef(null);
   const reportRef = useRef(null);
@@ -1971,6 +1981,45 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
     } catch (requestError) {
       await showError(requestError.message);
     }
+  };
+
+  const toggleArchivedStudents = async () => {
+    try {
+      if (!showArchived) {
+        const response = await fetch(`${API_URL}/api/learners?archived=true`, { headers: { "X-Teacher-Id": currentTeacher?.id || "" } });
+        if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not load archived learners."));
+        setArchivedStudents((await response.json()).map(learnerToStudent));
+      }
+      setShowArchived((value) => !value);
+    } catch (requestError) { await showError(requestError.message); }
+  };
+  const archivedLearnerAction = async (student, permanent) => {
+    if (permanent && !(await liraAlert.fire({ icon: "warning", title: "Permanently delete learner?", text: "This cannot be undone.", showCancelButton: true, confirmButtonText: "Delete permanently" })).isConfirmed) return;
+    try {
+      const response = await fetch(`${API_URL}/api/learners/${student.id}/${permanent ? "permanent" : "restore"}`, { method: permanent ? "DELETE" : "POST", headers: { "X-Teacher-Id": currentTeacher?.id || "" } });
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not update archived learner."));
+      setArchivedStudents((items) => items.filter((item) => item.id !== student.id));
+      if (!permanent) await onRefresh();
+    } catch (requestError) { await showError(requestError.message); }
+  };
+  const toggleArchivedSections = async () => {
+    try {
+      if (!showArchivedSections) {
+        const response = await fetch(`${API_URL}/api/sections?archived=true`, { headers: { "X-Teacher-Id": currentTeacher?.id || "" } });
+        if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not load archived sections."));
+        setArchivedSections(await response.json());
+      }
+      setShowArchivedSections((value) => !value);
+    } catch (requestError) { await showError(requestError.message); }
+  };
+  const archivedSectionAction = async (section, permanent) => {
+    if (permanent && !(await liraAlert.fire({ icon: "warning", title: "Permanently delete section?", text: "This cannot be undone.", showCancelButton: true, confirmButtonText: "Delete permanently" })).isConfirmed) return;
+    try {
+      const response = await fetch(`${API_URL}/api/sections/${section._id}/${permanent ? "permanent" : "restore"}`, { method: permanent ? "DELETE" : "POST", headers: { "X-Teacher-Id": currentTeacher?.id || "" } });
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not update archived section."));
+      setArchivedSections((items) => items.filter((item) => item._id !== section._id));
+      if (!permanent) await onRefresh();
+    } catch (requestError) { await showError(requestError.message); }
   };
 
   const deleteSection = async () => {
@@ -2254,8 +2303,10 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
 
   return (
     <div>
-      <h1 className="text-3xl font-bold" style={{ color: C.text }}>Manage Students</h1>
-      <p className="text-sm mt-1" style={{ color: C.textMuted }}>Your class roster and quick-view reading stats</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div><h1 className="text-3xl font-bold" style={{ color: C.text }}>Manage Students</h1><p className="text-sm mt-1" style={{ color: C.textMuted }}>Your class roster and quick-view reading stats</p></div>
+        <div className="flex items-center gap-5 pt-1"><ArchiveSwitch checked={showArchived} onChange={toggleArchivedStudents} label="Archived learners" /><ArchiveSwitch checked={showArchivedSections} onChange={toggleArchivedSections} label="Archived sections" /></div>
+      </div>
       {error && <div className="text-sm mt-3" style={{ color: "#C0504D" }}>{error} <button onClick={onRefresh} className="underline">Try again</button></div>}
 
       <div
@@ -2335,6 +2386,9 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         </button>
       </div>
 
+      {showArchivedSections && <div className="mt-4 grid gap-2"><div className="text-xs font-bold uppercase tracking-wide px-1" style={{ color: C.textMuted }}>Archived sections</div>{archivedSections.length ? archivedSections.map((section) => <div key={section._id} className="rounded-xl p-3 flex justify-between" style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}><span className="font-bold">{section.name}</span><span className="flex gap-3"><button title="Restore" aria-label="Restore section" className="text-green-700" onClick={() => archivedSectionAction(section, false)}><Undo2 size={17} /></button><button title="Delete permanently" aria-label="Permanently delete section" className="text-red-700" onClick={() => archivedSectionAction(section, true)}><Trash2 size={17} /></button></span></div>) : <span className="text-sm" style={{ color: C.textMuted }}>No archived sections.</span>}</div>}
+
+      {showArchived ? <div className="mt-5 grid gap-3"><div className="text-xs font-bold uppercase tracking-wide px-1" style={{ color: C.textMuted }}>Archived learners</div>{archivedStudents.length ? archivedStudents.filter((student) => student.displayName.toLowerCase().includes(search.toLowerCase())).map((student) => <div key={student.id} className="flex items-center justify-between rounded-xl p-4" style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}` }}><span><strong>{student.displayName}</strong> <span className="text-sm" style={{ color: C.textMuted }}>({student.section})</span></span><div className="flex gap-3"><button title="Restore" aria-label="Restore learner" className="text-green-700" onClick={() => archivedLearnerAction(student, false)}><Undo2 size={18} /></button><button title="Delete permanently" aria-label="Permanently delete learner" className="text-red-700" onClick={() => archivedLearnerAction(student, true)}><Trash2 size={18} /></button></div></div>) : <div className="text-center py-10 text-sm" style={{ color: C.textMuted }}>No archived learners.</div>}</div> : <>
       <div className="grid px-5 py-2 mt-5 text-xs font-semibold border border-transparent" style={{ gridTemplateColumns: STUDENT_COLUMNS, color: C.textMuted }}>
         <div>Learner</div><div>WPM</div><div className="text-center">Comprehension Score</div><div className="text-center">Reading Accuracy</div><div>Latest Test</div><div>Risk Level</div><div className="text-right">Actions</div>
       </div>
@@ -2356,6 +2410,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
       {!loading && filtered.length === 0 && (
         <div className="text-center py-10 text-sm" style={{ color: C.textMuted }}>No learners match your search.</div>
       )}
+      </>}
 
       <section ref={reportRef} className="student-print-report">
         <header className="student-report-letterhead">
@@ -2703,6 +2758,7 @@ function FlashcardColumn({
   onSave,
   onClose,
   onDeleteRequest,
+  archivedActions,
 }) {
   const meta = CAT_META[cat];
   const opened = items.find((i) => i.id === openId);
@@ -2746,11 +2802,16 @@ function FlashcardColumn({
 
         {items.length === 0 && (
           <div className="flashcard-empty">
-            Drop flashcards here
+            {archivedActions ? "No archived flashcards" : "Drop flashcards here"}
           </div>
         )}
 
-        {items.map((item) => (
+        {items.map((item) => archivedActions ? (
+          <div key={item.id} className={`flashcard-chip ${item.category} flex items-center gap-3`} style={{ background: meta.pill, color: meta.text, cursor: "default" }}>
+            <span className="flashcard-chip-content">{item.content}</span>
+            <div className="flex gap-2 shrink-0"><button title="Restore" aria-label="Restore flashcard" className="text-green-700" onClick={() => archivedActions.restore(item)}><Undo2 size={16} /></button><button title="Delete permanently" aria-label="Permanently delete flashcard" className="text-red-700" onClick={() => archivedActions.permanent(item)}><Trash2 size={16} /></button></div>
+          </div>
+        ) : (
           <FlashcardChip
             key={item.id}
             item={item}
@@ -2781,17 +2842,18 @@ function Flashcards({ currentTeacher }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lang, setLang] = useState("ENG");
+  const [showArchived, setShowArchived] = useState(false);
   const flashcardUrl = (id = "") => `${API_URL}/api/flashcards${id ? `/${id}` : ""}`;
   const teacherHeaders = (json = false) => ({
     "X-Teacher-Id": currentTeacher?.id || "",
     ...(json ? { "Content-Type": "application/json" } : {}),
   });
 
-  const loadFlashcards = async () => {
+  const loadFlashcards = async (archived = false) => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(flashcardUrl(), { headers: teacherHeaders() });
+      const response = await fetch(`${flashcardUrl()}${archived ? "?archived=true" : ""}`, { headers: teacherHeaders() });
       if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not load flashcards."));
       const result = await response.json();
       setItems(result.map((item) => ({ ...item, id: item._id })));
@@ -2800,6 +2862,21 @@ function Flashcards({ currentTeacher }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleArchived = () => {
+    const next = !showArchived;
+    setShowArchived(next);
+    setOpenId(null);
+    loadFlashcards(next);
+  };
+  const archivedFlashcardAction = async (item, permanent) => {
+    if (permanent && !(await liraAlert.fire({ icon: "warning", title: "Permanently delete flashcard?", text: "This cannot be undone.", showCancelButton: true, confirmButtonText: "Delete permanently" })).isConfirmed) return;
+    try {
+      const response = await fetch(`${flashcardUrl(item.id)}/${permanent ? "permanent" : "restore"}`, { method: permanent ? "DELETE" : "POST", headers: teacherHeaders() });
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not update archived flashcard."));
+      setItems((items) => items.filter((entry) => entry.id !== item.id));
+    } catch (requestError) { await showError(requestError.message); }
   };
 
   useEffect(() => {
@@ -2981,6 +3058,7 @@ function Flashcards({ currentTeacher }) {
         </div>
 
         <div className="flex items-center gap-3">
+          <ArchiveSwitch checked={showArchived} onChange={toggleArchived} />
           <div className="sm-lang-toggle" role="group" aria-label="Language filter">
             {["ENG", "FIL"].map((value) => (
               <button
@@ -2993,33 +3071,34 @@ function Flashcards({ currentTeacher }) {
               </button>
             ))}
           </div>
-          <button
+          {!showArchived && <button
             onClick={() => setShowAdd(true)}
             className="px-5 py-2 rounded-full font-semibold whitespace-nowrap"
             style={{ background: "#fff", border: `1px solid ${C.cardBorder}`, color: C.text }}
           >
             + Add flashcard
-          </button>
+          </button>}
         </div>
       </div>
 
       <div className="mt-6">
         {loading && <div className="text-center py-8 text-sm" style={{ color: C.textMuted }}>Loading flashcards...</div>}
         {error && <div className="text-center py-8 text-sm" style={{ color: "#C0504D" }}>{error}</div>}
-        {!loading && !error && visibleItems.length === 0 && <div className="text-center py-8 text-sm" style={{ color: C.textMuted }}>No {lang} flashcards yet. Add your first one above.</div>}
+        {!loading && !error && visibleItems.length === 0 && <div className="text-center py-8 text-sm" style={{ color: C.textMuted }}>No {showArchived ? "archived" : lang} flashcards yet.</div>}
         {["easy", "medium", "hard"].map((cat) => (
           <FlashcardColumn
             key={cat}
             cat={cat}
             items={visibleItems.filter((i) => i.category === cat)}
-            onDropColumn={onDropColumn}
-            onDropItem={onDropItem}
-            onDragStart={onDragStart}
-            onOpen={setOpenId}
+            onDropColumn={showArchived ? () => {} : onDropColumn}
+            onDropItem={showArchived ? () => {} : onDropItem}
+            onDragStart={showArchived ? () => {} : onDragStart}
+            onOpen={showArchived ? () => {} : setOpenId}
             openId={openId}
             onSave={onSaveContent}
             onClose={() => setOpenId(null)}
             onDeleteRequest={setDeleteTarget}
+            archivedActions={showArchived ? { restore: (item) => archivedFlashcardAction(item, false), permanent: (item) => archivedFlashcardAction(item, true) } : null}
           />
         ))}
       </div>
@@ -3045,7 +3124,7 @@ function Flashcards({ currentTeacher }) {
 }
 
 // ---------- Story cover card ----------
-function StoryCover({ story, canManage, onEdit, onDeleteRequest }) {
+function StoryCover({ story, canManage, onEdit, onDeleteRequest, archivedActions }) {
   return (
     <div className="relative">
       <div
@@ -3087,7 +3166,7 @@ function StoryCover({ story, canManage, onEdit, onDeleteRequest }) {
         </div>
       </div>
       <div className="text-xs mt-2 truncate" style={{ color: C.textMuted }}>Uploaded by {story.uploadedBy || "Unknown teacher"}</div>
-      {canManage && <button
+      {archivedActions ? <div className="flex gap-3 mt-2"><button title="Restore" aria-label="Restore story" className="text-green-700" onClick={() => archivedActions.restore(story)}><Undo2 size={16} /></button><button title="Delete permanently" aria-label="Permanently delete story" className="text-red-700" onClick={() => archivedActions.permanent(story)}><Trash2 size={16} /></button></div> : canManage && <button
         onClick={(e) => { e.stopPropagation(); onDeleteRequest(story); }}
         className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-white"
         style={{ background: "#C0504D" }}
@@ -3095,7 +3174,7 @@ function StoryCover({ story, canManage, onEdit, onDeleteRequest }) {
       >
         <MinusCircle size={16} />
       </button>}
-      {canManage && <button
+      {!archivedActions && canManage && <button
         onClick={(e) => { e.stopPropagation(); onEdit(story); }}
         className="absolute top-6 -right-2 w-6 h-6 rounded-full flex items-center justify-center bg-white shadow"
         aria-label={`Edit ${story.title}`}
@@ -3816,15 +3895,16 @@ function Stories({ currentTeacher }) {
   const [showAddStory, setShowAddStory] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
 
   const storyUrl = (id = "") => `${API_URL}/api/stories${id ? `/${id}` : ""}`;
   const teacherHeaders = () => ({ "X-Teacher-Id": currentTeacher?.id || "" });
 
-  const loadStories = async () => {
+  const loadStories = async (archived = false) => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(storyUrl(), { headers: teacherHeaders() });
+      const response = await fetch(`${storyUrl()}${archived ? "?archived=true" : ""}`, { headers: teacherHeaders() });
       if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not load stories from the database."));
       const databaseStories = await response.json();
       setStories(databaseStories.map((story) => ({ ...story, id: story._id })));
@@ -3836,6 +3916,16 @@ function Stories({ currentTeacher }) {
   };
 
   useEffect(() => { loadStories(); }, []);
+
+  const toggleArchived = () => { const next = !showArchived; setShowArchived(next); loadStories(next); };
+  const archivedStoryAction = async (story, permanent) => {
+    if (permanent && !(await liraAlert.fire({ icon: "warning", title: "Permanently delete story?", text: "This cannot be undone.", showCancelButton: true, confirmButtonText: "Delete permanently" })).isConfirmed) return;
+    try {
+      const response = await fetch(`${storyUrl(story.id)}/${permanent ? "permanent" : "restore"}`, { method: permanent ? "DELETE" : "POST", headers: teacherHeaders() });
+      if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not update archived story."));
+      setStories((stories) => stories.filter((item) => item.id !== story.id));
+    } catch (requestError) { await showError(requestError.message); }
+  };
 
   const filtered = stories.filter((s) => s.lang === lang);
 
@@ -4029,13 +4119,12 @@ function Stories({ currentTeacher }) {
             FIL
           </button>
         </div>
+        <ArchiveSwitch checked={showArchived} onChange={toggleArchived} />
       </div>
 
       <div className="grid mt-6 gap-6" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" }}>
-        {filtered.map((story) => (
-          <StoryCover key={story.id} story={story} canManage={story.teacherId === currentTeacher?.id} onEdit={setEditTarget} onDeleteRequest={requestDeleteStory} />
-        ))}
-        <AddStoryCard onAdd={() => setShowAddStory(true)} />
+        {filtered.map((story) => <StoryCover key={story.id} story={story} canManage={!showArchived && story.teacherId === currentTeacher?.id} onEdit={setEditTarget} onDeleteRequest={requestDeleteStory} archivedActions={showArchived ? { restore: (item) => archivedStoryAction(item, false), permanent: (item) => archivedStoryAction(item, true) } : null} />)}
+        {!showArchived && <AddStoryCard onAdd={() => setShowAddStory(true)} />}
       </div>
       {loading && <div className="text-sm mt-4" style={{ color: C.textMuted }}>Loading stories from the database…</div>}
       {error && <div className="text-sm mt-4" style={{ color: "#C0504D" }}>{error}</div>}

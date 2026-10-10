@@ -361,12 +361,16 @@ router.get("/", async (req, res) => {
       return res.status(401).json({ message: "Please sign in to view stories." });
     }
 
-    const stories = await Story.find({
+    const archived = req.query.archived === "true";
+    const stories = await Story.find(archived ? {
+      teacherId: ownerTeacherId, deletedAt: { $ne: null }
+    } : {
       $or: [
         { badge: "Library Story" },
         { teacherId: ownerTeacherId }
       ]
     })
+      .setOptions({ withDeleted: archived })
       .populate("teacherId", "firstName lastName")
       .sort({ createdAt: -1 });
     res.json(stories.map((story) => {
@@ -454,6 +458,32 @@ router.delete("/:id", async (req, res) => {
     console.error("Could not delete story:", error);
     res.status(400).json({ message: "Could not delete story." });
   }
+});
+
+async function ownedArchivedStory(req, res) {
+  const teacher = await currentTeacher(req, res);
+  if (!teacher) return null;
+  const story = await Story.findOne({ _id: req.params.id, teacherId: teacher._id, deletedAt: { $ne: null } }).setOptions({ withDeleted: true });
+  if (!story) res.status(404).json({ message: "Archived story not found." });
+  return story;
+}
+
+router.post("/:id/restore", async (req, res) => {
+  try {
+    const story = await ownedArchivedStory(req, res);
+    if (!story) return;
+    story.deletedAt = null;
+    res.json(await story.save());
+  } catch { res.status(400).json({ message: "Could not restore story." }); }
+});
+
+router.delete("/:id/permanent", async (req, res) => {
+  try {
+    const story = await ownedArchivedStory(req, res);
+    if (!story) return;
+    await story.deleteOne();
+    res.status(204).send();
+  } catch { res.status(400).json({ message: "Could not permanently delete story." }); }
 });
 
 module.exports = router;

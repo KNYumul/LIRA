@@ -29,11 +29,12 @@ function publicTeacher(teacher, sections = []) {
 }
 
 // GET all teacher accounts for the admin dashboard.
-router.get("/", async (_req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const teachers = await Teacher.find().sort({ createdAt: -1 });
+    const archived = req.query.archived === "true";
+    const teachers = await Teacher.find(archived ? { deletedAt: { $ne: null } } : {}).setOptions({ withDeleted: archived }).sort({ createdAt: -1 });
     const teacherIds = teachers.map((teacher) => teacher._id);
-    const sections = await Section.find({ teacherId: { $in: teacherIds } }).sort({ name: 1 });
+    const sections = await Section.find({ teacherId: { $in: teacherIds }, ...(archived ? { deletedAt: { $ne: null } } : {}) }).setOptions({ withDeleted: archived }).sort({ name: 1 });
     const sectionsByTeacher = sections.reduce((grouped, section) => {
       const teacherId = section.teacherId.toString();
       if (!grouped[teacherId]) grouped[teacherId] = [];
@@ -249,6 +250,27 @@ router.delete("/:id", async (req, res) => {
   } catch {
     res.status(400).json({ message: "Could not delete teacher account." });
   }
+});
+
+router.post("/:id/restore", async (req, res) => {
+  try {
+    const teacher = await Teacher.findOne({ _id: req.params.id, deletedAt: { $ne: null } }).setOptions({ withDeleted: true });
+    if (!teacher) return res.status(404).json({ message: "Archived teacher not found." });
+    teacher.deletedAt = null;
+    await teacher.save();
+    await Section.updateMany({ teacherId: teacher._id, deletedAt: { $ne: null } }, { $set: { deletedAt: null } }).setOptions({ withDeleted: true });
+    const sections = await Section.find({ teacherId: teacher._id }).sort({ name: 1 });
+    res.json({ teacher: publicTeacher(teacher, sections.map((section) => section.name)) });
+  } catch { res.status(400).json({ message: "Could not restore teacher account." }); }
+});
+
+router.delete("/:id/permanent", async (req, res) => {
+  try {
+    const teacher = await Teacher.findOne({ _id: req.params.id, deletedAt: { $ne: null } }).setOptions({ withDeleted: true });
+    if (!teacher) return res.status(404).json({ message: "Archived teacher not found." });
+    await teacher.deleteOne();
+    res.status(204).send();
+  } catch { res.status(400).json({ message: "Could not permanently delete teacher account." }); }
 });
 
 router.post("/signup", verificationRateLimit, async (req, res) => {

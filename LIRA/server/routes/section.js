@@ -33,7 +33,8 @@ router.get("/", async (req, res) => {
   try {
     const teacher = await currentTeacher(req, res);
     if (!teacher) return;
-    const sections = await Section.find({ teacherId: teacher._id }).sort({ name: 1 });
+    const archived = req.query.archived === "true";
+    const sections = await Section.find({ teacherId: teacher._id, ...(archived ? { deletedAt: { $ne: null } } : {}) }).setOptions({ withDeleted: archived }).sort({ name: 1 });
     res.json(sections);
   } catch {
     res.status(500).json({ message: "Could not load your sections." });
@@ -83,6 +84,28 @@ router.delete("/:id", async (req, res) => {
     if (error.name === "CastError") return res.status(404).json({ message: "Section not found in your classes." });
     res.status(500).json({ message: "Could not delete the section." });
   }
+});
+
+router.post("/:id/restore", async (req, res) => {
+  try {
+    const teacher = await currentTeacher(req, res);
+    if (!teacher) return;
+    const section = await Section.findOne({ _id: req.params.id, teacherId: teacher._id, deletedAt: { $ne: null } }).setOptions({ withDeleted: true });
+    if (!section) return res.status(404).json({ message: "Archived section not found in your classes." });
+    section.deletedAt = null;
+    res.json(await section.save());
+  } catch { res.status(400).json({ message: "Could not restore section." }); }
+});
+
+router.delete("/:id/permanent", async (req, res) => {
+  try {
+    const teacher = await currentTeacher(req, res);
+    if (!teacher) return;
+    const section = await Section.findOne({ _id: req.params.id, teacherId: teacher._id, deletedAt: { $ne: null } }).setOptions({ withDeleted: true });
+    if (!section) return res.status(404).json({ message: "Archived section not found in your classes." });
+    await section.deleteOne();
+    res.status(204).send();
+  } catch { res.status(400).json({ message: "Could not permanently delete section." }); }
 });
 
 module.exports = router;
