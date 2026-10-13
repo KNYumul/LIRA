@@ -358,7 +358,12 @@
 @media (min-width: 1100px) {
   .sm-reader-stage {
     display: grid;
-    grid-template-columns: 170px minmax(0, 580px) 170px;
+    grid-template-columns: 170px 40vw 170px;
+  }
+
+  .sm-page-card {
+    width: 40vw;
+    max-width: none;
   }
 
   .sm-mic-control {
