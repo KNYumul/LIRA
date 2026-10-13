@@ -1,6 +1,7 @@
 import { ReadingRecorder } from '../utils/readingRecorder';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 import './StoryMode.css';
 import CompletionScreen from '../components/CompletionScreen';
 import CompletionScreenNormal from '../components/CompletionScreenNormal';
@@ -790,7 +791,6 @@ function StoryMode({ onExit }) {
       const credentials = await response.json();
       if (!response.ok) throw new Error(credentials.message || 'Could not start speech recognition.');
 
-      const SpeechSDK = await import('microsoft-cognitiveservices-speech-sdk');
       if (request !== listeningRequestRef.current) return;
       const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(credentials.token, credentials.region);
       speechConfig.speechRecognitionLanguage = language === 'FIL' ? 'fil-PH' : 'en-US';

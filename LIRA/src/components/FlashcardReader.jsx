@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import * as SDK from 'microsoft-cognitiveservices-speech-sdk';
 import { getSession } from '../utils/session';
 import { isInactivityPaused } from '../utils/inactivityPause';
 import { readingWords, normalizedWord, readingProgress } from '../utils/readingTracking';
@@ -62,7 +63,6 @@ export default function FlashcardReader({ text, language }) {
       });
       const credentials = await response.json();
       if (!response.ok) throw new Error(credentials.message || 'Could not start speech recognition.');
-      const SDK = await import('microsoft-cognitiveservices-speech-sdk');
       if (request !== requestRef.current) return;
       const config = SDK.SpeechConfig.fromAuthorizationToken(credentials.token, credentials.region);
       config.speechRecognitionLanguage = language === 'FIL' ? 'fil-PH' : 'en-US';
