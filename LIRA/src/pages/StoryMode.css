@@ -361,7 +361,9 @@
     grid-template-columns: 170px 40vw 170px;
   }
 
-  .sm-page-card {
+  /* This rule appears before the base .sm-page-card declaration below.
+     Scope it to the page so its desktop dimensions retain precedence. */
+  .story-mode .sm-page-card {
     width: 40vw;
     max-width: none;
   }
