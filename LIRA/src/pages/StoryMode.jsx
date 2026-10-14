@@ -524,6 +524,17 @@ function learnerPage(text) {
   };
 }
 
+function storySentences(text, language) {
+  const cleaned = String(text || '').trim();
+  if (!cleaned) return [];
+
+  const segments = typeof Intl.Segmenter === 'function'
+    ? Array.from(new Intl.Segmenter(language === 'FIL' ? 'fil' : 'en', { granularity: 'sentence' }).segment(cleaned), ({ segment }) => segment)
+    : cleaned.match(/[\s\S]+?(?:[.!?]+["')]*(?:\s+|$)|$)/gu) || [cleaned];
+
+  return segments.map((segment) => segment.trim()).filter(Boolean);
+}
+
 function databaseStory(story) {
   const language = story.lang === 'FIL' ? 'FIL' : 'ENG';
   return {
@@ -671,6 +682,46 @@ function StoryMode({ onExit }) {
   useEffect(() => {
     readingScrollRef.current?.scrollTo({ top: 0, behavior: 'instant' });
   }, [activeStory, pageIndex, view]);
+
+  // Keep the fixed desktop card readable without splitting a sentence in half.
+  // If a page overflows, move its final complete sentence to a new page.
+  useEffect(() => {
+    if (view !== 'reading' || !activeStory || window.innerWidth < 1100) return undefined;
+
+    let frame = requestAnimationFrame(() => {
+      const pageInner = readingScrollRef.current;
+      if (!pageInner || pageInner.scrollHeight <= pageInner.clientHeight + 1) return;
+
+      const pageLanguage = activeStory.pages[language] ? language : 'ENG';
+      const pages = activeStory.pages[pageLanguage] || [];
+      const currentPage = pages[pageIndex];
+      const sentences = storySentences(`${currentPage?.highlight || ''}${currentPage?.rest || ''}`, pageLanguage);
+      if (sentences.length < 2) return;
+
+      const visibleText = sentences.slice(0, -1).join(' ');
+      const overflowText = sentences.at(-1);
+      setActiveStory((currentStory) => {
+        const currentPages = currentStory?.pages?.[pageLanguage] || [];
+        const pageToSplit = currentPages[pageIndex];
+        if (!pageToSplit || `${pageToSplit.highlight}${pageToSplit.rest}` !== `${currentPage.highlight}${currentPage.rest}`) return currentStory;
+
+        return {
+          ...currentStory,
+          pages: {
+            ...currentStory.pages,
+            [pageLanguage]: [
+              ...currentPages.slice(0, pageIndex),
+              learnerPage(visibleText),
+              learnerPage(overflowText),
+              ...currentPages.slice(pageIndex + 1),
+            ],
+          },
+        };
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [activeStory, language, pageIndex, view]);
 
   useEffect(() => {
     const container = readingScrollRef.current;

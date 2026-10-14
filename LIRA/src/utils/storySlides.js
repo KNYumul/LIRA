@@ -1,4 +1,4 @@
-// Paginate at read time so existing uploads also use five sentences per slide.
+// Paginate at read time so existing uploads use eight sentences per slide.
 export function storySlides(pages = [], language = 'ENG') {
   const text = pages.map((page) => String(page?.text || '').trim()).filter(Boolean).join('\n\n');
   if (!text) return [];
@@ -15,8 +15,8 @@ export function storySlides(pages = [], language = 'ENG') {
   }
 
   const slides = [];
-  for (let index = 0; index < sentences.length; index += 5) {
-    slides.push(sentences.slice(index, index + 5).join('').trim());
+  for (let index = 0; index < sentences.length; index += 8) {
+    slides.push(sentences.slice(index, index + 8).join('').trim());
   }
   return slides;
 }

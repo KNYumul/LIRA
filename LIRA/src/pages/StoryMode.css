@@ -356,16 +356,34 @@
 }
 
 @media (min-width: 1100px) {
+  .sm-reading-bg {
+    height: 100dvh;
+    min-height: 0;
+    overflow-y: hidden;
+  }
+
   .sm-reader-stage {
     display: grid;
     grid-template-columns: 170px 40vw 170px;
+    margin-top: clamp(12px, 2vw, 24px);
   }
 
   /* This rule appears before the base .sm-page-card declaration below.
      Scope it to the page so its desktop dimensions retain precedence. */
   .story-mode .sm-page-card {
     width: 40vw;
+    max-height: 70vh;
     max-width: none;
+  }
+
+  .sm-page-inner {
+    max-height: calc(70vh - 82px);
+    overflow: hidden;
+  }
+
+  .sm-page-text {
+    font-size: clamp(14px, 1.25vw, 18px);
+    line-height: 1.55;
   }
 
   .sm-mic-control {
@@ -477,8 +495,6 @@
   border: 2px dashed var(--teal);
   border-radius: 12px;
   padding: 28px 24px;
-  max-height: 380px;
-  overflow-y: auto;
 }
 
 .sm-progress-track {
@@ -887,11 +903,10 @@ body {
 
   .sm-page-inner {
     padding: 22px 18px;
-    max-height: 50vh;
   }
 
   .sm-page-text {
-    font-size: clamp(17px, 2.4vw, 20px);
+    font-size: clamp(18px, 2.4vw, 20px);
     line-height: 1.65;
   }
 
@@ -1079,7 +1094,6 @@ body {
 
   .sm-page-inner {
     padding: 18px 14px;
-    max-height: 52vh;
     border-radius: 10px;
   }
 
@@ -1236,7 +1250,7 @@ body {
   }
 
   .sm-page-text {
-    font-size: 15px;
+    font-size: 16px;
   }
 
   .sm-quiz-card {
@@ -1255,10 +1269,6 @@ body {
 
 /* Landscape phones */
 @media (max-width: 900px) and (orientation: landscape) {
-  .sm-page-inner {
-    max-height: 55vh;
-  }
-
   .sm-reader-stage {
     flex-direction: row;
     align-items: center;
