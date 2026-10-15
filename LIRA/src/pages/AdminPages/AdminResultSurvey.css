@@ -563,8 +563,42 @@
 }
 
 @media print {
+  /* Reset the dashboard viewport. Its screen-only 100% height otherwise
+     turns the report into one clipped, scrollable print page. */
+  html,
+  body,
+  #root {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  body {
+    display: block !important;
+  }
+
   body * {
     visibility: hidden !important;
+  }
+
+  /* The report is rendered inside the admin flex layout on screen. Remove
+     that layout for print so the invisible sidebar cannot consume page width. */
+  .app {
+    display: block !important;
+    min-height: 0 !important;
+  }
+
+  .sidebar {
+    display: none !important;
+  }
+
+  .main {
+    display: block !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: visible !important;
   }
 
   .survey-results-page,
@@ -573,14 +607,14 @@
   }
 
   .survey-results-page {
-    position: fixed;
-    inset: 0;
-    width: auto;
-    min-height: 0;
+    position: static;
+    width: 100%;
+    min-height: auto;
     padding: 0;
     background: #fff;
     color: #222;
     font: 10pt Arial, sans-serif;
+    overflow: visible !important;
   }
 
   .survey-results-container {
@@ -662,6 +696,7 @@
   .survey-table {
     width: 100%;
     min-width: 0;
+    table-layout: fixed;
     border-collapse: collapse;
   }
 
@@ -678,7 +713,21 @@
     padding: 5px 7px;
     border: 1px solid #bbb;
     color: #222;
-    font-size: 9pt;
+    font-size: 8pt;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .survey-student-column { width: 43%; }
+  .survey-section-column { width: 12%; }
+  .survey-submitted-column { width: 27%; }
+  .survey-score-column { width: 18%; }
+  .survey-action-column { display: none; }
+
+  .student-name,
+  .student-section {
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .survey-table th {

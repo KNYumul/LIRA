@@ -102,6 +102,13 @@ export default function AdminSurveyResults() {
           {loading ? <p className="survey-empty" role="status">Loading survey results...</p> : error ? <p className="survey-empty" role="alert">{error}</p> : (
             <div className="survey-table-wrapper">
               <table className="survey-table">
+                <colgroup>
+                  <col className="survey-student-column" />
+                  <col className="survey-section-column" />
+                  <col className="survey-submitted-column" />
+                  <col className="survey-score-column" />
+                  <col className="survey-action-column" />
+                </colgroup>
                 <thead><tr><th>Student</th><th>Section</th><th>Submitted</th><th>SUS Score</th><th>Action</th></tr></thead>
                 <tbody>
                   {filteredStudents.map(student => (
