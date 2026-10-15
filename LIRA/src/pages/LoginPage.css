@@ -331,6 +331,15 @@
   padding-right: 44px;
 }
 
+/* Edge adds its own password-reveal button.  The form supplies the
+   accessible custom control below, so hide the browser-provided duplicate. */
+input[name="studentPassword"]::-ms-reveal,
+input[name="password"]::-ms-reveal,
+input[name="studentPassword"]::-ms-clear,
+input[name="password"]::-ms-clear {
+  display: none;
+}
+
 .student-password-toggle {
   position: absolute;
   top: 0;
