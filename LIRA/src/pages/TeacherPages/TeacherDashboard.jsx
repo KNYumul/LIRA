@@ -3071,13 +3071,20 @@ function Flashcards({ currentTeacher }) {
               </button>
             ))}
           </div>
-          {!showArchived && <button
+          <button
+            type="button"
+            disabled={showArchived}
             onClick={() => setShowAdd(true)}
             className="px-5 py-2 rounded-full font-semibold whitespace-nowrap"
-            style={{ background: "#fff", border: `1px solid ${C.cardBorder}`, color: C.text }}
+            style={{
+              background: showArchived ? "#E5E7EB" : "#fff",
+              border: `1px solid ${showArchived ? "#D1D5DB" : C.cardBorder}`,
+              color: showArchived ? "#9CA3AF" : C.text,
+              cursor: showArchived ? "not-allowed" : "pointer",
+            }}
           >
             + Add flashcard
-          </button>}
+          </button>
         </div>
       </div>
 
