@@ -163,7 +163,9 @@
   display: flex;
   flex-direction: column;
   gap: 48px;
-  max-width: 1200px;
+  /* Three 20vw covers, their gaps, and the carousel controls. */
+  width: min(100%, calc(60vw + 11rem));
+  max-width: none;
   margin: 0 auto 100px;
   padding-bottom: 60px;
 }
@@ -253,7 +255,7 @@
 .sm-cards-track {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(3, minmax(200px, 260px));
+  grid-template-columns: repeat(3, 20vw);
   justify-content: center;
   gap: 24px;
   position: relative;
