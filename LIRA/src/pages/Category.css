@@ -89,7 +89,7 @@
 .dash-heading h1 {
   font-family: "Quicksand", sans-serif;
 
-  font-size: clamp(1.45rem, 2vw, 1.8rem);
+  font-size: clamp(2.1rem, 2.25vw, 2.65rem);
   font-weight: 800;
 
   color: #484341;
@@ -104,7 +104,7 @@
 
   font-family: "Poppins", sans-serif;
 
-  font-size: 0.88rem;
+  font-size: clamp(1.1rem, 1.45vw, 1.6rem);
   font-weight: 400;
 
   color: #817876;
