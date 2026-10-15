@@ -684,7 +684,8 @@ function StoryMode({ onExit }) {
   }, [activeStory, pageIndex, view]);
 
   // Keep the fixed desktop card readable without splitting a sentence in half.
-  // If a page overflows, move its final complete sentence to a new page.
+  // If a page overflows, carry its final complete sentence into the following
+  // page so it continues the story instead of becoming a one-sentence page.
   useEffect(() => {
     if (view !== 'reading' || !activeStory || window.innerWidth < 1100) return undefined;
 
@@ -705,6 +706,12 @@ function StoryMode({ onExit }) {
         const pageToSplit = currentPages[pageIndex];
         if (!pageToSplit || `${pageToSplit.highlight}${pageToSplit.rest}` !== `${currentPage.highlight}${currentPage.rest}`) return currentStory;
 
+        const followingPage = currentPages[pageIndex + 1];
+        const followingText = followingPage
+          ? `${followingPage.highlight || ''}${followingPage.rest || ''}`.trim()
+          : '';
+        const carriedPage = learnerPage([overflowText, followingText].filter(Boolean).join(' '));
+
         return {
           ...currentStory,
           pages: {
@@ -712,8 +719,8 @@ function StoryMode({ onExit }) {
             [pageLanguage]: [
               ...currentPages.slice(0, pageIndex),
               learnerPage(visibleText),
-              learnerPage(overflowText),
-              ...currentPages.slice(pageIndex + 1),
+              carriedPage,
+              ...currentPages.slice(pageIndex + 2),
             ],
           },
         };
