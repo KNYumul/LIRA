@@ -33,7 +33,7 @@ export default function AdminTeachersPage({ teachers, archivedTeachers, onLoadAr
       <h1 className="page-title">Manage Teachers</h1>
       <p className="page-sub">Add, edit, or deactivate teacher accounts across your school</p>
 
-      <button type="button" role="switch" aria-checked={showArchived} onClick={toggleArchived} style={{ display: 'flex', alignItems: 'center', gap: '8px', border: 0, background: 'transparent', cursor: 'pointer', fontWeight: 600 }}>
+      <button type="button" role="switch" aria-checked={showArchived} onClick={toggleArchived} className="archive-switch" style={{ display: 'flex', alignItems: 'center', gap: '8px', border: 0, background: 'transparent', cursor: 'pointer', fontWeight: 600 }}>
         <span>Archived teachers</span><span style={{ position: 'relative', display: 'inline-flex', width: '44px', height: '24px', borderRadius: '999px', background: showArchived ? '#4C6949' : '#9CA3AF' }}><span style={{ position: 'absolute', top: '4px', left: showArchived ? '24px' : '4px', width: '16px', height: '16px', borderRadius: '50%', background: '#fff', transition: 'left .2s' }} /></span>
       </button>
 

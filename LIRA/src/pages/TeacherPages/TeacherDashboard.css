@@ -733,6 +733,11 @@ button:not(:disabled):hover {
   box-shadow: 0 4px 12px rgba(80, 60, 50, 0.10);
 }
 
+/* Archive switches should not inherit the dashboard-wide button hover shadow. */
+button.archive-switch:not(:disabled):hover {
+  box-shadow: none;
+}
+
 button:not(:disabled):active {
   transform: translateY(0) scale(0.98);
 }

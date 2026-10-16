@@ -28,7 +28,7 @@ function countWords(str) {
 }
 
 function ArchiveSwitch({ checked, onChange, label = "Show archived" }) {
-  return <button type="button" role="switch" aria-checked={checked} onClick={onChange} className="flex items-center gap-2 text-sm font-semibold" style={{ color: C.text }}>
+  return <button type="button" role="switch" aria-checked={checked} onClick={onChange} className="archive-switch flex items-center gap-2 text-sm font-semibold" style={{ color: C.text }}>
     <span>{label}</span><span className="relative inline-flex h-6 w-11 rounded-full" style={{ background: checked ? C.coral : "#9CA3AF" }}><span className="absolute top-1 h-4 w-4 rounded-full bg-white" style={{ left: checked ? "24px" : "4px", transition: "left .2s" }} /></span>
   </button>;
 }
