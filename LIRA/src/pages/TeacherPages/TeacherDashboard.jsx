@@ -343,6 +343,7 @@ function learnerToStudent(learner) {
     lastName: learner.lastName,
     displayName: learner.lastName,
     section: learner.section,
+    sectionArchived: learner.sectionArchived === true,
     wpm: storyResults.find((attempt) => attempt.readingWpm != null)?.readingWpm ?? null,
     accuracy,
     readingAccuracy: averageReadingAccuracy(storyResults),
@@ -1996,7 +1997,45 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
   const archivedLearnerAction = async (student, permanent) => {
     if (permanent && !(await liraAlert.fire({ icon: "warning", title: "Permanently delete learner?", text: "This cannot be undone.", showCancelButton: true, confirmButtonText: "Delete permanently" })).isConfirmed) return;
     try {
-      const response = await fetch(`${API_URL}/api/learners/${student.id}/${permanent ? "permanent" : "restore"}`, { method: permanent ? "DELETE" : "POST", headers: { "X-Teacher-Id": currentTeacher?.id || "" } });
+      let restorePayload;
+      if (!permanent && student.sectionArchived) {
+        const action = await liraAlert.fire({
+          icon: "warning",
+          title: "Original section is archived",
+          text: `${student.displayName} was in ${student.section}. Restore that section, or assign the learner to an active section.`,
+          showCancelButton: true,
+          showDenyButton: true,
+          confirmButtonText: "Restore section and learner",
+          denyButtonText: "Assign another section",
+          cancelButtonText: "Cancel"
+        });
+        if (action.isDismissed) return;
+        if (action.isConfirmed) {
+          restorePayload = { restoreSection: true };
+        } else if (action.isDenied) {
+          const options = Object.fromEntries(sections.map((section) => [section.id, section.name]));
+          if (!Object.keys(options).length) {
+            await showWarning("Create or restore a section before assigning this learner.", "No active sections");
+            return;
+          }
+          const destination = await liraAlert.fire({
+            title: "Assign learner to a section",
+            input: "select",
+            inputOptions: options,
+            inputPlaceholder: "Choose a section",
+            showCancelButton: true,
+            confirmButtonText: "Restore learner",
+            inputValidator: (value) => !value && "Choose a section."
+          });
+          if (!destination.isConfirmed) return;
+          restorePayload = { sectionId: destination.value };
+        }
+      }
+      const response = await fetch(`${API_URL}/api/learners/${student.id}/${permanent ? "permanent" : "restore"}`, {
+        method: permanent ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json", "X-Teacher-Id": currentTeacher?.id || "" },
+        body: permanent ? undefined : JSON.stringify(restorePayload || {})
+      });
       if (!response.ok) throw new Error(await apiErrorMessage(response, "Could not update archived learner."));
       setArchivedStudents((items) => items.filter((item) => item.id !== student.id));
       if (!permanent) await onRefresh();

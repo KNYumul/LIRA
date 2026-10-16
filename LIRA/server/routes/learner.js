@@ -177,8 +177,21 @@ router.get("/", async (req, res) => {
     const teacher = await currentTeacher(req, res);
     if (!teacher) return;
     const archived = req.query.archived === "true";
-    const sectionIds = await Section.find({ teacherId: teacher._id }).distinct("_id");
-    const learners = await Learner.find({ sectionId: { $in: sectionIds }, ...(archived ? { deletedAt: { $ne: null } } : {}) })
+    // Include archived sections here. An archived learner must remain visible
+    // and manageable even when its original section has also been archived.
+    const sectionIds = await Section.find({ teacherId: teacher._id })
+      .setOptions({ withDeleted: true })
+      .distinct("_id");
+    const sections = await Section.find({ _id: { $in: sectionIds } })
+      .setOptions({ withDeleted: true })
+      .select("_id name deletedAt");
+    const archivedSectionIds = new Set(sections.filter((section) => section.deletedAt).map((section) => section._id.toString()));
+    const archivedSectionNames = new Set(sections.filter((section) => section.deletedAt).map((section) => section.name));
+    const sectionNames = sections.map((section) => section.name);
+    const learners = await Learner.find({
+      $or: [{ sectionId: { $in: sectionIds } }, { section: { $in: sectionNames } }],
+      ...(archived ? { deletedAt: { $ne: null } } : {})
+    })
       .setOptions({ withDeleted: archived })
       .select("lrn lastName section sectionId")
       .sort({ _id: 1 });
@@ -197,6 +210,7 @@ router.get("/", async (req, res) => {
       const storyResults = resultsByLearner.get(learner._id.toString()) || [];
       return {
         ...learner.toObject(),
+        sectionArchived: archivedSectionIds.has(learner.sectionId?.toString()) || archivedSectionNames.has(learner.section),
         latestStoryResult: storyResults[0] || null,
         storyResults
       };
@@ -280,9 +294,40 @@ router.post("/:id/restore", async (req, res) => {
   try {
     const teacher = await currentTeacher(req, res);
     if (!teacher) return;
-    const sectionIds = await Section.find({ teacherId: teacher._id }).distinct("_id");
-    const learner = await Learner.findOne({ _id: req.params.id, sectionId: { $in: sectionIds }, deletedAt: { $ne: null } }).setOptions({ withDeleted: true });
+    const sections = await Section.find({ teacherId: teacher._id })
+      .setOptions({ withDeleted: true })
+      .select("_id name");
+    const sectionIds = sections.map((section) => section._id);
+    const sectionNames = sections.map((section) => section.name);
+    const learner = await Learner.findOne({
+      _id: req.params.id,
+      $or: [{ sectionId: { $in: sectionIds } }, { section: { $in: sectionNames } }],
+      deletedAt: { $ne: null }
+    }).setOptions({ withDeleted: true });
     if (!learner) return res.status(404).json({ message: "Archived learner not found in your sections." });
+
+    const originalSection = await Section.findOne({
+      teacherId: teacher._id,
+      $or: [{ _id: learner.sectionId }, { name: learner.section }]
+    }).setOptions({ withDeleted: true }).collation({ locale: "en", strength: 2 });
+    if (!originalSection) return res.status(404).json({ message: "The learner's original section could not be found." });
+
+    if (originalSection.deletedAt) {
+      if (req.body?.restoreSection === true) {
+        originalSection.deletedAt = null;
+        await originalSection.save();
+      } else if (req.body?.sectionId) {
+        const destination = await Section.findOne({ _id: req.body.sectionId, teacherId: teacher._id });
+        if (!destination) return res.status(400).json({ message: "Choose an active section assigned to you." });
+        learner.sectionId = destination._id;
+        learner.section = destination.name;
+      } else {
+        return res.status(409).json({
+          message: "The learner's original section is archived. Restore that section or assign the learner to another active section.",
+          code: "SECTION_ARCHIVED"
+        });
+      }
+    }
     learner.deletedAt = null;
     await learner.save();
     res.json(learner);
@@ -293,8 +338,14 @@ router.delete("/:id/permanent", async (req, res) => {
   try {
     const teacher = await currentTeacher(req, res);
     if (!teacher) return;
-    const sectionIds = await Section.find({ teacherId: teacher._id }).distinct("_id");
-    const learner = await Learner.findOne({ _id: req.params.id, sectionId: { $in: sectionIds }, deletedAt: { $ne: null } }).setOptions({ withDeleted: true });
+    const sections = await Section.find({ teacherId: teacher._id })
+      .setOptions({ withDeleted: true })
+      .select("_id name");
+    const learner = await Learner.findOne({
+      _id: req.params.id,
+      $or: [{ sectionId: { $in: sections.map((section) => section._id) } }, { section: { $in: sections.map((section) => section.name) } }],
+      deletedAt: { $ne: null }
+    }).setOptions({ withDeleted: true });
     if (!learner) return res.status(404).json({ message: "Archived learner not found in your sections." });
     await learner.deleteOne();
     res.status(204).send();
