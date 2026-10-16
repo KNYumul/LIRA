@@ -172,6 +172,60 @@ p.page-sub {
   color: var(--muted);
 }
 
+.teachers-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.teachers-archive-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-top: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.archive-switch-track {
+  position: relative;
+  display: inline-flex;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: #9CA3AF;
+  transition: background .2s ease;
+}
+
+.archive-switch-track.is-active { background: #4C6949; }
+
+.archive-switch-thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left .2s ease;
+}
+
+.archive-switch-track.is-active .archive-switch-thumb { left: 24px; }
+
+.teachers-archive-switch:focus-visible {
+  outline: 2px solid #4C6949;
+  outline-offset: 4px;
+  border-radius: 999px;
+}
+
 .search-wrap {
   position: relative;
   max-width: 340px;
