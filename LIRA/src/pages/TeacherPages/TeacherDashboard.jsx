@@ -2186,7 +2186,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
         catch (reason) { results.push({ status: "rejected", reason }); }
       }
       const failed = results.filter((result) => result.status === "rejected");
-      const isDuplicateFailure = (result) => /already listed|duplicate key|E11000|Duplicate learner skipped/i.test(result.reason?.message || "");
+      const isDuplicateFailure = (result) => /already listed|already assigned|duplicate key|E11000|Duplicate learner skipped/i.test(result.reason?.message || "");
       const storedDuplicates = failed.filter(isDuplicateFailure);
       const ownershipFailures = failed.filter((result) => /managed by/i.test(result.reason?.message || ""));
       const otherFailures = failed.filter((result) => !isDuplicateFailure(result) && !/managed by/i.test(result.reason?.message || ""));

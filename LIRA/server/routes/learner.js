@@ -272,6 +272,14 @@ router.put("/:id", async (req, res) => {
     await learner.save();
     res.json(learner);
   } catch (error) {
+    // The database is the final authority here: another request can create
+    // the same LRN after validation but before this save completes.
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "That LRN is already assigned to a learner. Use a different LRN or restore the existing learner instead.",
+        code: "LRN_ALREADY_ASSIGNED"
+      });
+    }
     res.status(400).json({ message: error.message });
   }
 });

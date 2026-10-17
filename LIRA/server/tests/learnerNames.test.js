@@ -81,3 +81,19 @@ test('learner management requires a 12-digit LRN and surname', async () => {
   assert.equal(edited.status, 200);
   assert.equal(edited.data.lrn, '123456789014');
 });
+
+test('editing a learner to an LRN already in use returns a clear conflict', async () => {
+  const added = await request('', { lrn: '123456789017', lastName: 'Garcia', section: 'Earth' });
+  assert.equal(added.status, 201);
+
+  const response = await request('/' + added.data._id, {
+    lrn: details.lrn,
+    lastName: 'Reyes',
+    section: 'Earth'
+  }, 'PUT');
+
+  assert.equal(response.status, 409);
+  assert.equal(response.data.code, 'LRN_ALREADY_ASSIGNED');
+  assert.match(response.data.message, /already assigned/i);
+  assert.doesNotMatch(response.data.message, /E11000|duplicate key/i);
+});
