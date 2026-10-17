@@ -4149,23 +4149,39 @@ function Stories({ currentTeacher }) {
           <p className="text-sm mt-1" style={{ color: C.textMuted }}>Reading materials assigned to your class</p>
         </div>
 
-        <div className="sm-lang-toggle" role="group" aria-label="Language filter">
+        <div className="flex items-center gap-3">
+          <ArchiveSwitch checked={showArchived} onChange={toggleArchived} />
+          <div className="sm-lang-toggle" role="group" aria-label="Language filter">
+            <button
+              type="button"
+              className={`sm-lang-option ${lang === 'ENG' ? 'is-active' : ''}`}
+              onClick={() => setLang('ENG')}
+            >
+              ENG
+            </button>
+            <button
+              type="button"
+              className={`sm-lang-option ${lang === 'FIL' ? 'is-active' : ''}`}
+              onClick={() => setLang('FIL')}
+            >
+              FIL
+            </button>
+          </div>
           <button
             type="button"
-            className={`sm-lang-option ${lang === 'ENG' ? 'is-active' : ''}`}
-            onClick={() => setLang('ENG')}
+            disabled={showArchived}
+            onClick={() => setShowAddStory(true)}
+            className="px-5 py-2 rounded-full font-semibold whitespace-nowrap"
+            style={{
+              background: showArchived ? "#E5E7EB" : "#fff",
+              border: `1px solid ${showArchived ? "#D1D5DB" : C.cardBorder}`,
+              color: showArchived ? "#9CA3AF" : C.text,
+              cursor: showArchived ? "not-allowed" : "pointer",
+            }}
           >
-            ENG
-          </button>
-          <button
-            type="button"
-            className={`sm-lang-option ${lang === 'FIL' ? 'is-active' : ''}`}
-            onClick={() => setLang('FIL')}
-          >
-            FIL
+            + Add story
           </button>
         </div>
-        <ArchiveSwitch checked={showArchived} onChange={toggleArchived} />
       </div>
 
       <div className="grid mt-6 gap-6" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" }}>
@@ -4175,7 +4191,7 @@ function Stories({ currentTeacher }) {
       {loading && <div className="text-sm mt-4" style={{ color: C.textMuted }}>Loading stories from the database…</div>}
       {error && <div className="text-sm mt-4" style={{ color: "#C0504D" }}>{error}</div>}
       {!loading && !error && filtered.length === 0 && (
-        <div className="text-sm mt-2" style={{ color: C.textMuted }}>No stories yet in this language — add one with the + card.</div>
+        <div className="text-sm mt-2" style={{ color: C.textMuted }}>No stories yet in this language — add one with the + card or Add story button.</div>
       )}
 
       {showAddStory && (
