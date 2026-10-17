@@ -271,7 +271,8 @@ export default function AdminTeacherDashboard() {
     if (result.isConfirmed) {
       clearSavedPortalPage('liraAdminPortalPage')
       clearSession()
-      navigate('/')
+      // Do not leave the admin dashboard in browser history after logout.
+      navigate('/admin/login', { replace: true })
     }
   }
 

@@ -28,7 +28,8 @@ export default function Category() {
 
   function handleLogout() {
     clearSession();
-    navigate("/");
+    // Replace the protected page so the browser Back button cannot return to it.
+    navigate("/login", { replace: true });
   }
 
   return (

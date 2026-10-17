@@ -4243,7 +4243,8 @@ export default function TeacherDashboard() {
   function handleLogout() {
     clearSavedPortalPage("liraTeacherPortalPage");
     clearSession();
-    navigate("/");
+    // Replace the protected dashboard in history after ending the session.
+    navigate("/login?portal=teacher", { replace: true });
   }
 
   function handleSectionDeleted(sectionId) {

@@ -127,7 +127,7 @@ function ProtectedRoute({ role, children }) {
     };
   }, [token, role, pathname]);
 
-  if (!token) return <Navigate to={role === "student" ? "/login" : "/"} replace />;
+  if (!token) return <Navigate to={role === "admin" ? "/admin/login" : role === "teacher" ? "/login?portal=teacher" : "/login"} replace />;
   if (verification?.token !== token || verification?.role !== role || verification?.pathname !== pathname) {
     return (
       <div className="session-check" role="status" aria-live="polite">
@@ -136,7 +136,7 @@ function ProtectedRoute({ role, children }) {
       </div>
     );
   }
-  return verification.allowed ? children : <Navigate to={role === "student" ? "/login" : "/"} replace />;
+  return verification.allowed ? children : <Navigate to={role === "admin" ? "/admin/login" : role === "teacher" ? "/login?portal=teacher" : "/login"} replace />;
 }
 
 function App() {
