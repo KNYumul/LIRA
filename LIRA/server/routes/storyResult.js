@@ -36,6 +36,8 @@ router.post("/", async (req, res) => {
       if (!session || String(session.userId) !== learnerId) return res.status(401).json({ message: 'Please sign in again to submit your recording.' });
     }
     const { storyId, language, answers, readingDurationSeconds, readingWordStats = [] } = req.body;
+    const submittedReadingWordCount = req.body.readingWordCount;
+    const readingCompleted = req.body.readingCompleted !== false;
     if (!mongoose.isValidObjectId(learnerId) || !mongoose.isValidObjectId(storyId)) {
       return res.status(400).json({ message: "A valid learner and story are required." });
     }
@@ -68,10 +70,19 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "Please answer every question before submitting." });
     }
 
-    const readingWordCount = readingDurationSeconds == null ? null : story.pages.reduce(
+    const storyWordCount = story.pages.reduce(
       (sum, page) => sum + (String(page.text || '').match(/[\p{L}\p{N}]+(?:['\u2019-][\p{L}\p{N}]+)*/gu) || []).length, 0
     );
-    const readingWpm = readingDurationSeconds == null || !readingWordCount ? null : Math.round(readingWordCount * 60 / readingDurationSeconds);
+    if (submittedReadingWordCount != null && (!Number.isSafeInteger(submittedReadingWordCount)
+      || submittedReadingWordCount < 0 || submittedReadingWordCount > storyWordCount)) {
+      return res.status(400).json({ message: "Invalid number of words read." });
+    }
+    // WPM reflects words actually read aloud. Omitted words are still retained
+    // as errors in readingWordStats and therefore reduce reading accuracy.
+    const readingWordCount = readingDurationSeconds == null ? null : (submittedReadingWordCount ?? storyWordCount);
+    const readingWpm = readingDurationSeconds == null
+      ? null
+      : Math.round(readingWordCount * 60 / readingDurationSeconds);
     const score = questions.reduce((sum, question, index) => sum + (answers[index] === question.correct ? 1 : 0), 0);
     const result = await StoryResult.create({
       learnerId,
@@ -85,6 +96,7 @@ router.post("/", async (req, res) => {
       readingWordCount,
       readingWordStats,
       readingWpm,
+      readingCompleted,
       readingAccuracy: calculateReadingAccuracy(story.pages, readingWordStats),
       recording,
       recordingSegmentCount: recording.length,

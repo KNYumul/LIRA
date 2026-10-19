@@ -326,6 +326,7 @@ function learnerToStudent(learner) {
     storyTitle: storyResult.storyTitle,
     readingWordStats: storyResult.readingWordStats || [],
     readingWpm: storyResult.readingWpm ?? null,
+    readingCompleted: storyResult.readingCompleted !== false,
     readingAccuracy: storyResult.readingAccuracy ?? null,
     score: storyResult.score,
     total: storyResult.total,

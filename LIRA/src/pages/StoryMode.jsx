@@ -645,7 +645,17 @@ function StoryMode({ onExit }) {
   const latestSpeechEndRef = useRef(0);
   const exitPromptRef = useRef(false);
   const readingWordStatsRef = useRef(Object.create(null));
+  // Keep completion separate from the count used for WPM: an omitted word is
+  // incorrect for accuracy, but was not read aloud.
+  const readingCompletedRef = useRef(true);
+  const readingWordsReadRef = useRef(0);
   const readingTimerRef = useRef({ elapsed: 0, startedAt: null });
+  const recordReadingWord = (word, retry) => {
+    const key = normalizedWord(word);
+    const stat = readingWordStatsRef.current[key] ||= { word: key, attempts: 0, retries: 0 };
+    stat.attempts += 1;
+    if (retry) stat.retries += 1;
+  };
   const pauseReadingTimer = () => {
     const timer = readingTimerRef.current;
     if (timer.startedAt !== null) timer.elapsed += performance.now() - timer.startedAt;
@@ -915,13 +925,8 @@ function StoryMode({ onExit }) {
         const errors = new Set([...committed.incorrectWords, ...result.incorrectWordIndices.map((index) => previousCount + index)]);
         committedReadingRef.current = { count, incorrectWords: errors };
         setIncorrectWords(errors);
-        const recordWord = (word, retry) => {
-          const key = normalizedWord(word);
-          const stat = readingWordStatsRef.current[key] ||= { word: key, attempts: 0, retries: 0 };
-          stat.attempts += 1;
-          if (retry) stat.retries += 1;
-        };
-        for (let index = previousCount; index < count; index += 1) recordWord(words[index], errors.has(index));
+        for (let index = previousCount; index < count; index += 1) recordReadingWord(words[index], errors.has(index));
+        readingWordsReadRef.current += count - previousCount;
         setSpokenWordCount(count);
         setProgress(Math.round((count / Math.max(1, words.length)) * 100));
         if (count >= words.length) goNextPage(true, readingPageIndex);
@@ -975,8 +980,12 @@ function StoryMode({ onExit }) {
     recordingRef.current = new ReadingRecorder();
     readingTimerRef.current = { elapsed: 0, startedAt: null };
     readingWordStatsRef.current = Object.create(null);
+    readingCompletedRef.current = true;
+    readingWordsReadRef.current = 0;
     setIncorrectWords(new Set());
     committedReadingRef.current = { count: 0, incorrectWords: new Set() };
+    const firstPage = (story.pages[language] || story.pages.ENG || [])[0];
+    readingPageRef.current = { text: `${firstPage?.highlight || ''}${firstPage?.rest || ''}`, index: 0 };
     setActiveStory(story);
     setPageIndex(0);
     setProgress(0);
@@ -1022,6 +1031,27 @@ function StoryMode({ onExit }) {
     }, 300);
   };
 
+  const skipRemainingWords = () => {
+    if (!activeStory || pageTransitionRef.current !== null) return;
+    const { text: pageText, index: currentPageIndex } = readingPageRef.current;
+    const words = readingWords(pageText);
+    if (committedReadingRef.current.count >= words.length) {
+      goNextPage(isListening, currentPageIndex);
+      return;
+    }
+    const committed = committedReadingRef.current;
+    const skipped = words.slice(committed.count);
+    const errors = new Set([...committed.incorrectWords,
+      ...skipped.map((_, index) => committed.count + index)]);
+    skipped.forEach((word) => recordReadingWord(word, true));
+    committedReadingRef.current = { count: words.length, incorrectWords: errors };
+    readingCompletedRef.current = false;
+    setIncorrectWords(errors);
+    setSpokenWordCount(words.length);
+    setProgress(100);
+    goNextPage(isListening, currentPageIndex);
+  };
+
   const selectQuizOption = (optIndex) => {
     setSelectedOption(optIndex);
   };
@@ -1034,7 +1064,7 @@ function StoryMode({ onExit }) {
       const response = await fetch(`${API_URL}/api/story-results`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Learner-Id': learnerId || '', Authorization: `Bearer ${getSession()?.token || ''}` },
-        body: JSON.stringify({ recording: await recordingRef.current.serialize(), storyId: activeStory.id, language, answers, readingWordStats: Object.values(readingWordStatsRef.current), readingDurationSeconds: readingTimerRef.current.elapsed / 1000 })
+        body: JSON.stringify({ recording: await recordingRef.current.serialize(), storyId: activeStory.id, language, answers, readingWordStats: Object.values(readingWordStatsRef.current), readingCompleted: readingCompletedRef.current, readingWordCount: readingWordsReadRef.current, readingDurationSeconds: readingTimerRef.current.elapsed / 1000 })
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || 'Could not save your score.');
@@ -1289,10 +1319,19 @@ function StoryMode({ onExit }) {
             <span className="sm-page-fold" aria-hidden="true" />
           </div>
 
+          <div className="sm-page-navigation">
+            <button
+              type="button"
+              className="sm-next-page-btn"
+              onClick={skipRemainingWords}
+              disabled={isFlipping}
+              aria-label={pageIndex < storyPages.length - 1 ? 'Next page' : 'Finish reading'}
+            >
+              <span aria-hidden="true">&gt;</span>
+            </button>
+            <span className="sm-next-page-label">{pageIndex + 1}/{storyPages.length}</span>
+          </div>
         </div>
-        <span className="sm-next-page-label">
-          {pageIndex + 1}/{storyPages.length}
-        </span>
       </section>
     );
   }

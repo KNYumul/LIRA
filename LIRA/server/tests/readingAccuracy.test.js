@@ -48,3 +48,15 @@ test('caps credit at actual word occurrences and rounds percentages', () => {
     { word: 'one', attempts: 10, retries: 0 },
   ]), 33);
 });
+
+test('counts manually skipped trailing words as incorrect', () => {
+  const pages = [{ text: 'The little bird flew home' }];
+  // "little bird flew home" were skipped after correctly reading "The".
+  assert.equal(calculateReadingAccuracy(pages, [
+    { word: 'the', attempts: 1, retries: 0 },
+    { word: 'little', attempts: 1, retries: 1 },
+    { word: 'bird', attempts: 1, retries: 1 },
+    { word: 'flew', attempts: 1, retries: 1 },
+    { word: 'home', attempts: 1, retries: 1 },
+  ]), 20);
+});

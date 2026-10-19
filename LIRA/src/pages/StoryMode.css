@@ -567,6 +567,42 @@
   margin-top: 8px;
 }
 
+.sm-page-navigation {
+  width: 170px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.sm-next-page-btn {
+  width: 84px;
+  height: 84px;
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--teal);
+  font-family: 'Poppins', sans-serif;
+  font-size: 46px;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(90, 169, 192, 0.45);
+  transition: transform 0.18s ease, background-color 0.18s ease;
+}
+
+.sm-next-page-btn:hover:not(:disabled) {
+  transform: translateX(3px);
+  background-color: var(--teal-dark);
+}
+
+.sm-next-page-btn:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .sm-next-page-label {
   display: block;
   text-align: center;
@@ -575,9 +611,7 @@
   font-weight: 500;
   color: var(--text-muted);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  margin-top: 14px;
-  position: relative;
-  z-index: 2;
+  margin-top: 8px;
 }
 
 /* Quiz Stage & 3D Flashcard Flip Transition */
@@ -1063,9 +1097,21 @@ body {
     gap: 10px;
   }
 
+  .sm-page-navigation {
+    order: 3;
+    width: 100%;
+    gap: 10px;
+  }
+
   .sm-mic-btn {
     width: 68px;
     height: 68px;
+  }
+
+  .sm-next-page-btn {
+    width: 68px;
+    height: 68px;
+    font-size: 38px;
   }
 
   .sm-mic-label {
