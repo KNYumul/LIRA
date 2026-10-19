@@ -619,7 +619,6 @@ function StoryMode({ onExit }) {
   const [isFlipping, setIsFlipping] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [speechReady, setSpeechReady] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [spokenWordCount, setSpokenWordCount] = useState(0);
   const [speechStatus, setSpeechStatus] = useState('Tap the microphone and read aloud.');
   const [incorrectWords, setIncorrectWords] = useState(() => new Set());
@@ -847,7 +846,6 @@ function StoryMode({ onExit }) {
     // Resume committed speech and preserve error marks across microphone sessions.
     setSpokenWordCount(committedReadingRef.current.count);
     setIncorrectWords(new Set(committedReadingRef.current.incorrectWords));
-    setProgress(Math.round(committedReadingRef.current.count / Math.max(1, readingWords(pageText).length) * 100));
     try {
       if (!getSession()?.token) throw new Error('Please sign in again before recording your reading.');
       if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) throw new Error('Recording requires a supported browser and HTTPS (or localhost).');
@@ -907,7 +905,6 @@ function StoryMode({ onExit }) {
         // Interim hypotheses can change; only final speech commits error marks.
         setIncorrectWords(new Set([...committed.incorrectWords, ...result.incorrectWordIndices.map((index) => committed.count + index)]));
         setSpokenWordCount(count);
-        setProgress(Math.round((count / Math.max(1, words.length)) * 100));
       };
       recognizer.recognized = (_, event) => {
         if (recognizerRef.current !== recognizer) return;
@@ -928,7 +925,6 @@ function StoryMode({ onExit }) {
         for (let index = previousCount; index < count; index += 1) recordReadingWord(words[index], errors.has(index));
         readingWordsReadRef.current += count - previousCount;
         setSpokenWordCount(count);
-        setProgress(Math.round((count / Math.max(1, words.length)) * 100));
         if (count >= words.length) goNextPage(true, readingPageIndex);
       };
       recognizer.canceled = (_, event) => {
@@ -988,7 +984,6 @@ function StoryMode({ onExit }) {
     readingPageRef.current = { text: `${firstPage?.highlight || ''}${firstPage?.rest || ''}`, index: 0 };
     setActiveStory(story);
     setPageIndex(0);
-    setProgress(0);
     setSpokenWordCount(0);
     setSpeechStatus('Tap the microphone and read aloud.');
     setIsListening(false);
@@ -1009,7 +1004,6 @@ function StoryMode({ onExit }) {
         setIncorrectWords(new Set());
         committedReadingRef.current = { count: 0, incorrectWords: new Set() };
         setPageIndex(currentPageIndex + 1);
-        setProgress(0);
         setSpokenWordCount(0);
         const nextPage = storyPages[currentPageIndex + 1];
         readingPageRef.current = { text: `${nextPage.highlight}${nextPage.rest}`, index: currentPageIndex + 1 };
@@ -1048,7 +1042,6 @@ function StoryMode({ onExit }) {
     readingCompletedRef.current = false;
     setIncorrectWords(errors);
     setSpokenWordCount(words.length);
-    setProgress(100);
     goNextPage(isListening, currentPageIndex);
   };
 
@@ -1301,9 +1294,6 @@ function StoryMode({ onExit }) {
           <div className={`sm-page-card ${isFlipping ? 'flipping' : ''}`}>
             <span className="sm-bookmark" aria-hidden="true" />
             <div className="sm-page-inner" ref={readingScrollRef}>
-              <div className="sm-progress-track">
-                <div className="sm-progress-fill" style={{ width: `${progress}%` }} />
-              </div>
               <p className="sm-page-text">
                 {textParts.map((part, index) => {
                   if (!normalizedWord(part)) return <span key={`separator-${index}`}>{part}</span>;
