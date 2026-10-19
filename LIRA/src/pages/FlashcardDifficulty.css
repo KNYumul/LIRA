@@ -337,7 +337,7 @@
 .fc-card h2 {
   font-family: "Quicksand", sans-serif;
 
-  font-size: clamp(1.35rem, 1.6vw, 1.7rem);
+  font-size: clamp(2.25rem, 3vw, 3rem);
 
   font-weight: 700;
 
@@ -356,7 +356,7 @@
 
   font-weight: 400;
 
-  font-size: clamp(0.8rem, 0.85vw, 0.95rem);
+  font-size: clamp(1.05rem, 1.2vw, 1.25rem);
 
   color: var(--ink-soft);
 

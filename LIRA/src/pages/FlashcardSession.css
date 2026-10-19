@@ -6,7 +6,8 @@
   --accent-blue: #8fc8e8;
 
   position: relative;
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
   width: 100%;
   font-family: "Poppins", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 300;
@@ -16,6 +17,7 @@
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
+  overflow: hidden;
   box-sizing: border-box;
 }
 
@@ -27,7 +29,8 @@
   display: flex;
   align-items: center;
   gap: clamp(0.875rem, 1.4vw, 1.25rem);
-  padding: clamp(1.5rem, 2.2vw, 2rem) var(--viewport-gutter) 0;
+  height: 10vh;
+  padding: 0 var(--viewport-gutter);
 }
 
 .fs-back {
@@ -53,7 +56,7 @@
 /* Header Title: Quicksand */
 .fs-title {
   font-family: "Quicksand", sans-serif;
-  font-size: clamp(1.35rem, 1.8vw, 1.6rem);
+  font-size: clamp(1.5rem, 2vw, 1.8rem);
   font-weight: 700;
   margin: 0;
 }
@@ -62,13 +65,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: clamp(2.5rem, 4vw, 3.75rem) var(--viewport-gutter) clamp(4.5rem, 6vw, 6.25rem);
+  height: 90vh;
+  padding: 0 var(--viewport-gutter) 10vh;
 }
 
 .fs-card-stack {
   position: relative;
   width: 100%;
-  max-width: 560px;
+  max-width: 580px;
+  height: 80vh;
 }
 
 .fs-card-shadow {
@@ -88,6 +93,7 @@
   padding: clamp(1.375rem, 2vw, 1.75rem) clamp(1.375rem, 2.2vw, 2rem) clamp(1.75rem, 2.5vw, 2.25rem);
   display: flex;
   flex-direction: column;
+  height: 80vh;
 }
 
 .fs-card__top {
@@ -122,7 +128,7 @@
 /* Flashcard Target Sentence: Quicksand */
 .fs-sentence {
   font-family: "Quicksand", sans-serif;
-  font-size: clamp(1.15rem, 1.7vw, 1.4rem);
+  font-size: clamp(1.25rem, 3.2vh, 1.75rem);
   font-weight: 700;
   line-height: 1.4;
   margin: 0 0 30px;
@@ -178,35 +184,54 @@
 /* Mic Status Subtitle: Poppins Thin */
 .fs-mic__status {
   display: block;
-  /* Reserve four lines so wrapping status text does not shift the card. */
-  height: 6em;
+  /* Keep room for status feedback without leaving a large empty area. */
+  height: 3em;
   flex-shrink: 0;
   line-height: 1.5;
   overflow-y: auto;
   text-align: center;
   font-family: "Poppins", sans-serif;
   font-weight: 300;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   color: var(--ink-soft);
 }
 
 @media (max-width: 700px) {
+  .fs-page {
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
   .fs-header {
-    padding: 24px;
+    padding: 12px 24px 0;
+  }
+
+  .fs-main {
+    padding: 0 24px 10vh;
   }
 
   .fs-card {
-    padding: 22px 22px 30px;
+    padding: 16px 22px 18px;
   }
 
   .fs-sentence {
-    font-size: 1.15rem;
+    font-size: clamp(1.1rem, 3.2vh, 1.75rem);
+  }
+
+}
+
+/* Match the desktop reading-card width used by Story Mode. */
+@media (min-width: 1100px) {
+  .fs-card-stack {
+    width: 40vw;
+    max-width: none;
   }
 }
 
 .fs-message { background: #fff; border-radius: 18px; padding: 24px 30px; box-shadow: 0 8px 20px rgba(0,0,0,.06); }
 .fs-message--error { color: #a04444; }
-.fs-navigation { display: flex; justify-content: space-between; gap: 16px; margin-top: 24px; }
+.fs-navigation { display: flex; justify-content: space-between; gap: 16px; margin-top: auto; }
 .fs-navigation button { border: 0; border-radius: 999px; padding: 8px 18px; background: #cdeaf6; color: var(--ink); cursor: pointer; font-weight: 600; }
 .fs-navigation button:disabled { opacity: .4; cursor: not-allowed; }
 
