@@ -1842,14 +1842,25 @@ button:focus-visible,
   flex: 1;
 
   min-height: 0;
+  min-width: 0;
 
   display: flex;
 
   align-items: stretch;
+
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
-.dashboard-chart-wrapper > div {
-  width: 100% !important;
+/* Keep the Recharts measurement box finite on ultrawide displays.  Without
+   this cap the nested percentage-sized container can continually resize and
+   produce a distorted SVG. */
+.dashboard-chart-canvas {
+  width: min(100%, 1600px) !important;
+  max-width: 1600px;
+  height: 100% !important;
+  margin: 0 auto;
+  flex: 0 0 auto;
 }
 
 
@@ -2632,13 +2643,19 @@ button:focus-visible,
   width: 100%;
   flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
   display: flex;
   align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
-.dashboard-chart-wrapper > div {
-  width: 100% !important;
+.dashboard-chart-canvas {
+  width: min(100%, 1600px) !important;
+  max-width: 1600px;
   height: 100% !important;
+  margin: 0 auto;
+  flex: 0 0 auto;
 }
 
 /* Heatmap must fill the available lower card height */

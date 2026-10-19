@@ -1238,8 +1238,11 @@ function Dashboard({
 
               {hasChartData ? (
 
-                <div className="dashboard-chart-wrapper" style={{ overflowX: "auto" }}>
-                  <div style={{ minWidth: Math.max(420, chartData.length * 75) }}>
+                <div className="dashboard-chart-wrapper">
+                  <div
+                    className="dashboard-chart-canvas"
+                    style={{ minWidth: Math.max(420, chartData.length * 75) }}
+                  >
 
                   <ResponsiveContainer
                     width="100%"
