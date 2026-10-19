@@ -42,7 +42,7 @@ router.post("/login", async (req, res) => {
 
     const admin = await Admin.findOne({ email: email.trim().toLowerCase() }).select("+passwordHash");
     if (!admin || !admin.active || !(await verifyPassword(password, admin.passwordHash))) {
-      const failure = failedLogin(key);
+      const failure = failedLogin(key, 3);
       if (failure.locked) return sendCooldown(res, failure.retryAfterSeconds);
       return res.status(401).json({ message: `Invalid email or password. ${failure.remainingAttempts} attempt${failure.remainingAttempts === 1 ? "" : "s"} remaining.` });
     }

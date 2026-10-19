@@ -12,6 +12,7 @@ function AdminLoginPage() {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [retryAfterSeconds, setRetryAfterSeconds] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,6 +21,16 @@ function AdminLoginPage() {
     setError("");
     showError(message, "Admin login unsuccessful");
   }, [error]);
+
+  useEffect(() => {
+    if (retryAfterSeconds <= 0) return undefined;
+
+    const timer = window.setInterval(() => {
+      setRetryAfterSeconds((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [retryAfterSeconds > 0]);
 
   const depedEmailRegex = /^[a-zA-Z._%+-]+@deped\.gov\.ph$/i;
 
@@ -50,6 +61,8 @@ function AdminLoginPage() {
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
+
+    if (retryAfterSeconds > 0) return;
 
     const email = credentials.email.trim();
     const password = credentials.password;
@@ -101,6 +114,9 @@ function AdminLoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 429 && Number.isFinite(Number(data.retryAfterSeconds))) {
+          setRetryAfterSeconds(Math.max(1, Number(data.retryAfterSeconds)));
+        }
         setError(data.message || "Admin login failed.");
         return;
       }
@@ -233,8 +249,10 @@ function AdminLoginPage() {
             </button>
           </div>
 
-          <button type="submit" className="admin-submit-btn">
-            Log in
+          <button type="submit" className="admin-submit-btn" disabled={retryAfterSeconds > 0}>
+            {retryAfterSeconds > 0
+              ? `Try again in ${Math.ceil(retryAfterSeconds / 60)} minute${Math.ceil(retryAfterSeconds / 60) === 1 ? "" : "s"}`
+              : "Log in"}
           </button>
 
           {/* OR Divider

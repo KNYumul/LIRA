@@ -23,11 +23,11 @@ function cooldownStatus(key) {
   return { locked: false };
 }
 
-function failedLogin(key) {
+function failedLogin(key, maxFailedAttempts = MAX_FAILED_ATTEMPTS) {
   const previous = attempts.get(key);
   const failedAttempts = (previous?.failedAttempts || 0) + 1;
 
-  if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+  if (failedAttempts >= maxFailedAttempts) {
     const lockedUntil = Date.now() + COOLDOWN_MS;
     attempts.set(key, { failedAttempts, lockedUntil });
     return {
@@ -38,7 +38,7 @@ function failedLogin(key) {
   }
 
   attempts.set(key, { failedAttempts, lockedUntil: null });
-  return { locked: false, remainingAttempts: MAX_FAILED_ATTEMPTS - failedAttempts };
+  return { locked: false, remainingAttempts: maxFailedAttempts - failedAttempts };
 }
 
 function clearFailedLogins(key) {
