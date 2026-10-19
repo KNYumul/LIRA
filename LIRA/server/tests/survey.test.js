@@ -54,7 +54,7 @@ test('persists answers, derives learner identity, computes SUS, and avoids dupli
     const { status, data } = await request(adminToken);
     assert.equal(status, 200);
     assert.equal(data.length, 1);
-    assert.equal(data[0].name, 'Student');
+    assert.equal(data[0].name, '********');
     assert.equal(data[0].section, 'Earth');
     assert.equal(data[0].score, score);
     assert.deepEqual(data[0].answers, answers);
