@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const router = require('../routes/auth');
 const Session = mongoose.model('RecordingSession');
 const handler = router.stack.find((layer) => layer.route?.path === '/session').route.stack[0].handle;
+const logoutHandler = router.stack.find((layer) => layer.route?.path === '/logout').route.stack[0].handle;
 
 afterEach(() => mock.restoreAll());
 
@@ -44,4 +45,21 @@ test('valid sessions are accepted for each matching role', async () => {
     assert.equal(res.statusCode, 200);
     assert.deepEqual(res.body, { role });
   }
+});
+
+test('logout revokes a valid token and never reveals whether it existed', async () => {
+  let query;
+  mock.method(Session, 'deleteOne', async (receivedQuery) => {
+    query = receivedQuery;
+  });
+  const res = {
+    statusCode: 200,
+    set() { return this; },
+    status(code) { this.statusCode = code; return this; },
+    end() { this.ended = true; return this; },
+  };
+  await logoutHandler({ get: () => `Bearer ${'a'.repeat(64)}` }, res);
+  assert.equal(res.statusCode, 204);
+  assert.equal(res.ended, true);
+  assert.match(query.tokenHash, /^[a-f0-9]{64}$/);
 });

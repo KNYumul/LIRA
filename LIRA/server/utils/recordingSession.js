@@ -31,4 +31,10 @@ async function recordingSession(req, role) {
   });
 }
 
-module.exports = { issueSession, recordingSession };
+async function revokeSession(req) {
+  const token = (req.get('Authorization') || '').replace(/^Bearer /, '');
+  if (!/^[a-f0-9]{64}$/.test(token)) return;
+  await Session.deleteOne({ tokenHash: digest(token) });
+}
+
+module.exports = { issueSession, recordingSession, revokeSession };

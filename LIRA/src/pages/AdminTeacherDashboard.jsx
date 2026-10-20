@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { clearSession } from '../utils/session'
+import { endSession } from '../utils/session'
 import {
   clearSavedPortalPage,
   getSavedPortalPage,
@@ -270,7 +270,7 @@ export default function AdminTeacherDashboard() {
 
     if (result.isConfirmed) {
       clearSavedPortalPage('liraAdminPortalPage')
-      clearSession()
+      endSession()
       // Do not leave the admin dashboard in browser history after logout.
       navigate('/admin/login', { replace: true })
     }

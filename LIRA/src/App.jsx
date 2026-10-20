@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, Route, Routes, useLocation, Outlet } from "react-router-dom";
 import WelcomePage from "./pages/WelcomePage";
 import FaqSection from "./pages/FaqSection";
@@ -18,7 +18,7 @@ import AdminPage from "./pages/AdminTeacherDashboard";
 import Category from "./pages/Category";
 import FlashcardDifficulty from "./pages/FlashcardDifficulty";
 import FlashcardSession from "./pages/FlashcardSession";
-import { clearSession, getSession } from "./utils/session";
+import { clearSession, endSession, getSession } from "./utils/session";
 import StudentInactivityAlert from "./components/StudentInactivityAlert";
 import DesktopOnly from "./components/DesktopOnly";
 
@@ -71,6 +71,32 @@ function ScrollToHash() {
   return null;
 }
 
+function BrowserBackLogout() {
+  const { pathname } = useLocation();
+  const historyIndex = useRef(window.history.state?.idx);
+
+  useEffect(() => {
+    // React Router stores a monotonically increasing index in history state.
+    // A lower index means the browser Back button was used.
+    const logoutOnBack = (event) => {
+      const nextIndex = event.state?.idx;
+      if (typeof historyIndex.current === "number" && typeof nextIndex === "number" && nextIndex < historyIndex.current && getSession()) {
+        endSession();
+      }
+      historyIndex.current = nextIndex;
+    };
+
+    window.addEventListener("popstate", logoutOnBack);
+    return () => window.removeEventListener("popstate", logoutOnBack);
+  }, []);
+
+  useEffect(() => {
+    historyIndex.current = window.history.state?.idx;
+  }, [pathname]);
+
+  return null;
+}
+
 // Wraps the existing public/marketing pages with the site-wide Header + Footer,
 // exactly as before. Nothing about these routes changed.
 function PublicLayout() {
@@ -88,6 +114,19 @@ function ProtectedRoute({ role, children }) {
   const token = session?.role === role ? session.token : null;
   const { pathname } = useLocation();
   const [verification, setVerification] = useState(null);
+  const [, setHistoryRestore] = useState(0);
+
+  useEffect(() => {
+    // A browser can restore this page from its back/forward cache without
+    // remounting React. Force a render so the current stored session is read.
+    const checkRestoredPage = () => setHistoryRestore((value) => value + 1);
+    window.addEventListener("pageshow", checkRestoredPage);
+    window.addEventListener("popstate", checkRestoredPage);
+    return () => {
+      window.removeEventListener("pageshow", checkRestoredPage);
+      window.removeEventListener("popstate", checkRestoredPage);
+    };
+  }, []);
 
   useEffect(() => {
     if (!token) return;
@@ -144,6 +183,7 @@ function App() {
     <>
       <PageTitle />
       <ScrollToHash />
+      <BrowserBackLogout />
       <StudentInactivityAlert />
       <Routes>
         {/* ---------- Existing public site (unchanged) ---------- */}

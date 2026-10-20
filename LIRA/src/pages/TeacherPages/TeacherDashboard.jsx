@@ -8,7 +8,7 @@ import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker&url";
 import { createWorker } from "tesseract.js";
 import { useNavigate } from "react-router-dom";
 import './TeacherDashboard.css';
-import { clearSession, getSession, saveSession } from "../../utils/session";
+import { endSession, getSession, saveSession } from "../../utils/session";
 import { clearSavedPortalPage, getSavedPortalPage, savePortalPage } from "../../utils/portalPage";
 import { liraAlert, showError, showWarning } from "../../utils/alerts";
 import { extractCsvLastName, findCsvNameColumn } from "../../utils/csvNames";
@@ -4262,7 +4262,7 @@ export default function TeacherDashboard() {
 
   function handleLogout() {
     clearSavedPortalPage("liraTeacherPortalPage");
-    clearSession();
+    endSession();
     // Replace the protected dashboard in history after ending the session.
     navigate("/login?portal=teacher", { replace: true });
   }

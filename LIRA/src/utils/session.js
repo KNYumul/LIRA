@@ -61,3 +61,20 @@ export function clearSession() {
   removeStorage(getStorage("sessionStorage"));
   memorySession = null;
 }
+
+// Clear the browser copy immediately, then invalidate the server-side token.
+// `keepalive` lets the request finish if navigation follows right away.
+export function endSession() {
+  const token = getSession()?.token;
+  clearSession();
+  if (!token) return;
+
+  fetch(`${import.meta.env.VITE_API_URL || ""}/api/auth/logout`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+    keepalive: true,
+  }).catch(() => {
+    // Local logout remains effective when the network is unavailable.
+  });
+}

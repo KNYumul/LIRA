@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import "./Category.css";
-import { clearSession, getSession } from "../utils/session";
+import { endSession, getSession } from "../utils/session";
 
 const penguinIcon = "/UI_Designs/ANIMALS/H_Penguin.png";
 const catIcon = "/UI_Designs/ANIMALS/D_Cat.png";
@@ -27,7 +27,7 @@ export default function Category() {
   };
 
   function handleLogout() {
-    clearSession();
+    endSession();
     // Replace the protected page so the browser Back button cannot return to it.
     navigate("/login", { replace: true });
   }

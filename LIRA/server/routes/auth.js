@@ -4,7 +4,7 @@ const Teacher = require("../models/Teacher");
 const Section = require("../models/Section");
 const { hashPassword } = require("../utils/password");
 
-const { issueSession, recordingSession } = require("../utils/recordingSession");
+const { issueSession, recordingSession, revokeSession } = require("../utils/recordingSession");
 const router = express.Router();
 const oauthStates = new Map();
 const loginSessions = new Map();
@@ -25,6 +25,19 @@ router.get("/session", async (req, res) => {
   } catch {
     return res.status(503).json({ message: "Unable to verify session" });
   }
+});
+
+// A client-side storage clear alone can be undone by browser history or a
+// restored page. Revoke the presented token so it cannot authenticate again.
+router.post("/logout", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  try {
+    await revokeSession(req);
+  } catch {
+    // Logout is still successful from the client's perspective; do not expose
+    // whether a token existed or is already expired.
+  }
+  return res.status(204).end();
 });
 
 for (const action of ["forgot-password", "reset-password"]) {
