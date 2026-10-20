@@ -117,14 +117,10 @@ export default function FlashcardReader({ text, language }) {
     }
   };
 
-  const progress = Math.round(count / Math.max(1, words.length) * 100);
   const connecting = listening && !speechReady;
   const parts = String(text || '').match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*|[^\p{L}\p{N}]+/gu) || [];
   let wordIndex = 0;
   return <>
-    <div className="fs-progress" role="progressbar" aria-label="Reading progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
-      <div className="fs-progress__fill" style={{ width: `${progress}%` }} />
-    </div>
     <p className="fs-sentence">{parts.map((part, index) => {
       if (!normalizedWord(part)) return <span key={index}>{part}</span>;
       const position = wordIndex++;
