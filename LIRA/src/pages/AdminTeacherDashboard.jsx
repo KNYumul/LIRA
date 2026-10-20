@@ -130,10 +130,10 @@ export default function AdminTeacherDashboard() {
       result = await liraAlert.fire({
         icon: 'warning',
         title: 'Remove teacher and managed sections?',
-        html: `${escapeAlertHtml(teacher.name)} manages ${managedSections.length === 1 ? 'this section' : 'these sections'}: <strong>${managedSections.map(escapeAlertHtml).join(', ')}</strong>. Select another active teacher to transfer ${managedSections.length === 1 ? 'it' : 'them'}, or leave this blank to delete ${managedSections.length === 1 ? 'the section' : 'the sections'}.`,
+        html: `${escapeAlertHtml(teacher.name)} manages ${managedSections.length === 1 ? 'this section' : 'these sections'}: <strong>${managedSections.map(escapeAlertHtml).join(', ')}</strong>. Select another active teacher to transfer ${managedSections.length === 1 ? 'it' : 'them'}, or leave this blank to archive ${managedSections.length === 1 ? 'the section' : 'the sections'}. Learners in archived sections cannot sign in until an active teacher manages their section.`,
         input: 'select',
         inputOptions: replacementOptions,
-        inputPlaceholder: 'Delete managed section(s)',
+        inputPlaceholder: 'Archive managed section(s)',
         showCancelButton: true,
         confirmButtonText: 'Remove teacher',
         cancelButtonText: 'Cancel'
@@ -182,7 +182,7 @@ export default function AdminTeacherDashboard() {
         text: replacementTeacherId
           ? 'The managed section(s) were transferred to the selected teacher.'
           : managedSections.length
-            ? 'The managed section(s) were removed.'
+            ? 'The managed section(s) were archived. Learners in them cannot sign in until an active teacher manages the section.'
             : undefined,
         timer: 1600,
         showConfirmButton: false

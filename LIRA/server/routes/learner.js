@@ -105,6 +105,19 @@ async function ownedLearner(learnerId, teacherId) {
   return Learner.findOne({ _id: learnerId, sectionId: { $in: sectionIds } });
 }
 
+// A learner account is usable only while its section is assigned to an active
+// teacher.  This also covers a teacher that an admin archived without
+// transferring their sections: soft-deleted sections are excluded by the
+// model's default query scope.
+async function hasActiveTeacherAssignment(learner) {
+  const section = learner.sectionId
+    ? await Section.findById(learner.sectionId)
+    : await Section.findOne({ name: learner.section }).collation({ locale: "en", strength: 2 });
+  if (!section) return false;
+
+  return Boolean(await Teacher.exists({ _id: section.teacherId, active: true }));
+}
+
 router.post("/recommendations", async (req, res) => {
   try {
     const teacher = await currentTeacher(req, res);
@@ -390,6 +403,12 @@ router.post("/login", async (req, res) => {
       const failure = failedLogin(key);
       if (failure.locked) return sendCooldown(res, failure.retryAfterSeconds);
       return res.status(401).json({ message: `Invalid LRN or password. ${failure.remainingAttempts} attempt${failure.remainingAttempts === 1 ? "" : "s"} remaining.` });
+    }
+    if (!await hasActiveTeacherAssignment(learner)) {
+      return res.status(403).json({
+        code: "NO_ACTIVE_TEACHER_ASSIGNMENT",
+        message: "Your account is not assigned to an active teacher. Please ask a teacher to add or transfer you to an active section before signing in."
+      });
     }
     clearFailedLogins(key);
     res.json({

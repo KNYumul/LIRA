@@ -73,6 +73,30 @@ test('encrypted roster records with a lookup remain sign-in capable without a mi
   assert.equal((await request('/login', { lrn: '123456789016', password: 'mIgRaTeD' })).status, 200);
 });
 
+test('learners cannot sign in while their teacher and section are archived, but can after a teacher takes the section', async () => {
+  const retiredTeacher = await Teacher.create({ firstName: 'Retired', lastName: 'Teacher', email: 'retired@test.com', passwordHash: 'unused', active: true });
+  const archivedSection = await Section.create({ name: 'Archived Section', teacherId: retiredTeacher._id });
+  const learner = await Learner.create({
+    lrn: '123456789018', lastName: 'Transferred', section: archivedSection.name,
+    sectionId: archivedSection._id
+  });
+  archivedSection.deletedAt = new Date();
+  await archivedSection.save();
+  retiredTeacher.deletedAt = new Date();
+  await retiredTeacher.save();
+
+  const blocked = await request('/login', { lrn: '123456789018', password: 'Transferred' });
+  assert.equal(blocked.status, 403);
+  assert.equal(blocked.data.code, 'NO_ACTIVE_TEACHER_ASSIGNMENT');
+
+  const replacement = await Teacher.create({ firstName: 'New', lastName: 'Teacher', email: 'replacement@test.com', passwordHash: 'unused', active: true });
+  archivedSection.deletedAt = null;
+  archivedSection.teacherId = replacement._id;
+  await archivedSection.save();
+
+  assert.equal((await request('/login', { lrn: '123456789018', password: 'Transferred' })).status, 200);
+});
+
 test('learner management requires a 12-digit LRN and surname', async () => {
   assert.equal((await request('', { lastName: 'Cruz', section: 'Earth' })).status, 400);
   const added = await request('', { lrn: '123456789013', lastName: 'Cruz', section: 'Earth' });

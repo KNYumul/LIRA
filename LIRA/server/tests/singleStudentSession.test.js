@@ -57,8 +57,12 @@ test('teacher and admin logins retain multiple sessions', async () => {
 
 test('two browser logins through HTTP revoke the first browser session', async () => {
   const Learner = require('../models/Learner');
+  const Teacher = require('../models/Teacher');
+  const Section = require('../models/Section');
   const credentials = { lrn: '123456789012', password: 'BrowserTest' };
-  await Learner.create({ lrn: credentials.lrn, lastName: credentials.password, section: 'Session Test' });
+  const teacher = await Teacher.create({ firstName: 'Session', lastName: 'Teacher', email: 'session@test.com', passwordHash: 'unused', active: true });
+  const section = await Section.create({ name: 'Session Test', teacherId: teacher._id });
+  await Learner.create({ lrn: credentials.lrn, lastName: credentials.password, section: section.name, sectionId: section._id });
   const app = express();
   app.use(express.json());
   app.use('/api/learners', require('../routes/learner'));
