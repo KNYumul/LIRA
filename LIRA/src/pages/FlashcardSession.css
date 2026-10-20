@@ -65,15 +65,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 90vh;
-  padding: 0 var(--viewport-gutter) 10vh;
+  min-height: 90vh;
+  padding: 0 var(--viewport-gutter);
 }
 
 .fs-card-stack {
   position: relative;
   width: 100%;
   max-width: 580px;
-  height: 80vh;
 }
 
 .fs-card-shadow {
@@ -93,7 +92,6 @@
   padding: clamp(1.375rem, 2vw, 1.75rem) clamp(1.375rem, 2.2vw, 2rem) clamp(1.75rem, 2.5vw, 2.25rem);
   display: flex;
   flex-direction: column;
-  height: 80vh;
 }
 
 .fs-card__top {
@@ -208,7 +206,8 @@
   }
 
   .fs-main {
-    padding: 0 24px 10vh;
+    min-height: 90vh;
+    padding: 0 24px;
   }
 
   .fs-card {
@@ -231,7 +230,7 @@
 
 .fs-message { background: #fff; border-radius: 18px; padding: 24px 30px; box-shadow: 0 8px 20px rgba(0,0,0,.06); }
 .fs-message--error { color: #a04444; }
-.fs-navigation { display: flex; justify-content: space-between; gap: 16px; margin-top: auto; }
+.fs-navigation { display: flex; justify-content: space-between; gap: 16px; margin-top: 1.5rem; }
 .fs-navigation button { border: 0; border-radius: 999px; padding: 8px 18px; background: #cdeaf6; color: var(--ink); cursor: pointer; font-weight: 600; }
 .fs-navigation button:disabled { opacity: .4; cursor: not-allowed; }
 
