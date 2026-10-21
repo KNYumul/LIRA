@@ -535,6 +535,55 @@ function storySentences(text, language) {
   return segments.map((segment) => segment.trim()).filter(Boolean);
 }
 
+async function paginateStoryForViewport(story, language) {
+  const pageLanguage = story.pages[language] ? language : 'ENG';
+  const sourcePages = story.pages[pageLanguage] || [];
+  const sentences = storySentences(sourcePages.map((page) => `${page.highlight || ''}${page.rest || ''}`).join(' '), pageLanguage);
+  if (!sentences.length || window.innerWidth < 1100) return story;
+
+  // Wait for the reading font before measuring so a late font swap cannot
+  // create a different page count after the assessment begins.
+  await document.fonts?.ready;
+  await new Promise((resolve) => requestAnimationFrame(resolve));
+
+  const measurer = document.createElement('div');
+  measurer.className = 'story-mode sm-reading-bg';
+  measurer.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;left:-100vw;top:0;width:100vw;height:100dvh;padding:0;';
+  const card = document.createElement('div');
+  card.className = 'sm-page-card';
+  const inner = document.createElement('div');
+  inner.className = 'sm-page-inner';
+  const text = document.createElement('p');
+  text.className = 'sm-page-text';
+  inner.appendChild(text);
+  card.appendChild(inner);
+  measurer.appendChild(card);
+  document.body.appendChild(measurer);
+
+  try {
+    const pages = [];
+    let pageSentences = [];
+    for (const sentence of sentences) {
+      const candidate = [...pageSentences, sentence];
+      text.textContent = candidate.join(' ');
+      if (pageSentences.length && inner.scrollHeight > inner.clientHeight + 1) {
+        pages.push(learnerPage(pageSentences.join(' ')));
+        pageSentences = [sentence];
+      } else {
+        pageSentences = candidate;
+      }
+    }
+    if (pageSentences.length) pages.push(learnerPage(pageSentences.join(' ')));
+
+    return {
+      ...story,
+      pages: { ...story.pages, [pageLanguage]: pages },
+    };
+  } finally {
+    measurer.remove();
+  }
+}
+
 function databaseStory(story) {
   const language = story.lang === 'FIL' ? 'FIL' : 'ENG';
   return {
@@ -649,6 +698,7 @@ function StoryMode({ onExit }) {
   const readingCompletedRef = useRef(true);
   const readingWordsReadRef = useRef(0);
   const readingTimerRef = useRef({ elapsed: 0, startedAt: null });
+  const paginationRequestRef = useRef(0);
   const recordReadingWord = (word, retry) => {
     const key = normalizedWord(word);
     const stat = readingWordStatsRef.current[key] ||= { word: key, attempts: 0, retries: 0 };
@@ -691,53 +741,6 @@ function StoryMode({ onExit }) {
   useEffect(() => {
     readingScrollRef.current?.scrollTo({ top: 0, behavior: 'instant' });
   }, [activeStory, pageIndex, view]);
-
-  // Keep the fixed desktop card readable without splitting a sentence in half.
-  // If a page overflows, carry its final complete sentence into the following
-  // page so it continues the story instead of becoming a one-sentence page.
-  useEffect(() => {
-    if (view !== 'reading' || !activeStory || window.innerWidth < 1100) return undefined;
-
-    let frame = requestAnimationFrame(() => {
-      const pageInner = readingScrollRef.current;
-      if (!pageInner || pageInner.scrollHeight <= pageInner.clientHeight + 1) return;
-
-      const pageLanguage = activeStory.pages[language] ? language : 'ENG';
-      const pages = activeStory.pages[pageLanguage] || [];
-      const currentPage = pages[pageIndex];
-      const sentences = storySentences(`${currentPage?.highlight || ''}${currentPage?.rest || ''}`, pageLanguage);
-      if (sentences.length < 2) return;
-
-      const visibleText = sentences.slice(0, -1).join(' ');
-      const overflowText = sentences.at(-1);
-      setActiveStory((currentStory) => {
-        const currentPages = currentStory?.pages?.[pageLanguage] || [];
-        const pageToSplit = currentPages[pageIndex];
-        if (!pageToSplit || `${pageToSplit.highlight}${pageToSplit.rest}` !== `${currentPage.highlight}${currentPage.rest}`) return currentStory;
-
-        const followingPage = currentPages[pageIndex + 1];
-        const followingText = followingPage
-          ? `${followingPage.highlight || ''}${followingPage.rest || ''}`.trim()
-          : '';
-        const carriedPage = learnerPage([overflowText, followingText].filter(Boolean).join(' '));
-
-        return {
-          ...currentStory,
-          pages: {
-            ...currentStory.pages,
-            [pageLanguage]: [
-              ...currentPages.slice(0, pageIndex),
-              learnerPage(visibleText),
-              carriedPage,
-              ...currentPages.slice(pageIndex + 2),
-            ],
-          },
-        };
-      });
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [activeStory, language, pageIndex, view]);
 
   useEffect(() => {
     const container = readingScrollRef.current;
@@ -969,7 +972,16 @@ function StoryMode({ onExit }) {
     }
   };
 
-  const openStory = (story) => {
+  const openStory = async (story) => {
+    const request = ++paginationRequestRef.current;
+    let paginatedStory = story;
+    try {
+      paginatedStory = await paginateStoryForViewport(story, language);
+    } catch {
+      // Use the stored pagination if preflight measurement is unavailable.
+    }
+    if (request !== paginationRequestRef.current) return;
+
     // Keep this attempt's choice stable when saving updates the completion history.
     setShowCompletionSurvey(completedStoryIds.size === 0);
     recordingRef.current.stop();
@@ -980,9 +992,9 @@ function StoryMode({ onExit }) {
     readingWordsReadRef.current = 0;
     setIncorrectWords(new Set());
     committedReadingRef.current = { count: 0, incorrectWords: new Set() };
-    const firstPage = (story.pages[language] || story.pages.ENG || [])[0];
+    const firstPage = (paginatedStory.pages[language] || paginatedStory.pages.ENG || [])[0];
     readingPageRef.current = { text: `${firstPage?.highlight || ''}${firstPage?.rest || ''}`, index: 0 };
-    setActiveStory(story);
+    setActiveStory(paginatedStory);
     setPageIndex(0);
     setSpokenWordCount(0);
     setSpeechStatus('Tap the microphone and read aloud.');
