@@ -33,7 +33,10 @@ app.use("/api/speech", speechRoutes);
 app.use("/api/surveys", require("./routes/survey"));
 
 mongoose
-  .connect(process.env.MONGO_URI, {dbname: "LIRA"} )
+  // The Atlas URI does not include a database path, so use the driver's
+  // correctly-cased option. `dbname` is ignored and silently falls back to
+  // MongoDB's default `test` database.
+  .connect(process.env.MONGO_URI, { dbName: "LIRA" })
   .then(async () => {
     await require("./utils/learnerIndexes")();
     console.log("MongoDB connected!");

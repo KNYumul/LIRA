@@ -106,6 +106,10 @@ async function ownedLearner(learnerId, teacherId) {
   return Learner.findOne({ _id: learnerId, sectionId: { $in: sectionIds } });
 }
 
+function duplicateKeyFields(error) {
+  return Object.keys(error?.keyPattern || error?.keyValue || {});
+}
+
 // A learner account is usable only while its section is assigned to an active
 // teacher.  This also covers a teacher that an admin archived without
 // transferring their sections: soft-deleted sections are excluded by the
@@ -263,7 +267,17 @@ router.post("/", async (req, res) => {
     });
     res.status(201).json(learner);
   } catch (error) {
-    if (error.code === 11000) return res.status(409).json({ message: "That LRN is already assigned to a learner." });
+    if (error.code === 11000) {
+      const fields = duplicateKeyFields(error);
+      if (fields.includes("lrnLookup") || fields.includes("lrn")) {
+        return res.status(409).json({ message: "That LRN is already assigned to a learner.", code: "LRN_ALREADY_ASSIGNED" });
+      }
+      console.error("Unexpected duplicate learner index:", error.keyPattern);
+      return res.status(500).json({
+        message: `The learner database has an outdated unique index${fields.length ? ` on ${fields.join(", ")}` : ""}. Restart the API so it can update its learner indexes, then try the import again.`,
+        code: "OUTDATED_LEARNER_INDEX"
+      });
+    }
     res.status(400).json({ message: error.message });
   }
 });
