@@ -3,10 +3,11 @@ const Learner = require("../models/Learner");
 const Section = require("../models/Section");
 const Teacher = require("../models/Teacher");
 const StoryResult = require("../models/StoryResult");
+const SurveyResponse = require("../models/SurveyResponse");
 const { loginKey, cooldownStatus, failedLogin, clearFailedLogins, sendCooldown } = require("../utils/loginCooldown");
 const { lrnLookup } = require("../utils/learnerEncryption");
 
-const { issueSession } = require("../utils/recordingSession");
+const { issueSession, revokeUserSessions } = require("../utils/recordingSession");
 const router = express.Router();
 
 // AI Recommended Actions
@@ -368,6 +369,15 @@ router.delete("/:id/permanent", async (req, res) => {
       deletedAt: { $ne: null }
     }).setOptions({ withDeleted: true });
     if (!learner) return res.status(404).json({ message: "Archived learner not found in your sections." });
+
+    // Archiving preserves the learner and their progress. Permanently deleting
+    // removes the learner account and every record owned by that account, so
+    // its LRN becomes available for a future roster upload.
+    await Promise.all([
+      StoryResult.deleteMany({ learnerId: learner._id }),
+      SurveyResponse.deleteMany({ learnerId: learner._id }),
+      revokeUserSessions(learner._id, "student")
+    ]);
     await learner.deleteOne();
     res.status(204).send();
   } catch (error) { res.status(400).json({ message: error.message || "Could not permanently delete learner." }); }

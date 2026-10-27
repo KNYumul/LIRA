@@ -6,6 +6,9 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 const Learner = require('../models/Learner');
 const Teacher = require('../models/Teacher');
 const Section = require('../models/Section');
+const StoryResult = require('../models/StoryResult');
+const SurveyResponse = require('../models/SurveyResponse');
+const { issueSession } = require('../utils/recordingSession');
 
 let mongo, server, base, teacher;
 const details = { lrn: '123456789012', lastName: 'Santos', section: 'Earth' };
@@ -16,7 +19,8 @@ async function request(path, body, method = 'POST') {
     headers: { 'Content-Type': 'application/json', 'X-Teacher-Id': teacher.id },
     body: JSON.stringify(body),
   });
-  return { status: response.status, data: await response.json() };
+  const text = await response.text();
+  return { status: response.status, data: text ? JSON.parse(text) : null };
 }
 
 before(async () => {
@@ -120,4 +124,31 @@ test('editing a learner to an LRN already in use returns a clear conflict', asyn
   assert.equal(response.data.code, 'LRN_ALREADY_ASSIGNED');
   assert.match(response.data.message, /already assigned/i);
   assert.doesNotMatch(response.data.message, /E11000|duplicate key/i);
+});
+
+test('permanently deleting an archived learner removes learner data and releases the LRN', async () => {
+  const details = { lrn: '123456789019', lastName: 'Permanent', section: 'Earth' };
+  const created = await request('', details);
+  assert.equal(created.status, 201);
+  const learnerId = created.data._id;
+
+  await StoryResult.create({
+    learnerId,
+    storyId: new mongoose.Types.ObjectId(),
+    storyTitle: 'Test story',
+    language: 'ENG',
+    score: 3,
+    total: 5
+  });
+  await SurveyResponse.create({ learnerId, answers: Array(10).fill(4) });
+  await issueSession(learnerId, 'student');
+
+  assert.equal((await request('/' + learnerId, {}, 'DELETE')).status, 204);
+  assert.equal((await request('/' + learnerId + '/permanent', {}, 'DELETE')).status, 204);
+
+  assert.equal(await Learner.findById(learnerId).setOptions({ withDeleted: true }), null);
+  assert.equal(await StoryResult.countDocuments({ learnerId }).setOptions({ withDeleted: true }), 0);
+  assert.equal(await SurveyResponse.countDocuments({ learnerId }).setOptions({ withDeleted: true }), 0);
+  assert.equal(await mongoose.model('RecordingSession').countDocuments({ userId: learnerId }), 0);
+  assert.equal((await request('', details)).status, 201);
 });

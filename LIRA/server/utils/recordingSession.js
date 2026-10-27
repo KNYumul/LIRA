@@ -37,4 +37,8 @@ async function revokeSession(req) {
   await Session.deleteOne({ tokenHash: digest(token) });
 }
 
-module.exports = { issueSession, recordingSession, revokeSession };
+async function revokeUserSessions(userId, role) {
+  await Session.deleteMany({ userId, ...(role ? { role } : {}) });
+}
+
+module.exports = { issueSession, recordingSession, revokeSession, revokeUserSessions };

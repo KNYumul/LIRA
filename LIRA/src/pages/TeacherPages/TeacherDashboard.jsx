@@ -1863,6 +1863,7 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
   const [archivedSections, setArchivedSections] = useState([]);
   const [modal, setModal] = useState(null);
   const fileRef = useRef(null);
+  const importingRef = useRef(false);
   const reportRef = useRef(null);
 
   const filtered = students.filter((s) => s.displayName.toLowerCase().includes(search.toLowerCase()));
@@ -2107,8 +2108,17 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
 
   const handleFile = (file) => {
     if (!file) return;
+    // File-selection and drop events can arrive more than once in quick
+    // succession. Only one CSV import may create learners at a time.
+    if (importingRef.current) return;
+    importingRef.current = true;
     const reader = new FileReader();
+    reader.onerror = async () => {
+      importingRef.current = false;
+      await showError("The selected CSV file could not be read.");
+    };
     reader.onload = async (e) => {
+      try {
       const text = e.target.result;
       const lines = text.split(/\r?\n/).filter((line) => line.trim());
       if (lines.length === 0) {
@@ -2222,6 +2232,13 @@ function Students({ students, setStudents, sections, sectionName, onSectionChang
             ? "Only the assigned teacher can manage learners in that section."
             : otherFailures.length > 0 ? "Please review the CSV data and try again." : undefined
         });
+      }
+      } catch (importError) {
+        await showError(importError.message || "Could not import the CSV file.");
+      } finally {
+        importingRef.current = false;
+        // Allow selecting the same file again after this import has ended.
+        if (fileRef.current) fileRef.current.value = "";
       }
     };
     reader.readAsText(file);
